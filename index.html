@@ -1,236 +1,226 @@
-diff --git a//dev/null b/demo.html
-index 0000000000000000000000000000000000000000..b78bca3ed7936ce4fb3ae8bb555b0943c98a9f6c 100644
---- a//dev/null
-+++ b/demo.html
-@@ -0,0 +1,231 @@
-+<!DOCTYPE html>
-+<html lang="en">
-+<head>
-+  <meta charset="UTF-8" />
-+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-+  <title>Altera Demo</title>
-+  <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet" />
-+  <style>
-+    :root {
-+      --bg:#0b132b;
-+      --card:#1c2541;
-+      --accent:#5bc0be;
-+      --correct:#3ddc84;
-+      --wrong:#ff6b6b;
-+    }
-+    * { box-sizing:border-box; }
-+    body {
-+      margin:0;
-+      min-height:100vh;
-+      font-family:'Bungee',sans-serif;
-+      background:linear-gradient(160deg,var(--bg),#1d2951 60%,#16213e);
-+      color:#fff;
-+      display:flex;
-+      align-items:center;
-+      justify-content:center;
-+      padding:32px 16px;
-+    }
-+    .demo {
-+      width:100%;
-+      max-width:640px;
-+      background:var(--card);
-+      border-radius:20px;
-+      padding:32px;
-+      box-shadow:0 20px 60px rgba(0,0,0,0.3);
-+    }
-+    h1 {
-+      margin:0 0 8px;
-+      font-size:32px;
-+      letter-spacing:2px;
-+    }
-+    p.lede {
-+      margin:0 0 24px;
-+      font-size:14px;
-+      text-transform:uppercase;
-+      letter-spacing:1px;
-+      color:rgba(255,255,255,0.75);
-+    }
-+    .status {
-+      display:flex;
-+      justify-content:space-between;
-+      align-items:center;
-+      margin-bottom:16px;
-+    }
-+    .status span {
-+      font-size:15px;
-+    }
-+    .options {
-+      display:grid;
-+      grid-template-columns:repeat(2,minmax(0,1fr));
-+      gap:14px;
-+      margin-bottom:20px;
-+    }
-+    button.option {
-+      appearance:none;
-+      border:none;
-+      border-radius:14px;
-+      padding:26px 10px;
-+      font-size:18px;
-+      color:#fff;
-+      background:rgba(91,192,190,0.2);
-+      border:2px solid transparent;
-+      cursor:pointer;
-+      transition:transform .15s ease, background .15s ease, border .15s ease;
-+    }
-+    button.option:hover { transform:translateY(-2px); }
-+    button.option:disabled { cursor:default; transform:none; opacity:0.85; }
-+    button.option.correct {
-+      background:rgba(61,220,132,0.15);
-+      border-color:var(--correct);
-+    }
-+    button.option.wrong {
-+      background:rgba(255,107,107,0.15);
-+      border-color:var(--wrong);
-+    }
-+    .explanation {
-+      min-height:48px;
-+      font-size:15px;
-+      line-height:1.4;
-+      margin-bottom:24px;
-+    }
-+    .controls {
-+      display:flex;
-+      gap:12px;
-+      flex-wrap:wrap;
-+    }
-+    .controls button {
-+      appearance:none;
-+      border:none;
-+      border-radius:999px;
-+      padding:12px 22px;
-+      font-size:14px;
-+      letter-spacing:0.05em;
-+      text-transform:uppercase;
-+      background:var(--accent);
-+      color:#04121f;
-+      cursor:pointer;
-+      transition:transform .15s ease, filter .15s ease;
-+    }
-+    .controls button:hover { transform:translateY(-1px); filter:brightness(1.05); }
-+    .controls button:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
-+    .loading {
-+      font-size:14px;
-+      letter-spacing:0.08em;
-+      opacity:0.7;
-+      text-transform:uppercase;
-+    }
-+  </style>
-+</head>
-+<body>
-+  <div class="demo">
-+    <h1>Altera Demo</h1>
-+    <p class="lede">Experience a single daily puzzle taken from the live game.</p>
-+    <div class="status">
-+      <span id="diffLabel">Difficulty: Easy</span>
-+      <span id="progressLabel" class="loading">Loading puzzle…</span>
-+    </div>
-+    <div id="options" class="options" aria-live="polite"></div>
-+    <div id="explanation" class="explanation"></div>
-+    <div class="controls">
-+      <button id="nextBtn" disabled>Try Medium</button>
-+      <button id="resetBtn" disabled>Reset Demo</button>
-+    </div>
-+  </div>
-+
-+  <script>
-+    const difficulties = ["easy", "medium", "hard"];
-+    let puzzleSet = null;
-+    let currentIndex = 0;
-+    let answered = false;
-+    let progressPrefix = "";
-+
-+    const optionsEl = document.getElementById("options");
-+    const diffLabel = document.getElementById("diffLabel");
-+    const progressLabel = document.getElementById("progressLabel");
-+    const explanationEl = document.getElementById("explanation");
-+    const nextBtn = document.getElementById("nextBtn");
-+    const resetBtn = document.getElementById("resetBtn");
-+
-+    async function loadDemoPuzzle() {
-+      try {
-+        const response = await fetch("altera/puzzles.json");
-+        const data = await response.json();
-+        puzzleSet = data.days[0];
-+        progressPrefix = "Sample Seed #1";
-+        resetDemo();
-+      } catch (error) {
-+        progressLabel.textContent = "Unable to load demo";
-+        progressLabel.style.color = "var(--wrong)";
-+        console.error(error);
-+      }
-+    }
-+
-+    function resetDemo() {
-+      currentIndex = 0;
-+      answered = false;
-+      explanationEl.textContent = "";
-+      renderDifficulty();
-+      resetBtn.disabled = false;
-+    }
-+
-+    function renderDifficulty() {
-+      const key = difficulties[currentIndex];
-+      const puzzle = puzzleSet[key];
-+      diffLabel.textContent = `Difficulty: ${key.charAt(0).toUpperCase() + key.slice(1)}`;
-+      progressLabel.textContent = `${progressPrefix} • Puzzle ${currentIndex + 1}/${difficulties.length}`;
-+      optionsEl.innerHTML = "";
-+      answered = false;
-+      explanationEl.textContent = "Pick the odd one out.";
-+      const nextKey = difficulties[currentIndex + 1];
-+      if (nextKey) {
-+        nextBtn.textContent = `Try ${nextKey.charAt(0).toUpperCase() + nextKey.slice(1)}`;
-+        nextBtn.disabled = true;
-+      } else {
-+        nextBtn.textContent = "All difficulties shown";
-+        nextBtn.disabled = true;
-+      }
-+
-+      puzzle.words.forEach(word => {
-+        const btn = document.createElement("button");
-+        btn.className = "option";
-+        btn.textContent = word;
-+        btn.addEventListener("click", () => handleChoice(btn, word, puzzle));
-+        optionsEl.appendChild(btn);
-+      });
-+    }
-+
-+    function handleChoice(button, choice, puzzle) {
-+      if (answered) return;
-+      answered = true;
-+      const buttons = Array.from(optionsEl.querySelectorAll(".option"));
-+      buttons.forEach(btn => btn.disabled = true);
-+
-+      if (choice === puzzle.odd) {
-+        button.classList.add("correct");
-+        explanationEl.textContent = `Correct! ${puzzle.explanation}`;
-+      } else {
-+        button.classList.add("wrong");
-+        explanationEl.textContent = `Not quite. ${puzzle.explanation}`;
-+        const correctBtn = buttons.find(btn => btn.textContent === puzzle.odd);
-+        if (correctBtn) correctBtn.classList.add("correct");
-+      }
-+
-+      if (currentIndex < difficulties.length - 1) {
-+        nextBtn.disabled = false;
-+      }
-+    }
-+
-+    nextBtn.addEventListener("click", () => {
-+      if (currentIndex < difficulties.length - 1) {
-+        currentIndex += 1;
-+        answered = false;
-+        renderDifficulty();
-+      }
-+    });
-+
-+    resetBtn.addEventListener("click", resetDemo);
-+
-+    loadDemoPuzzle();
-+  </script>
-+</body>
-+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>JBTgames — Daily Puzzles</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Staatliches&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#F4EBD0;       /* cream */
+      --ink:#2C1E1E;      /* dark ink */
+      --muted:#9C8C7A;    /* muted taupe */
+      --brand:#E4572E;    /* burnt orange */
+      --success:#22B34B;  /* emerald green overlay */
+      --shadow:0 4px 16px rgba(0,0,0,.15);
+
+      --radius:16px;
+      --phone-width:430px;
+    }
+
+    body {
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family: Inter, system-ui, sans-serif;
+      display:flex;
+      justify-content:center;
+    }
+
+    .page {
+      width:100%;
+      max-width:var(--phone-width);
+      background:var(--bg);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* Header */
+    .header-bar {
+      background:var(--brand);
+      padding:12px 0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      width:100%;
+      margin:0;
+    }
+    .header-bar img {
+      max-width:70%;
+      height:auto;
+      display:block;
+    }
+
+    /* Access login box */
+    .access-box {
+      background:var(--ink);
+      border-radius:12px;
+      padding:14px;
+      margin:16px auto;
+      width:calc(100% - 32px);
+      color:#fff;
+      box-shadow:var(--shadow);
+    }
+    .access-box label {
+      display:block;
+      font-family:"Baloo 2", system-ui, sans-serif;
+      font-size:18px;
+      margin-bottom:8px;
+    }
+    .access-inner {
+      display:flex;
+      gap:8px;
+    }
+    .access-inner input {
+      flex:1;
+      padding:8px 12px;
+      border:none;
+      border-radius:8px;
+      font-size:14px;
+      font-family:"Baloo 2", system-ui, sans-serif;
+    }
+    .access-inner button {
+      background:var(--brand);
+      color:#fff;
+      border:none;
+      border-radius:8px;
+      padding:8px 12px;
+      font-size:14px;
+      font-weight:600;
+      font-family:"Baloo 2", system-ui, sans-serif;
+      cursor:pointer;
+      transition:background 0.2s ease;
+    }
+    .access-inner button:hover {
+      background:#c94421;
+    }
+
+    /* Games section */
+    .games-section {
+      background:var(--ink);
+      border-radius:12px;
+      padding:20px;
+      margin:0 auto 24px;
+      width:calc(100% - 32px);
+      box-sizing:border-box;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+
+    h2 {
+      font-family:"Staatliches", sans-serif;
+      font-size:26px;
+      margin:0 0 16px;
+      text-align:center;
+      color:#F4EBD0; /* cream text for contrast */
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:14px;
+      width:100%;
+      justify-items:center; /* ensures centering inside grid */
+      margin:0 auto;
+    }
+
+    .card {
+      position:relative;
+      width:100%;
+      aspect-ratio:1/1;
+      border-radius:var(--radius);
+      text-decoration:none;
+      overflow:hidden;
+      background:#fff center/cover no-repeat;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:26px;
+      font-weight:900;
+      color:#fff;
+      border:3px solid var(--ink);
+      box-shadow:var(--shadow);
+      transition:transform 0.15s ease;
+    }
+
+    .card:hover {
+      transform:scale(1.03);
+    }
+
+    /* Game tile images */
+    .ordera { background-image:url("ordera.png"); }
+    .duos { background-image:url("duos.png"); }
+    .oddity { background-image:url("oddity.png"); }
+    .decode { background-image:url("decode.png"); }
+
+    /* Completed overlay */
+    .card.completed::after {
+      content:"✓";
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(34,179,75,0.85);
+      color:#fff;
+      font-size:90px;
+      font-weight:900;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+
+    footer {
+      text-align:center;
+      font-size:13px;
+      color:var(--muted);
+      padding:20px 16px;
+      font-family:"Baloo 2", system-ui, sans-serif;
+      margin-top:auto; /* push footer to bottom */
+    }
+    footer span {
+      display:block;
+      margin-top:4px;
+      color:var(--ink);
+      font-weight:700;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <div class="header-bar">
+      <img src="header.png" alt="JBTgames Header">
+    </div>
+
+    <!-- Access Login -->
+    <div class="access-box">
+      <label for="access">Enter your access code to login:</label>
+      <div class="access-inner">
+        <input id="access" type="text" placeholder="Access code" />
+        <button>Login</button>
+        <button>Sign Up</button>
+      </div>
+    </div>
+
+    <!-- Games Section -->
+    <div class="games-section">
+      <h2>Today’s Games</h2>
+      <div class="grid">
+        <a class="card ordera" href="ordera/"></a>
+        <a class="card duos" href="duos/"></a>
+        <a class="card oddity" href="oddity/"></a>
+        <a class="card decode" href="decode/"></a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      Welcome to Mediocrity  
+      <span>JBTgames ©2025</span>
+    </footer>
+  </div>
+</body>
+</html>
