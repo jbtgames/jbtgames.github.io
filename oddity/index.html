@@ -41,7 +41,7 @@
   header img.logo { height:80%; width:auto; }
 
   footer {
-    font-size:11px; padding:6px 0; line-height:1.2;
+    font-size:11px; padding:6px 0; line-height:1.4;
     background:var(--accent);
     color:var(--cream);
   }
@@ -55,7 +55,14 @@
     padding: 10px 20px;
   }
 
-  .sub { font-size:28px; font-weight:bold; margin-bottom:8px; }
+  .sub {
+    font-size: clamp(18px, 5vw, 28px); /* scales automatically */
+    font-weight: bold;
+    margin-bottom: 8px;
+    white-space: nowrap;       /* never wrap */
+    overflow: hidden;
+    text-overflow: ellipsis;   /* prevents breaking */
+  }
   #progress { font-size:18px; opacity:0.9; }
 
   .tilesWrap {
@@ -259,10 +266,9 @@
   };
 
   function updateFooter(){
-    footerInfo.innerHTML=`Seed: ${ymd()}<br>Date: ${ymdDash()}`;
+    footerInfo.innerHTML = `Seed: ${ymd()}<br>Date: ${ymdDash()}<br>JBTgames ©2025`;
   }
 
-  // --- Boot ---
   async function boot(){
     updateFooter();
     try {
@@ -270,8 +276,7 @@
       if (!res.ok) throw new Error("HTTP " + res.status);
       const all = await res.json();
 
-      // Launch date (day 0 = first puzzle)
-      const startDate = new Date("2025-10-01");
+      const startDate = new Date("2025-10-01"); // first puzzle date
       const today = new Date();
       const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
 
