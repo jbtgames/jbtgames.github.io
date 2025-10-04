@@ -218,9 +218,9 @@
   },
   {
     "code": "H004",
-    "words": ["TUNDRA", "WAX", "VITAL", "BOTTLE"],
-    "odd": "BOTTLE",
-    "explanation": "BOTTLE contains curved letters; the others can be written with straight strokes only.",
+    "words": ["Io", "Europa", "Ganymede", "Phoebe"],
+    "odd": "Phoebe",
+    "explanation": "Phoebe is a moon of Saturn; the others are moons of Jupiter.",
     "difficulty": "hard"
   },
   {
