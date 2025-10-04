@@ -4,140 +4,156 @@
   <meta charset="UTF-8" />
   <meta name="viewport"
     content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover,user-scalable=no" />
-  <title>Altera</title>
+  <title>Oddity — JBTgames</title>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet" />
 
   <style>
   :root {
-    --correct:#10b981;
-    --wrong:#ef4444;
-    --tile1:#5b6cff; --tile2:#2ec6ff; --tile3:#ff477e; --tile4:#ffb020;
-    --logo:#ffb020;
+    --cream: #F4EBD0;
+    --ink: #2C1E1E;
+    --taupe: #9C8C7A;
+    --accent: #E4572E;
+    --success: #22B34B;
+    --error: #ef4444;
   }
 
   * { box-sizing:border-box; margin:0; padding:0; }
 
   body {
     font-family:'Bungee',sans-serif;
-    color:#fff;
-    background:#142049;
+    color:var(--ink);
+    background:var(--cream);
     display:flex;
     flex-direction:column;
-    height:100dvh; /* dynamic viewport height, iOS-safe */
-    overflow:hidden;
+    height:100dvh;
     text-align:center;
   }
 
-  /* Header */
-  header {
-    padding:8px 0 4px;
-    flex-shrink:0;
-  }
-  .logo {
-    font-size:36px; font-weight:900;
-    color:var(--logo);
-    text-shadow:0 0 6px rgba(0,0,0,0.4);
-  }
-  .sub { font-size:14px; margin:2px 0; opacity:0.95; }
-  #progress { font-size:12px; margin:2px 0 6px; }
+  header, footer { flex-shrink:0; }
 
-  /* Main game grid */
-  main {
-    flex:1;
-    display:flex; justify-content:center; align-items:center;
-    padding:0 10px;
-    min-height:0; /* ensure flex child can shrink */
+  header {
+    background:var(--accent);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:110px;
   }
+  header img.logo { height:80%; width:auto; }
+
+  footer {
+    font-size:11px; padding:6px 0; line-height:1.2;
+    background:var(--accent);
+    color:var(--cream);
+  }
+
+  .middle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 10px 20px;
+  }
+
+  .titleBlock { margin:0; }
+  .sub { font-size:28px; font-weight:bold; margin-bottom:8px; }
+  #progress { font-size:18px; opacity:0.9; }
+
+  .tilesWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
   #options {
-    width:100%; 
-    max-width:420px;
-    max-height:100%;
-    display:grid; 
-    grid-template-columns:repeat(2,1fr);
-    gap:10px;
+    width: 100%;
+    max-width: 420px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }
+
   .option {
     display:flex; align-items:center; justify-content:center;
-    aspect-ratio:1/1; border-radius:10px;
-    font-size:20px; /* bigger font */
-    cursor:pointer; user-select:none;
-    color:#fff; font-weight:bold; transition:.2s transform;
-    min-height:0; /* shrink if tight space */
+    aspect-ratio:1/1;
+    border-radius:14px;
+    font-size:22px;
+    min-height:120px;
+    color:var(--cream);
+    font-weight:bold;
+    transition:.2s transform;
+    cursor:pointer;
+    user-select:none;
   }
   .option:active { transform:scale(.95); }
-  .option:nth-child(1){background:var(--tile1);}
-  .option:nth-child(2){background:var(--tile2);}
-  .option:nth-child(3){background:var(--tile3);}
-  .option:nth-child(4){background:var(--tile4);}
-  .correct { background:var(--correct)!important; }
-  .wrong { background:var(--wrong)!important; }
 
-  /* Overlay & End screen */
+  .option:nth-child(1){background:var(--accent);}
+  .option:nth-child(2){background:var(--ink);}
+  .option:nth-child(3){background:var(--taupe);}
+  .option:nth-child(4){background:#000;}
+
+  .correct { background:var(--success)!important; }
+  .wrong { background:var(--error)!important; }
+
   #overlay, #endScreen {
     position:fixed; inset:0; display:none;
     flex-direction:column; align-items:center; justify-content:center;
-    background:rgba(0,0,0,.9); z-index:50; padding:20px;
+    background:rgba(44,30,30,.92); z-index:50; padding:20px;
+    color:var(--cream);
   }
   #overlay.show, #endScreen.show { display:flex; }
-  #overlay h1 { margin:0 0 6px; font-size:26px; }
-  #overlay p { font-size:14px; max-width:300px; }
+  #overlay h1 { margin:0 0 12px; font-size:32px; }
+  #overlay p { font-size:16px; max-width:300px; }
 
   #continueBtn {
-    margin-top:10px; padding:10px 20px;
-    border:none; border-radius:8px; background:var(--correct);
-    color:#fff; font-size:14px; cursor:pointer;
+    margin-top:20px;
+    padding:18px 24px;
+    border:none; border-radius:14px;
+    background:var(--accent);
+    color:var(--cream);
+    font-size:22px;
+    font-weight:bold;
+    cursor:pointer;
+    width:80%;
+    max-width:320px;
   }
 
   #endIcons { font-size:44px; margin-bottom:8px; }
-  #endText { margin:0; font-size:22px; }
-  #endComment { margin-top:10px; font-size:16px; max-width:320px; }
+  #endText { margin:0; font-size:26px; color:var(--accent); }
+  #endComment { margin-top:10px; font-size:18px; max-width:320px; }
   #shareBtn {
-    display:none; margin-top:12px;
-    padding:10px 20px; font-size:16px;
-    border:none; border-radius:8px; background:#5b6cff;
-    color:#fff; cursor:pointer;
-  }
-
-  /* Footer pinned */
-  footer {
-    font-size:11px; padding:4px 0; opacity:.85; line-height:1.2;
-    flex-shrink:0;
-    background:#0e1633;
-  }
-
-  /* Responsive scaling */
-  @media (max-height:700px) {
-    .logo { font-size:30px; }
-    .sub { font-size:12px; }
-    #options { max-width:340px; gap:8px; }
-    .option { font-size:18px; }
-  }
-  @media (max-height:600px) {
-    .logo { font-size:26px; }
-    #options { max-width:280px; gap:6px; }
-    .option { font-size:16px; }
+    display:none; margin-top:16px;
+    padding:16px 20px; font-size:20px;
+    border:none; border-radius:12px;
+    background:var(--accent);
+    color:var(--cream); cursor:pointer;
+    width:80%;
+    max-width:320px;
   }
   </style>
 </head>
 <body>
   <header>
-    <div class="logo">ALTERA</div>
-    <div class="sub">FIND THE ODD ONE OUT</div>
-    <div id="progress"></div>
+    <img src="oddity.png" alt="Oddity Logo" class="logo" />
   </header>
 
-  <main>
-    <div id="options"></div>
-  </main>
+  <div class="middle">
+    <div class="titleBlock">
+      <div class="sub">FIND THE ODD ONE OUT</div>
+      <div id="progress"></div>
+    </div>
+    <div class="tilesWrap">
+      <div id="options"></div>
+    </div>
+  </div>
 
-  <!-- Feedback -->
   <div id="overlay">
     <h1 id="result"></h1>
     <p id="explanation"></p>
     <button id="continueBtn">Continue</button>
   </div>
 
-  <!-- End screen -->
   <div id="endScreen">
     <div id="endIcons"></div>
     <h1 id="endText"></h1>
@@ -148,8 +164,7 @@
   <footer id="footerInfo"></footer>
 
   <script>
-  const DATA_URL="puzzles.json";
-  let puzzles, todaySet;
+  let todaySet = null;
   let level=0;
   let results=[];
 
@@ -166,49 +181,16 @@
         shareBtn=document.getElementById("shareBtn"),
         footerInfo=document.getElementById("footerInfo");
 
-  // Comments
   const comments = {
-    0: [
-      "Utter garbage. Zero. Just quit.",
-      "Hopeless. You didn’t even scratch the surface.",
-      "That’s 0/3 — embarrassing doesn’t cover it.",
-      "Zero. Were you even awake?",
-      "Pathetic. This is the bottom of the barrel."
-    ],
-    1: [
-      "1/3… humiliating. Were you asleep?",
-      "You clearly guessed and failed.",
-      "One correct? That’s laughable.",
-      "1/3. That’s all? Weak.",
-      "You barely tried. Shameful."
-    ],
-    2: [
-      "Close, but still not good enough.",
-      "2/3. Almost there, but not a winner.",
-      "Decent effort, still a failure.",
-      "So close. Too bad close doesn’t count.",
-      "Not terrible, but you still lose."
-    ],
-    3: [
-      "Perfect. Finally, someone competent.",
-      "3/3. Brilliant result.",
-      "Flawless. That’s how it’s done.",
-      "You nailed it. Respect.",
-      "Victory. Pure skill."
-    ]
+    0:["Utter garbage. Zero. Just quit.","Hopeless. You didn’t even scratch the surface.","That’s 0/3 — embarrassing doesn’t cover it.","Zero. Were you even awake?","Pathetic. This is the bottom of the barrel."],
+    1:["1/3… humiliating. Were you asleep?","You clearly guessed and failed.","One correct? That’s laughable.","1/3. That’s all? Weak.","You barely tried. Shameful."],
+    2:["Close, but still not good enough.","2/3. Almost there, but not a winner.","Decent effort, still a failure.","So close. Too bad close doesn’t count.","Not terrible, but you still lose."],
+    3:["Perfect. Finally, someone competent.","3/3. Brilliant result.","Flawless. That’s how it’s done.","You nailed it. Respect.","Victory. Pure skill."]
   };
 
   function ymd(){const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");}
   function ymdDash(){const d=new Date();return d.toISOString().split("T")[0];}
   function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-
-  async function loadPuzzles(){
-    const res=await fetch(DATA_URL+"?v="+ymd(),{cache:"no-store"});
-    const data=await res.json();
-    puzzles=data.days;
-    const idx=parseInt(ymd())%puzzles.length;
-    todaySet=puzzles[idx];
-  }
 
   function renderLevel(){
     progressEl.textContent=`Puzzle ${level+1}/3`;
@@ -239,9 +221,9 @@
 
   function showFeedback(ok,ex){
     resultEl.textContent=ok?"✓ Correct":"✗ Wrong";
-    resultEl.style.color=ok?"var(--correct)":"var(--wrong)";
+    resultEl.style.color=ok?"var(--success)":"var(--error)";
     explanationEl.textContent=ex;
-    continueBtn.style.background=ok?"var(--correct)":"var(--wrong)";
+    continueBtn.style.background=ok?"var(--success)":"var(--error)";
     overlay.classList.add("show");
   }
 
@@ -256,17 +238,14 @@
     options.innerHTML="";
     endScreen.classList.add("show");
     endIcons.innerHTML=results.map(r=> r==="✓"
-      ? `<span style="color:var(--correct)">✓</span>`
-      : `<span style="color:var(--wrong)">✗</span>`).join(" ");
+      ? `<span style="color:var(--success)">✓</span>`
+      : `<span style="color:var(--error)">✗</span>`).join(" ");
     const score = results.filter(r=>r==="✓").length;
     endText.textContent=win?"You Win!":"Game Over";
-
-    // Pick random comment
     const cList = comments[score];
     const comment = cList[Math.floor(Math.random()*cList.length)];
     endComment.textContent=comment;
-    endComment.style.color = score===3 ? "var(--correct)" : "var(--wrong)";
-
+    endComment.style.color = score===3 ? "var(--success)" : "var(--error)";
     updateFooter();
     shareBtn.style.display="inline-block";
   }
@@ -275,19 +254,35 @@
     let score = results.filter(r=>r==="✓").length;
     let seed = ymd();
     let date = ymdDash();
-    let msg = `Altera — Seed ${seed} (${date})\nScore: ${score}/3`;
-    if(navigator.share){navigator.share({title:"Altera",text:msg});}
-    else{navigator.clipboard.writeText(msg).then(()=>alert("Copied!"));}
+    let msg = `ODDITY — JBTgames\nSeed ${seed} (${date})\nScore: ${score}/3`;
+    if(navigator.share){navigator.share({title:"ODDITY",text:msg});}
+    else{navigator.clipboard.writeText(msg).then(()=>alert("Copied!"));} 
   };
 
   function updateFooter(){
     footerInfo.innerHTML=`Seed: ${ymd()}<br>Date: ${ymdDash()}`;
   }
 
-  (async function(){
+  // --- Boot ---
+  async function boot(){
     updateFooter();
-    await loadPuzzles(); renderLevel();
-  })();
+    try {
+      const res = await fetch("puzzles.json");
+      const all = await res.json();
+
+      // Use today’s seed to pick puzzle index
+      const seed = parseInt(ymd(),10);
+      const idx = seed % all.length; // wrap around
+      todaySet = all[idx];
+
+      renderLevel();
+    } catch(e){
+      console.error("Puzzle load error", e);
+      document.getElementById("options").innerHTML="<p>Failed to load puzzle.</p>";
+    }
+  }
+
+  boot();
   </script>
 </body>
 </html>
