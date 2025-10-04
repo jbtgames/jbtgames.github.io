@@ -1,121 +1,296 @@
 [
   {
-    "easy": {
-      "words": ["Carrot", "Broccoli", "Spinach", "Apple"],
-      "odd": "Apple",
-      "explanation": "Carrot, broccoli, and spinach are vegetables; apple is a fruit."
-    },
-    "medium": {
-      "words": ["Mars", "Venus", "Jupiter", "Moon"],
-      "odd": "Moon",
-      "explanation": "Mars, Venus, and Jupiter are planets; the Moon is a satellite."
-    },
-    "hard": {
-      "words": ["Petals", "Plates", "Pleats", "Pedals"],
-      "odd": "Pedals",
-      "explanation": "Petals, plates, and pleats are anagrams of each other; pedals is not."
-    }
+    "code": "E001",
+    "words": ["Monday", "Friday", "Sunday", "Wednesday"],
+    "odd": "Sunday",
+    "explanation": "Sunday is a weekend day; the others are weekdays.",
+    "difficulty": "easy"
   },
   {
-    "easy": {
-      "words": ["Shirt", "Pants", "Hat", "Banana"],
-      "odd": "Banana",
-      "explanation": "Shirt, pants, and hat are clothing; banana is food."
-    },
-    "medium": {
-      "words": ["Python", "Ruby", "Java", "Photoshop"],
-      "odd": "Photoshop",
-      "explanation": "Python, Ruby, and Java are programming languages; Photoshop is not."
-    },
-    "hard": {
-      "words": ["Lead", "Read", "Bead", "Head"],
-      "odd": "Lead",
-      "explanation": "Read, bead, and head rhyme; lead does not."
-    }
+    "code": "E002",
+    "words": ["Triangle", "Circle", "Square", "Rectangle"],
+    "odd": "Circle",
+    "explanation": "Circle is the only shape with no straight sides.",
+    "difficulty": "easy"
   },
   {
-    "easy": {
-      "words": ["Circle", "Square", "Triangle", "Orange"],
-      "odd": "Orange",
-      "explanation": "Circle, square, and triangle are shapes; orange is a color/fruit."
-    },
-    "medium": {
-      "words": ["Soccer", "Baseball", "Basketball", "Chess"],
-      "odd": "Chess",
-      "explanation": "Soccer, baseball, and basketball are physical sports; chess is a board game."
-    },
-    "hard": {
-      "words": ["Brake", "Snake", "Lake", "Bake"],
-      "odd": "Brake",
-      "explanation": "Snake, lake, and bake rhyme perfectly; brake does not."
-    }
+    "code": "E003",
+    "words": ["Banana", "Apple", "Carrot", "Orange"],
+    "odd": "Carrot",
+    "explanation": "Carrot is a vegetable; the others are fruits.",
+    "difficulty": "easy"
   },
   {
-    "easy": {
-      "words": ["Lion", "Tiger", "Bear", "Jeep"],
-      "odd": "Jeep",
-      "explanation": "Lion, tiger, and bear are animals; jeep is a vehicle."
-    },
-    "medium": {
-      "words": ["Gold", "Silver", "Bronze", "Cotton"],
-      "odd": "Cotton",
-      "explanation": "Gold, silver, and bronze are metals; cotton is fabric."
-    },
-    "hard": {
-      "words": ["Crate", "Plate", "Slate", "State"],
-      "odd": "Crate",
-      "explanation": "Plate, slate, and state rhyme; crate does not."
-    }
+    "code": "E004",
+    "words": ["Desk", "Chair", "Table", "Plate"],
+    "odd": "Plate",
+    "explanation": "Plate is not a piece of furniture.",
+    "difficulty": "easy"
   },
   {
-    "easy": {
-      "words": ["Violin", "Piano", "Guitar", "Hammer"],
-      "odd": "Hammer",
-      "explanation": "Violin, piano, and guitar are instruments; hammer is a tool."
-    },
-    "medium": {
-      "words": ["January", "March", "July", "Winter"],
-      "odd": "Winter",
-      "explanation": "January, March, and July are months; winter is a season."
-    },
-    "hard": {
-      "words": ["Panel", "Camel", "Towel", "Tunnel"],
-      "odd": "Towel",
-      "explanation": "Panel, camel, and tunnel share the 'nel'/'mel' sound; towel does not."
-    }
+    "code": "E005",
+    "words": ["Book", "Newspaper", "Magazine", "Radio"],
+    "odd": "Radio",
+    "explanation": "Radio is not read; the others are reading materials.",
+    "difficulty": "easy"
   },
   {
-    "easy": {
-      "words": ["Fork", "Spoon", "Knife", "Sock"],
-      "odd": "Sock",
-      "explanation": "Fork, spoon, and knife are cutlery; sock is clothing."
-    },
-    "medium": {
-      "words": ["Rain", "Snow", "Sun", "Stone"],
-      "odd": "Stone",
-      "explanation": "Rain, snow, and sun are weather; stone is not."
-    },
-    "hard": {
-      "words": ["Plane", "Crane", "Train", "Brain"],
-      "odd": "Brain",
-      "explanation": "Plane, crane, and train rhyme; brain does not fit."
-    }
+    "code": "E006",
+    "words": ["Run", "Jump", "Swim", "Sleep"],
+    "odd": "Sleep",
+    "explanation": "Sleep is not an active movement.",
+    "difficulty": "easy"
   },
   {
-    "easy": {
-      "words": ["Blue", "Red", "Yellow", "Chair"],
-      "odd": "Chair",
-      "explanation": "Blue, red, and yellow are colors; chair is furniture."
-    },
-    "medium": {
-      "words": ["Instagram", "Twitter", "Snapchat", "Photoshop"],
-      "odd": "Photoshop",
-      "explanation": "Instagram, Twitter, and Snapchat are social media; Photoshop is software."
-    },
-    "hard": {
-      "words": ["Fate", "Late", "Mate", "Fast"],
-      "odd": "Fast",
-      "explanation": "Fate, late, and mate rhyme; fast does not."
-    }
+    "code": "E007",
+    "words": ["Cat", "Dog", "Hamster", "Salmon"],
+    "odd": "Salmon",
+    "explanation": "Salmon is a fish; the others are mammals.",
+    "difficulty": "easy"
+  },
+  {
+    "code": "E008",
+    "words": ["Pencil", "Pen", "Crayon", "Eraser"],
+    "odd": "Eraser",
+    "explanation": "Eraser does not make marks; the others do.",
+    "difficulty": "easy"
+  },
+  {
+    "code": "E009",
+    "words": ["Square", "Circle", "Triangle", "Cube"],
+    "odd": "Cube",
+    "explanation": "Cube is 3D; the others are 2D shapes.",
+    "difficulty": "easy"
+  },
+  {
+    "code": "E010",
+    "words": ["Tea", "Coffee", "Soda", "Rice"],
+    "odd": "Rice",
+    "explanation": "Rice is food; the others are drinks.",
+    "difficulty": "easy"
+  },
+  {
+    "code": "E011",
+    "words": ["Paris", "Tokyo", "Nile", "London"],
+    "odd": "Nile",
+    "explanation": "Nile is a river; the others are cities.",
+    "difficulty": "easy"
+  },
+  {
+    "code": "E012",
+    "words": ["Email", "Letter", "Text", "Package"],
+    "odd": "Package",
+    "explanation": "Package is not a message; the others are forms of communication.",
+    "difficulty": "easy"
+  },
+  {
+    "code": "E013",
+    "words": ["Fork", "Spoon", "Knife", "Plate"],
+    "odd": "Plate",
+    "explanation": "Plate is not a utensil; the others are.",
+    "difficulty": "easy"
+  },
+  {
+    "code": "E014",
+    "words": ["Glove", "Sock", "Glasses", "Hat"],
+    "odd": "Hat",
+    "explanation": "Hat does not come as a pair; the others do.",
+    "difficulty": "easy"
+  },
+  {
+    "code": "M001",
+    "words": ["Einstein", "Newton", "Darwin", "Picasso"],
+    "odd": "Picasso",
+    "explanation": "Picasso was an artist; the others were scientists.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M002",
+    "words": ["Canada", "Portugal", "Denmark", "Germany"],
+    "odd": "Germany",
+    "explanation": "Germany has many land borders; the others have exactly one.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M003",
+    "words": ["Stressed", "Drawer", "Diaper", "Level"],
+    "odd": "Level",
+    "explanation": "Level is a palindrome; the others become different words when reversed.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M004",
+    "words": ["Saturn", "Jupiter", "Neptune", "Venus"],
+    "odd": "Venus",
+    "explanation": "Venus has no rings; the others have ring systems.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M005",
+    "words": ["Oven", "Toaster", "Kettle", "Blender"],
+    "odd": "Blender",
+    "explanation": "Blender does not use heat; the others do.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M006",
+    "words": ["Wrench", "Screwdriver", "Socket", "Chisel"],
+    "odd": "Chisel",
+    "explanation": "Chisel is a cutting tool; the others are fastener tools.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M007",
+    "words": ["Mirror", "Reflection", "Shadow", "Photograph"],
+    "odd": "Photograph",
+    "explanation": "Photograph is permanent; the others are temporary light effects.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M008",
+    "words": ["Italy", "Spain", "Brazil", "Portugal"],
+    "odd": "Brazil",
+    "explanation": "Brazil is not in Europe; the others are European countries.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M009",
+    "words": ["Flour", "Sugar", "Salt", "Yeast"],
+    "odd": "Yeast",
+    "explanation": "Yeast is a living organism; the others are not.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M010",
+    "words": ["Mercury", "Venus", "Mars", "Pluto"],
+    "odd": "Pluto",
+    "explanation": "Pluto is no longer classified as a planet; the others are.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M011",
+    "words": ["Flute", "Clarinet", "Oboe", "Saxophone"],
+    "odd": "Flute",
+    "explanation": "Flute has no reed; the others are reed woodwinds.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M012",
+    "words": ["Copper", "Silver", "Gold", "Bronze"],
+    "odd": "Bronze",
+    "explanation": "Bronze is an alloy; the others are elements.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M013",
+    "words": ["Cash", "Credit card", "Check", "Invoice"],
+    "odd": "Invoice",
+    "explanation": "Invoice is a request for payment; the others are payment methods.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "M014",
+    "words": ["Poland", "Ireland", "Finland", "Iceland"],
+    "odd": "Iceland",
+    "explanation": "Iceland is not an EU member; the others are.",
+    "difficulty": "medium"
+  },
+  {
+    "code": "H001",
+    "words": ["Nitrogen", "Oxygen", "Chlorine", "Bromine"],
+    "odd": "Bromine",
+    "explanation": "Bromine is a liquid at room temperature; the others are gases.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H002",
+    "words": ["IV", "VI", "IX", "XL"],
+    "odd": "VI",
+    "explanation": "VI is additive; the others are subtractive numeral forms.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H003",
+    "words": ["Banana", "Letter", "Pepper", "Rainbow"],
+    "odd": "Rainbow",
+    "explanation": "Rainbow is an isogram; the others have repeated letters.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H004",
+    "words": ["TUNDRA", "WAX", "VITAL", "BOTTLE"],
+    "odd": "BOTTLE",
+    "explanation": "BOTTLE contains curved letters; the others can be written with straight strokes only.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H005",
+    "words": ["Listen", "Silent", "Tinsel", "Island"],
+    "odd": "Island",
+    "explanation": "Island is not an anagram of Listen; the others are.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H006",
+    "words": ["Copper", "Iron", "Silver", "Steel"],
+    "odd": "Steel",
+    "explanation": "Steel is an alloy; the others are pure elements.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H007",
+    "words": ["Palindrome", "Anagram", "Rhyme", "Synonym"],
+    "odd": "Palindrome",
+    "explanation": "Palindrome describes a single word’s structure; the others describe word relationships.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H008",
+    "words": ["Earth", "Jupiter", "Uranus", "Neptune"],
+    "odd": "Earth",
+    "explanation": "Earth is a terrestrial planet; the others are gas/ice giants.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H009",
+    "words": ["Nepal", "Switzerland", "Japan", "Brazil"],
+    "odd": "Nepal",
+    "explanation": "Nepal’s national flag is not rectangular; the others’ are.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H010",
+    "words": ["Lesotho", "San Marino", "Vatican City", "Andorra"],
+    "odd": "Andorra",
+    "explanation": "Andorra is not an enclave; the others are enclaved countries.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H011",
+    "words": ["CIVIC", "VIVID", "MIX", "LIMIT"],
+    "odd": "LIMIT",
+    "explanation": "LIMIT includes T, which is not a Roman numeral; the others use only Roman numeral letters.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H012",
+    "words": ["Typewriter", "Repertoire", "Proprietor", "Computer"],
+    "odd": "Computer",
+    "explanation": "Computer is not typeable using a single QWERTY row; the others are typed on the top row only.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H013",
+    "words": ["Mercury", "Gallium", "Cesium", "Sodium"],
+    "odd": "Mercury",
+    "explanation": "Mercury is liquid at room temperature; the others are solid.",
+    "difficulty": "hard"
+  },
+  {
+    "code": "H014",
+    "words": ["Rhythm", "Crypt", "Lynx", "Algorithm"],
+    "odd": "Algorithm",
+    "explanation": "Algorithm contains a standard vowel; the others do not.",
+    "difficulty": "hard"
   }
 ]
