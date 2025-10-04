@@ -55,7 +55,6 @@
     padding: 10px 20px;
   }
 
-  .titleBlock { margin:0; }
   .sub { font-size:28px; font-weight:bold; margin-bottom:8px; }
   #progress { font-size:18px; opacity:0.9; }
 
@@ -267,18 +266,25 @@
   async function boot(){
     updateFooter();
     try {
-      const res = await fetch("puzzles.json");
+      const res = await fetch("./puzzles.json", { cache: "no-cache" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
       const all = await res.json();
 
-      // Use today’s seed to pick puzzle index
-      const seed = parseInt(ymd(),10);
-      const idx = seed % all.length; // wrap around
-      todaySet = all[idx];
+      // Launch date (day 0 = first puzzle)
+      const startDate = new Date("2025-10-01");
+      const today = new Date();
+      const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
 
+      if (daysSinceStart < 0 || daysSinceStart >= all.length) {
+        document.getElementById("options").innerHTML = "<p>✅ No more puzzles today. Come back tomorrow!</p>";
+        return;
+      }
+
+      todaySet = all[daysSinceStart];
       renderLevel();
     } catch(e){
-      console.error("Puzzle load error", e);
-      document.getElementById("options").innerHTML="<p>Failed to load puzzle.</p>";
+      console.error("Puzzle load error:", e);
+      document.getElementById("options").innerHTML="<p>❌ Could not load puzzles.json</p>";
     }
   }
 
