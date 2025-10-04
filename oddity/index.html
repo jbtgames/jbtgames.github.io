@@ -15,6 +15,7 @@
     --accent: #E4572E;
     --success: #22B34B;
     --error: #ef4444;
+    --share: #2C1E1E; /* new color for share button */
   }
 
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -56,12 +57,12 @@
   }
 
   .sub {
-    font-size: clamp(18px, 5vw, 28px); /* scales automatically */
+    font-size: clamp(18px, 5vw, 28px);
     font-weight: bold;
     margin-bottom: 8px;
-    white-space: nowrap;       /* never wrap */
+    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;   /* prevents breaking */
+    text-overflow: ellipsis;
   }
   #progress { font-size:18px; opacity:0.9; }
 
@@ -132,7 +133,7 @@
     display:none; margin-top:16px;
     padding:16px 20px; font-size:20px;
     border:none; border-radius:12px;
-    background:var(--accent);
+    background:var(--share); /* different color */
     color:var(--cream); cursor:pointer;
     width:80%;
     max-width:320px;
@@ -280,12 +281,17 @@
       const today = new Date();
       const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
 
-      if (daysSinceStart < 0 || daysSinceStart >= all.length) {
+      // group puzzles by difficulty from new format
+      const easy = all.filter(p=>p.difficulty==="easy")[daysSinceStart];
+      const medium = all.filter(p=>p.difficulty==="medium")[daysSinceStart];
+      const hard = all.filter(p=>p.difficulty==="hard")[daysSinceStart];
+
+      if (!easy || !medium || !hard) {
         document.getElementById("options").innerHTML = "<p>✅ No more puzzles today. Come back tomorrow!</p>";
         return;
       }
 
-      todaySet = all[daysSinceStart];
+      todaySet = { easy, medium, hard };
       renderLevel();
     } catch(e){
       console.error("Puzzle load error:", e);
