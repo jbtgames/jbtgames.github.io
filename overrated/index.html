@@ -11,103 +11,190 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header>
-      <h1>Overrated</h1>
-      <p>
-        A lovingly sarcastic tribute to the trends that dominate the gaming
-        scene. Tap on a card to discover why these fads deserve a time-out.
-      </p>
-    </header>
-
-    <main>
-      <article class="game-card">
-        <h2>Endless Battle Passes</h2>
-        <div class="game-meta">
-          <span class="meta-pill">grind fatigue</span>
-          <span>Introduced: 2017</span>
-          <span>Popularized by: Fortnite &amp; friends</span>
+    <div class="app-shell">
+      <header class="status-bar" aria-label="Device status">
+        <span class="status-time" id="status-time" aria-live="polite"></span>
+        <div class="status-icons" aria-hidden="true">
+          <span class="signal-bars" title="Signal strength"></span>
+          <span class="wifi"></span>
+          <span class="battery" title="Battery level">
+            <span class="battery-level" style="--level: 0.78"></span>
+          </span>
         </div>
+      </header>
+
+      <section class="hero" aria-labelledby="page-title">
+        <h1 id="page-title">Overrated</h1>
         <p>
-          Battle passes promised rewarding progression, but the modern reality is
-          more like a part-time job.
+          A lovingly sarcastic tribute to the trends that dominate the gaming
+          scene. Tap on a card to discover why these fads deserve a time-out.
         </p>
-        <button class="toggle" aria-expanded="false" type="button">
-          Why it's overrated
-        </button>
-        <div class="toggle-panel" id="battle-pass-panel">
-          <p>
-            The pressure to log in daily can turn a hobby into a chore.
-            Meanwhile, the rewards often feel like virtual clutter.
-          </p>
-          <ul class="reasons">
-            <li>Artificial fear-of-missing-out tactics.</li>
-            <li>Confusing currencies and tier unlocks.</li>
-            <li>Cosmetics that rarely feel worth the grind.</li>
-          </ul>
+        <div class="chip-row" role="tablist" aria-label="Filter overrated trends">
+          <button
+            class="filter-chip active"
+            type="button"
+            data-filter="all"
+            aria-pressed="true"
+            role="tab"
+          >
+            All trends
+          </button>
+          <button
+            class="filter-chip"
+            type="button"
+            data-filter="grind"
+            aria-pressed="false"
+            role="tab"
+          >
+            Grind culture
+          </button>
+          <button
+            class="filter-chip"
+            type="button"
+            data-filter="tech"
+            aria-pressed="false"
+            role="tab"
+          >
+            Tech flex
+          </button>
+          <button
+            class="filter-chip"
+            type="button"
+            data-filter="cinematic"
+            aria-pressed="false"
+            role="tab"
+          >
+            Cinematic craze
+          </button>
         </div>
-      </article>
+      </section>
 
-      <article class="game-card">
-        <h2>Ultra-Realistic Mud Physics</h2>
-        <div class="game-meta">
-          <span class="meta-pill">tech flex</span>
-          <span>Introduced: 2015</span>
-          <span>Popularized by: Racing sims</span>
-        </div>
-        <p>
-          Yes, the mud looks fantastic. No, it does not make the gameplay more
-          exciting.
-        </p>
-        <button class="toggle" aria-expanded="false" type="button">
-          Why it's overrated
-        </button>
-        <div class="toggle-panel" id="mud-physics-panel">
+      <main class="card-stack">
+        <article class="game-card" data-category="grind">
+          <header class="card-header">
+            <h2>Endless Battle Passes</h2>
+            <span class="meta-pill">grind fatigue</span>
+          </header>
+          <div class="game-meta">
+            <span>Introduced: 2017</span>
+            <span>Popularized by: Fortnite &amp; friends</span>
+          </div>
           <p>
-            When studios brag about dirt realism more than track design, maybe
-            priorities need a patch.
+            Battle passes promised rewarding progression, but the modern reality is
+            more like a part-time job.
           </p>
-          <ul class="reasons">
-            <li>The novelty wears off after the first splash.</li>
-            <li>Often masks lackluster vehicle handling.</li>
-            <li>Consumes dev time better spent on smarter AI.</li>
-          </ul>
-        </div>
-      </article>
+          <button class="toggle" aria-expanded="false" type="button">
+            Why it's overrated
+          </button>
+          <div class="toggle-panel" id="battle-pass-panel">
+            <p>
+              The pressure to log in daily can turn a hobby into a chore.
+              Meanwhile, the rewards often feel like virtual clutter.
+            </p>
+            <ul class="reasons">
+              <li>Artificial fear-of-missing-out tactics.</li>
+              <li>Confusing currencies and tier unlocks.</li>
+              <li>Cosmetics that rarely feel worth the grind.</li>
+            </ul>
+          </div>
+        </article>
 
-      <article class="game-card">
-        <h2>Non-Stop Cinematic Cutscenes</h2>
-        <div class="game-meta">
-          <span class="meta-pill">passive play</span>
-          <span>Introduced: 2001</span>
-          <span>Popularized by: Prestige action titles</span>
-        </div>
-        <p>
-          Games that forget to let you actually play them? A bold creative
-          choice, sure.
-        </p>
-        <button class="toggle" aria-expanded="false" type="button">
-          Why it's overrated
-        </button>
-        <div class="toggle-panel" id="cutscene-panel">
+        <article class="game-card" data-category="tech">
+          <header class="card-header">
+            <h2>Ultra-Realistic Mud Physics</h2>
+            <span class="meta-pill">tech flex</span>
+          </header>
+          <div class="game-meta">
+            <span>Introduced: 2015</span>
+            <span>Popularized by: Racing sims</span>
+          </div>
           <p>
-            Storytelling is great, but skipping 12-minute cutscenes to get back
-            to the action should not feel like a crime.
+            Yes, the mud looks fantastic. No, it does not make the gameplay more
+            exciting.
           </p>
-          <ul class="reasons">
-            <li>Breaks the pacing and immersion.</li>
-            <li>Disrespects player agency.</li>
-            <li>Unskippable scenes are the real boss fights.</li>
-          </ul>
-        </div>
-      </article>
-    </main>
+          <button class="toggle" aria-expanded="false" type="button">
+            Why it's overrated
+          </button>
+          <div class="toggle-panel" id="mud-physics-panel">
+            <p>
+              When studios brag about dirt realism more than track design, maybe
+              priorities need a patch.
+            </p>
+            <ul class="reasons">
+              <li>The novelty wears off after the first splash.</li>
+              <li>Often masks lackluster vehicle handling.</li>
+              <li>Consumes dev time better spent on smarter AI.</li>
+            </ul>
+          </div>
+        </article>
 
-    <footer>
-      <p>
-        Built with playful bias by the JBT Games crew. Share your own overrated
-        trends and let's commiserate.
-      </p>
-    </footer>
+        <article class="game-card" data-category="cinematic">
+          <header class="card-header">
+            <h2>Non-Stop Cinematic Cutscenes</h2>
+            <span class="meta-pill">passive play</span>
+          </header>
+          <div class="game-meta">
+            <span>Introduced: 2001</span>
+            <span>Popularized by: Prestige action titles</span>
+          </div>
+          <p>
+            Games that forget to let you actually play them? A bold creative
+            choice, sure.
+          </p>
+          <button class="toggle" aria-expanded="false" type="button">
+            Why it's overrated
+          </button>
+          <div class="toggle-panel" id="cutscene-panel">
+            <p>
+              Storytelling is great, but skipping 12-minute cutscenes to get back
+              to the action should not feel like a crime.
+            </p>
+            <ul class="reasons">
+              <li>Breaks the pacing and immersion.</li>
+              <li>Disrespects player agency.</li>
+              <li>Unskippable scenes are the real boss fights.</li>
+            </ul>
+          </div>
+        </article>
+
+        <section
+          class="pulse-card"
+          data-meter-value="72"
+          aria-label="Community pulse on overrated trends"
+        >
+          <div class="pulse-header">
+            <h2>Community Pulse</h2>
+            <span class="pulse-value" aria-hidden="true">72%</span>
+          </div>
+          <p>
+            Players who say battle passes feel like chores rather than rewards
+            this week.
+          </p>
+          <div class="pulse-meter" role="img" aria-label="72 percent sentiment">
+            <span class="meter-fill"></span>
+          </div>
+        </section>
+      </main>
+
+      <nav class="app-nav" aria-label="Trend shortcuts">
+        <button class="nav-btn active" type="button" data-filter="all">
+          <span class="nav-icon" aria-hidden="true">🔥</span>
+          <span class="nav-label">Discover</span>
+        </button>
+        <button class="nav-btn" type="button" data-filter="grind">
+          <span class="nav-icon" aria-hidden="true">⏳</span>
+          <span class="nav-label">Grind</span>
+        </button>
+        <button class="nav-btn" type="button" data-filter="tech">
+          <span class="nav-icon" aria-hidden="true">🛠️</span>
+          <span class="nav-label">Tech</span>
+        </button>
+        <button class="nav-btn" type="button" data-action="share">
+          <span class="nav-icon" aria-hidden="true">📤</span>
+          <span class="nav-label">Share</span>
+        </button>
+      </nav>
+    </div>
 
     <script src="script.js"></script>
   </body>
