@@ -1,0 +1,256 @@
+{
+  "days": [
+    {
+      "footer": "Critic and audience scores pulled from Rotten Tomatoes snapshots (Jan 2024).",
+      "easy": {
+        "prompt": "Which blockbuster had the widest gap where critics cheered but audiences booed?",
+        "items": [
+          {"title": "Star Wars: The Last Jedi", "critics": 91, "audience": 42, "note": "2017, dir. Rian Johnson"},
+          {"title": "Mulan (2020)", "critics": 73, "audience": 47, "note": "Live-action remake"},
+          {"title": "The Irishman", "critics": 95, "audience": 86, "note": "Scorsese's Netflix epic"},
+          {"title": "The Shape of Water", "critics": 92, "audience": 72, "note": "Best Picture winner"}
+        ],
+        "answer": "Star Wars: The Last Jedi",
+        "explanation": "Critics scored The Last Jedi at 91% while audiences sat at 42% — a 49-point gulf." 
+      },
+      "medium": {
+        "prompt": "Prestige streamers galore. Which film kept critics far ahead of viewers?",
+        "items": [
+          {"title": "The Power of the Dog", "critics": 94, "audience": 76, "note": "Jane Campion's western slow-burn"},
+          {"title": "Nomadland", "critics": 93, "audience": 81, "note": "Oscars 2021 champion"},
+          {"title": "Roma", "critics": 96, "audience": 85, "note": "Cuarón's black-and-white opus"},
+          {"title": "Green Book", "critics": 77, "audience": 86, "note": "Crowd-pleaser surprise winner"}
+        ],
+        "answer": "The Power of the Dog",
+        "explanation": "The Power of the Dog sits at 94% with critics versus 76% with audiences — an 18-point edge." 
+      },
+      "hard": {
+        "prompt": "Awards darlings collide. Which one lost fans fastest?",
+        "items": [
+          {"title": "Birdman", "critics": 91, "audience": 78, "note": "2015 Best Picture"},
+          {"title": "La La Land", "critics": 91, "audience": 81, "note": "City of stars"},
+          {"title": "The Fabelmans", "critics": 92, "audience": 82, "note": "Spielberg's memoir"},
+          {"title": "Her", "critics": 94, "audience": 82, "note": "Spike Jonze future romance"}
+        ],
+        "answer": "Birdman",
+        "explanation": "Birdman holds a 91% critics score against a 78% audience score — a 13-point slide." 
+      }
+    },
+    {
+      "footer": "Critic and audience scores pulled from Rotten Tomatoes snapshots (Jan 2024).",
+      "easy": {
+        "prompt": "Festival favorites. Which eerie indie spooked audiences far less than critics?",
+        "items": [
+          {"title": "The Witch", "critics": 90, "audience": 59, "note": "Folk horror breakout"},
+          {"title": "Lady Bird", "critics": 99, "audience": 79, "note": "Gerwig's coming-of-age"},
+          {"title": "Call Me By Your Name", "critics": 94, "audience": 86, "note": "Sun-drenched romance"},
+          {"title": "Moonlight", "critics": 98, "audience": 79, "note": "Best Picture 2016"}
+        ],
+        "answer": "The Witch",
+        "explanation": "The Witch boasts a 90% critics score but only 59% from audiences — a 31-point split." 
+      },
+      "medium": {
+        "prompt": "Awards circuit obsessions. Which one is the biggest critic darling?",
+        "items": [
+          {"title": "The Favourite", "critics": 93, "audience": 61, "note": "Period satire"},
+          {"title": "Licorice Pizza", "critics": 91, "audience": 62, "note": "PTA's San Fernando hangout"},
+          {"title": "The Lighthouse", "critics": 90, "audience": 72, "note": "Two men and a lighthouse"},
+          {"title": "Tár", "critics": 90, "audience": 73, "note": "Cate Blanchett conducts chaos"}
+        ],
+        "answer": "The Favourite",
+        "explanation": "The Favourite sits 32 points higher with critics (93%) than with audiences (61%)." 
+      },
+      "hard": {
+        "prompt": "Auteur fever dreams. Which film's praise-to-popcorn gap is widest?",
+        "items": [
+          {"title": "First Reformed", "critics": 93, "audience": 68, "note": "Schrader's crisis of faith"},
+          {"title": "Phantom Thread", "critics": 91, "audience": 71, "note": "Fashion and obsession"},
+          {"title": "Hereditary", "critics": 90, "audience": 68, "note": "Ari Aster terror"},
+          {"title": "Annihilation", "critics": 88, "audience": 66, "note": "Cosmic shimmer"}
+        ],
+        "answer": "First Reformed",
+        "explanation": "First Reformed keeps critics at 93% while audiences linger at 68% — a 25-point chasm." 
+      }
+    },
+    {
+      "footer": "Critic and audience scores pulled from Rotten Tomatoes snapshots (Jan 2024).",
+      "easy": {
+        "prompt": "Horror that divided sleepovers. Which title suffered the sharpest audience drop?",
+        "items": [
+          {"title": "It Comes at Night", "critics": 88, "audience": 44, "note": "Post-apocalyptic paranoia"},
+          {"title": "The Babadook", "critics": 95, "audience": 72, "note": "Monster in the closet"},
+          {"title": "The Blair Witch Project", "critics": 86, "audience": 56, "note": "Found-footage phenomenon"},
+          {"title": "Us", "critics": 93, "audience": 60, "note": "Jordan Peele's doppelgängers"}
+        ],
+        "answer": "It Comes at Night",
+        "explanation": "It Comes at Night drops from 88% with critics to 44% with audiences — a 44-point fall." 
+      },
+      "medium": {
+        "prompt": "Which supernatural scare kept critics 30+ points ahead of viewers?",
+        "items": [
+          {"title": "It Follows", "critics": 95, "audience": 62, "note": "Relentless urban legend"},
+          {"title": "The Ring", "critics": 71, "audience": 48, "note": "Seven days of fear"},
+          {"title": "Paranormal Activity 3", "critics": 66, "audience": 59, "note": "Third-night terrors"},
+          {"title": "Insidious", "critics": 66, "audience": 62, "note": "Astral projection chills"}
+        ],
+        "answer": "It Follows",
+        "explanation": "It Follows holds a 95% critics score against a 62% audience score — a 33-point spread." 
+      },
+      "hard": {
+        "prompt": "Cult horror picks. Which release left general audiences the coldest?",
+        "items": [
+          {"title": "The Endless", "critics": 92, "audience": 67, "note": "UFO cult mystery"},
+          {"title": "A Cure for Wellness", "critics": 43, "audience": 24, "note": "Gothic spa nightmare"},
+          {"title": "The Invitation", "critics": 89, "audience": 70, "note": "Dinner party dread"},
+          {"title": "The Others", "critics": 84, "audience": 77, "note": "Victorian ghost tale"}
+        ],
+        "answer": "The Endless",
+        "explanation": "The Endless keeps critics at 92% while audiences linger at 67% — a 25-point difference." 
+      }
+    },
+    {
+      "footer": "Critic and audience scores pulled from Rotten Tomatoes snapshots (Jan 2024).",
+      "easy": {
+        "prompt": "Spacey sci-fi. Which cerebral trip did mainstream audiences resist most?",
+        "items": [
+          {"title": "High Life", "critics": 82, "audience": 41, "note": "Claire Denis goes cosmic"},
+          {"title": "Ad Astra", "critics": 83, "audience": 72, "note": "Brad Pitt deep space odyssey"},
+          {"title": "Arrival", "critics": 94, "audience": 82, "note": "Linguistics vs aliens"},
+          {"title": "Ex Machina", "critics": 92, "audience": 86, "note": "AI house arrest"}
+        ],
+        "answer": "High Life",
+        "explanation": "High Life charts an 82% critics score but just 41% with audiences — a 41-point plunge." 
+      },
+      "medium": {
+        "prompt": "Mind-bending visions. Which release left critics 20+ points ahead?",
+        "items": [
+          {"title": "Annihilation", "critics": 88, "audience": 66, "note": "Shimmering annihilation"},
+          {"title": "Blade Runner 2049", "critics": 88, "audience": 81, "note": "Synthwave noir"},
+          {"title": "Tenet", "critics": 69, "audience": 76, "note": "Time inversion chaos"},
+          {"title": "The Matrix Resurrections", "critics": 63, "audience": 63, "note": "Meta reboot"}
+        ],
+        "answer": "Annihilation",
+        "explanation": "Annihilation posts 88% with critics versus 66% with viewers — a 22-point spread." 
+      },
+      "hard": {
+        "prompt": "Sci-fi canon. Which classic still reads as most overrated to audiences?",
+        "items": [
+          {"title": "Her", "critics": 94, "audience": 82, "note": "AI relationship"},
+          {"title": "2001: A Space Odyssey", "critics": 92, "audience": 89, "note": "Kubrick monolith"},
+          {"title": "Solaris (1972)", "critics": 96, "audience": 90, "note": "Tarkovsky's meditation"},
+          {"title": "Brazil", "critics": 98, "audience": 90, "note": "Gilliam's dystopia"}
+        ],
+        "answer": "Her",
+        "explanation": "Her sits at 94% with critics but 82% with audiences — a 12-point gap, the widest here." 
+      }
+    },
+    {
+      "footer": "Critic and audience scores pulled from Rotten Tomatoes snapshots (Jan 2024).",
+      "easy": {
+        "prompt": "Awards season 2022. Which nominee left general audiences the coldest?",
+        "items": [
+          {"title": "The Banshees of Inisherin", "critics": 96, "audience": 76, "note": "Feckin' feud"},
+          {"title": "Top Gun: Maverick", "critics": 96, "audience": 99, "note": "Mach 10 crowd-pleaser"},
+          {"title": "Avatar: The Way of Water", "critics": 78, "audience": 92, "note": "Pandora's sequel"},
+          {"title": "Elvis", "critics": 77, "audience": 94, "note": "Baz Luhrmann biopic"}
+        ],
+        "answer": "The Banshees of Inisherin",
+        "explanation": "The Banshees of Inisherin lands at 96% with critics yet 76% with viewers — a 20-point gap." 
+      },
+      "medium": {
+        "prompt": "Which awards contender kept critics a solid 15+ points ahead?",
+        "items": [
+          {"title": "Tár", "critics": 90, "audience": 73, "note": "Symphonic scandal"},
+          {"title": "Women Talking", "critics": 90, "audience": 80, "note": "Barn-raising debate"},
+          {"title": "Triangle of Sadness", "critics": 72, "audience": 69, "note": "Yacht satire"},
+          {"title": "The Whale", "critics": 64, "audience": 91, "note": "Fraser's comeback"}
+        ],
+        "answer": "Tár",
+        "explanation": "Tár carries a 17-point split: 90% critics vs 73% audience." 
+      },
+      "hard": {
+        "prompt": "Cannes faves. Which slow burn has the steepest approval drop?",
+        "items": [
+          {"title": "Aftersun", "critics": 96, "audience": 81, "note": "Father-daughter memory"},
+          {"title": "All Quiet on the Western Front", "critics": 90, "audience": 90, "note": "Oscar-winning remake"},
+          {"title": "The Fabelmans", "critics": 92, "audience": 82, "note": "Spielberg's memoir"},
+          {"title": "Living", "critics": 96, "audience": 86, "note": "Kazuo Ishiguro adaptation"}
+        ],
+        "answer": "Aftersun",
+        "explanation": "Aftersun holds critics at 96% against audiences at 81% — a 15-point difference." 
+      }
+    },
+    {
+      "footer": "Critic and audience scores pulled from Rotten Tomatoes snapshots (Jan 2024).",
+      "easy": {
+        "prompt": "Heist and thriller fare. Which title screamed \"overrated\" to viewers?",
+        "items": [
+          {"title": "Widows", "critics": 91, "audience": 60, "note": "Steve McQueen's Chicago caper"},
+          {"title": "Nightcrawler", "critics": 95, "audience": 85, "note": "News stringer nightmare"},
+          {"title": "Sicario", "critics": 92, "audience": 85, "note": "Borderland tension"},
+          {"title": "Se7en", "critics": 82, "audience": 95, "note": "What's in the box?"}
+        ],
+        "answer": "Widows",
+        "explanation": "Widows plunges from 91% with critics to 60% with audiences — a 31-point swing." 
+      },
+      "medium": {
+        "prompt": "Modern war dramas. Which one kept critics a baker's dozen ahead?",
+        "items": [
+          {"title": "The Hurt Locker", "critics": 97, "audience": 84, "note": "Bomb squad intensity"},
+          {"title": "Zero Dark Thirty", "critics": 91, "audience": 80, "note": "Bin Laden manhunt"},
+          {"title": "Argo", "critics": 96, "audience": 90, "note": "Hollywood rescue"},
+          {"title": "Captain Phillips", "critics": 93, "audience": 89, "note": "Somali pirate standoff"}
+        ],
+        "answer": "The Hurt Locker",
+        "explanation": "The Hurt Locker posts 97% with critics and 84% with audiences — a 13-point cushion." 
+      },
+      "hard": {
+        "prompt": "Spycraft sequels. Which entry saw the biggest enthusiasm drop?",
+        "items": [
+          {"title": "Sicario: Day of the Soldado", "critics": 62, "audience": 47, "note": "Cartel escalation"},
+          {"title": "Bridge of Spies", "critics": 91, "audience": 87, "note": "Spielberg spy swap"},
+          {"title": "Tinker Tailor Soldier Spy", "critics": 83, "audience": 79, "note": "Le Carré labyrinth"},
+          {"title": "The Constant Gardener", "critics": 83, "audience": 80, "note": "Corporate conspiracy"}
+        ],
+        "answer": "Sicario: Day of the Soldado",
+        "explanation": "Sicario: Day of the Soldado slips 15 points from critics (62%) to audiences (47%)." 
+      }
+    },
+    {
+      "footer": "Critic and audience scores pulled from Rotten Tomatoes snapshots (Jan 2024).",
+      "easy": {
+        "prompt": "Animated crowd-pleasers. Which release baffled family audiences most?",
+        "items": [
+          {"title": "Turning Red", "critics": 95, "audience": 72, "note": "Teen panda pandemonium"},
+          {"title": "Soul", "critics": 95, "audience": 88, "note": "Existential jazz"},
+          {"title": "Encanto", "critics": 91, "audience": 93, "note": "Casita con encanto"},
+          {"title": "Luca", "critics": 91, "audience": 86, "note": "Italian summer"}
+        ],
+        "answer": "Turning Red",
+        "explanation": "Turning Red stays at 95% with critics but only 72% with audiences — a 23-point gap." 
+      },
+      "medium": {
+        "prompt": "Which Pixar outing kept critics a dozen points ahead?",
+        "items": [
+          {"title": "The Good Dinosaur", "critics": 76, "audience": 65, "note": "Prehistoric road trip"},
+          {"title": "Onward", "critics": 88, "audience": 95, "note": "Brothers on a quest"},
+          {"title": "Brave", "critics": 78, "audience": 75, "note": "Merida's stand"},
+          {"title": "Finding Dory", "critics": 94, "audience": 88, "note": "Ocean reunion"}
+        ],
+        "answer": "The Good Dinosaur",
+        "explanation": "The Good Dinosaur holds a modest 76% with critics versus 65% with audiences — an 11-point lead." 
+      },
+      "hard": {
+        "prompt": "Pixar classics showdown. Which one loses audiences by the widest margin?",
+        "items": [
+          {"title": "Ratatouille", "critics": 96, "audience": 87, "note": "Parisian kitchen dream"},
+          {"title": "WALL·E", "critics": 95, "audience": 90, "note": "Lonely robot love story"},
+          {"title": "Up", "critics": 98, "audience": 90, "note": "Adventure is out there"},
+          {"title": "Toy Story 4", "critics": 97, "audience": 94, "note": "Forky's existential crisis"}
+        ],
+        "answer": "Ratatouille",
+        "explanation": "Ratatouille keeps critics at 96% while audiences sit at 87% — a 9-point difference." 
+      }
+    }
+  ]
+}
