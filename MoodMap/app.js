@@ -27,7 +27,14 @@ const logButton = document.getElementById("logMoodButton");
 const modal = document.getElementById("moodModal");
 const streakCount = document.getElementById("streakCount");
 const gridMonth = document.getElementById("gridMonth");
+const previousMonthButton = document.getElementById("previousMonth");
+const nextMonthButton = document.getElementById("nextMonth");
 const currentDateLabel = document.getElementById("currentDate");
+
+let currentViewDate = (() => {
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), 1);
+})();
 
 function formatDate(date) {
   return new Intl.DateTimeFormat("en-US", {
@@ -119,9 +126,10 @@ function logMood(color) {
 
 function renderGrid() {
   const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const viewDate = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1);
+  const firstDay = new Date(viewDate);
   const startOffset = firstDay.getDay();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
   const data = getMockData();
   const todayISO = getISODate(now);
   const dataMap = new Map(data.map((item) => [item.date, item.color]));
@@ -142,7 +150,7 @@ function renderGrid() {
     const dayNumber = cellIndex - startOffset + 1;
 
     if (dayNumber > 0 && dayNumber <= daysInMonth) {
-      const date = new Date(now.getFullYear(), now.getMonth(), dayNumber);
+      const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), dayNumber);
       const isoDate = getISODate(date);
       const color = dataMap.get(isoDate);
 
@@ -176,9 +184,20 @@ function renderGrid() {
     gridElement.appendChild(cell);
   }
 
-  streakCount.textContent = `${calculateStreak(data, now)} day${calculateStreak(data, now) === 1 ? "" : "s"}`;
-  gridMonth.textContent = formatMonth(now);
+  const streakValue = calculateStreak(data, now);
+  streakCount.textContent = `${streakValue} day${streakValue === 1 ? "" : "s"}`;
+  gridMonth.textContent = formatMonth(viewDate);
   currentDateLabel.textContent = formatDate(now);
+
+  const isCurrentMonth =
+    viewDate.getFullYear() === now.getFullYear() && viewDate.getMonth() === now.getMonth();
+
+  nextMonthButton.disabled = isCurrentMonth;
+}
+
+function changeMonth(offset) {
+  currentViewDate = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + offset, 1);
+  renderGrid();
 }
 
 logButton.addEventListener("click", () => {
@@ -193,6 +212,16 @@ logButton.addEventListener("click", () => {
 modal.addEventListener("cancel", (event) => {
   event.preventDefault();
   modal.close();
+});
+
+previousMonthButton.addEventListener("click", () => {
+  changeMonth(-1);
+});
+
+nextMonthButton.addEventListener("click", () => {
+  if (!nextMonthButton.disabled) {
+    changeMonth(1);
+  }
 });
 
 hydrateLegend();

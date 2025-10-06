@@ -27,7 +27,11 @@
 
     <main class="app__main" aria-live="polite">
       <section class="grid" aria-label="Mood grid for current month">
-        <div class="grid__header" id="gridMonth">March 2024</div>
+        <div class="grid__header">
+          <button class="grid__nav-button" id="previousMonth" type="button" aria-label="View previous month">◀</button>
+          <div class="grid__header-month" id="gridMonth">March 2024</div>
+          <button class="grid__nav-button" id="nextMonth" type="button" aria-label="View next month">▶</button>
+        </div>
         <div class="grid__weekdays">
           <span>Sun</span>
           <span>Mon</span>
