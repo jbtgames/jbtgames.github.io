@@ -139,7 +139,11 @@
         <button type="submit" class="modal__close" aria-label="Close">×</button>
       </header>
       <div class="modal__body">
+        <p class="modal__subtitle" id="modalSubtitle">Tap a mood to log it.</p>
         <ul class="palette" id="palette"></ul>
+        <div class="modal__actions">
+          <button type="button" class="button button--ghost modal__clear" id="clearMoodButton" disabled>Clear mood for this day</button>
+        </div>
       </div>
     </form>
   </dialog>
