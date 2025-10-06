@@ -10,7 +10,56 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div class="app">
+  <div class="auth" id="authPanel" aria-labelledby="authTitle">
+    <div class="auth__card" role="dialog" aria-modal="true">
+      <div class="auth__header">
+        <h2 class="auth__title" id="authTitle">Unlock your MoodMap</h2>
+        <p class="auth__subtitle" id="authSubtitle">Pick the three-mood combo you chose when you signed up.</p>
+      </div>
+
+      <form class="auth__form" id="signInForm" autocomplete="off">
+        <label class="auth__label" for="signInUsername">Username</label>
+        <input class="auth__input" id="signInUsername" name="username" type="text" required autocomplete="username" placeholder="alex" />
+
+        <div class="auth__combo" id="signInCombo" aria-live="polite"></div>
+        <div class="auth__pad" id="signInPad" aria-label="Mood keypad"></div>
+
+        <div class="auth__controls">
+          <button type="button" class="auth__reset" data-reset-combo="signIn">Clear combo</button>
+        </div>
+
+        <p class="auth__message" id="signInMessage" role="status" aria-live="polite"></p>
+
+        <div class="auth__actions">
+          <button type="submit" class="button button--primary">Sign in</button>
+          <button type="button" class="button button--ghost" id="switchToCreate">Create account</button>
+        </div>
+      </form>
+
+      <form class="auth__form auth__form--hidden" id="createForm" autocomplete="off">
+        <label class="auth__label" for="createUsername">Choose a username</label>
+        <input class="auth__input" id="createUsername" name="new-username" type="text" required autocomplete="off" placeholder="moonbeam" />
+
+        <p class="auth__hint">Tap three moods in order to set your secret pass-sequence.</p>
+
+        <div class="auth__combo" id="createCombo" aria-live="polite"></div>
+        <div class="auth__pad" id="createPad" aria-label="Mood keypad"></div>
+
+        <div class="auth__controls">
+          <button type="button" class="auth__reset" data-reset-combo="create">Clear combo</button>
+        </div>
+
+        <p class="auth__message" id="createMessage" role="status" aria-live="polite"></p>
+
+        <div class="auth__actions">
+          <button type="submit" class="button button--primary">Create account</button>
+          <button type="button" class="button button--ghost" id="switchToSignIn">Back to sign in</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="app app--hidden">
     <header class="app__header">
       <div class="app__branding">
         <h1 class="app__title">MoodMap <span aria-hidden="true">🌈</span></h1>
@@ -22,6 +71,7 @@
           <span class="status-card__value" id="streakCount">0 days</span>
         </div>
         <button class="button button--primary" id="logMoodButton" type="button">Log Mood</button>
+        <button class="button button--ghost" id="signOutButton" type="button">Sign out</button>
       </div>
     </header>
 
