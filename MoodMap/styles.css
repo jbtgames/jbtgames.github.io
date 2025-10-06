@@ -127,9 +127,46 @@ body {
 }
 
 .grid__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.grid__header-month {
   font-size: 1.2rem;
   font-weight: 600;
   text-align: center;
+  flex: 1;
+}
+
+.grid__nav-button {
+  border: none;
+  background: #f1f5f9;
+  color: var(--color-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 150ms ease, box-shadow 150ms ease, color 150ms ease;
+}
+
+.grid__nav-button:hover,
+.grid__nav-button:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(31, 42, 55, 0.12);
+  color: var(--color-text);
+}
+
+.grid__nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .grid__weekdays {
