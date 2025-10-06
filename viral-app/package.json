@@ -1,0 +1,16 @@
+{
+  "name": "social-spark",
+  "version": "0.1.0",
+  "description": "Social Spark — a viral-ready social MVP built with Firebase and vanilla JS",
+  "private": true,
+  "scripts": {
+    "start": "npx serve .",
+    "deploy": "npx firebase deploy --only hosting,functions"
+  },
+  "dependencies": {
+    "firebase": "^10.7.1"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
