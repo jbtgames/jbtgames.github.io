@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SocialSquare</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">SocialSquare</div>
+      <nav class="menu">
+        <button class="menu-item active" data-section="feed">Home</button>
+        <button class="menu-item" data-section="messages">Messages</button>
+        <button class="menu-item" data-section="trending">Trending</button>
+        <button class="menu-item" data-section="profile">Profile</button>
+      </nav>
+      <div class="user-card">
+        <img src="https://avatars.dicebear.com/api/initials/SocialSquare.svg" alt="User avatar" />
+        <div>
+          <p class="user-name">Alex Rivers</p>
+          <p class="user-handle">@arivers</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="main-header">
+        <h1>Welcome back, Alex</h1>
+        <p>Share a moment, react to friends, and see what's trending.</p>
+      </header>
+
+      <section class="composer" aria-label="Create a post">
+        <form id="postForm">
+          <textarea id="postContent" placeholder="What's on your mind today?" rows="3" required></textarea>
+          <div class="composer-actions">
+            <div class="composer-meta">
+              <label>
+                <input type="file" id="mediaUpload" accept="image/*" />
+                <span>📷 Add photo</span>
+              </label>
+            </div>
+            <button type="submit" class="primary">Share</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="tabs" role="tablist">
+        <button class="tab active" data-tab="for-you">For you</button>
+        <button class="tab" data-tab="following">Following</button>
+        <button class="tab" data-tab="bookmarked">Bookmarked</button>
+      </section>
+
+      <section id="feed" class="feed" aria-live="polite"></section>
+
+      <section id="messages" class="panel hidden" aria-live="polite">
+        <h2>Messages</h2>
+        <div class="message-card">
+          <div class="message-card__header">
+            <img src="https://avatars.dicebear.com/api/initials/JD.svg" alt="Avatar" />
+            <div>
+              <p class="user-name">Jamie Doe</p>
+              <p class="timestamp">2h ago</p>
+            </div>
+          </div>
+          <p>Hey Alex! Loved your last post about the design sprint. Let's catch up this week?</p>
+          <div class="message-card__actions">
+            <button class="secondary">Reply</button>
+            <button class="ghost">Mark as read</button>
+          </div>
+        </div>
+        <div class="message-empty">No new messages right now. Send a hello to your friends!</div>
+      </section>
+
+      <section id="trending" class="panel hidden" aria-live="polite">
+        <h2>Trending Topics</h2>
+        <ul class="trending-list">
+          <li>
+            <span>#DesignSystems</span>
+            <span class="trend-count">12k posts</span>
+          </li>
+          <li>
+            <span>#CoffeeChat</span>
+            <span class="trend-count">8.9k posts</span>
+          </li>
+          <li>
+            <span>#ProductLaunch</span>
+            <span class="trend-count">5.3k posts</span>
+          </li>
+          <li>
+            <span>#CityWalks</span>
+            <span class="trend-count">2.1k posts</span>
+          </li>
+        </ul>
+      </section>
+
+      <section id="profile" class="panel hidden" aria-live="polite">
+        <h2>Your Profile</h2>
+        <div class="profile-card">
+          <img src="https://avatars.dicebear.com/api/initials/AR.svg" alt="Profile avatar" />
+          <div>
+            <p class="user-name">Alex Rivers</p>
+            <p class="user-handle">@arivers</p>
+            <p class="bio">Product designer exploring playful experiences. Amateur photographer and tea enthusiast.</p>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div>
+            <span class="stat-value" id="stat-posts">0</span>
+            <span class="stat-label">Posts</span>
+          </div>
+          <div>
+            <span class="stat-value">1,204</span>
+            <span class="stat-label">Followers</span>
+          </div>
+          <div>
+            <span class="stat-value">536</span>
+            <span class="stat-label">Following</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="rightbar">
+      <div class="widget search-widget">
+        <input type="search" id="search" placeholder="Search SocialSquare" />
+      </div>
+
+      <div class="widget suggestions">
+        <h3>Who to follow</h3>
+        <div class="suggestion">
+          <img src="https://avatars.dicebear.com/api/initials/LN.svg" alt="Lena" />
+          <div>
+            <p class="user-name">Lena Nguyen</p>
+            <p class="user-handle">@lena.designs</p>
+          </div>
+          <button class="secondary">Follow</button>
+        </div>
+        <div class="suggestion">
+          <img src="https://avatars.dicebear.com/api/initials/MC.svg" alt="Marcus" />
+          <div>
+            <p class="user-name">Marcus Clark</p>
+            <p class="user-handle">@marcus.codes</p>
+          </div>
+          <button class="secondary">Follow</button>
+        </div>
+        <div class="suggestion">
+          <img src="https://avatars.dicebear.com/api/initials/SM.svg" alt="Sara" />
+          <div>
+            <p class="user-name">Sara Malik</p>
+            <p class="user-handle">@saramalik</p>
+          </div>
+          <button class="secondary">Follow</button>
+        </div>
+      </div>
+
+      <div class="widget activity">
+        <h3>Latest Activity</h3>
+        <ul>
+          <li><strong>Jamie</strong> liked your post “Morning light ✨”</li>
+          <li><strong>Taylor</strong> started following you</li>
+          <li><strong>Avery</strong> added a new collection “Urban exploration”</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <template id="postTemplate">
+    <article class="post" aria-live="polite">
+      <header class="post-header">
+        <img class="post-avatar" alt="" />
+        <div>
+          <div class="post-user">
+            <span class="user-name"></span>
+            <span class="user-handle"></span>
+          </div>
+          <time class="timestamp"></time>
+        </div>
+        <button class="ghost post-menu" aria-label="More options">⋯</button>
+      </header>
+      <p class="post-content"></p>
+      <img class="post-media hidden" alt="Attached media" />
+      <footer class="post-footer">
+        <button class="ghost like-button">❤️ <span>0</span></button>
+        <button class="ghost comment-toggle">💬 <span>0</span></button>
+        <button class="ghost bookmark-button">🔖</button>
+      </footer>
+      <section class="comments hidden" aria-label="Comments">
+        <div class="comments-list"></div>
+        <form class="comment-form">
+          <input type="text" name="comment" placeholder="Add a comment" required />
+          <button type="submit" class="secondary">Post</button>
+        </form>
+      </section>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
