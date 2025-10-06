@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Pixel Colonies — Draft</title>
+<style>
+  :root{
+    /* JBTgames palette (nice on mobile) */
+    --cream:#F4EBD0; --ink:#2C1E1E; --taupe:#9C8C7A; --orange:#E4572E; --green:#22B34B; --teal:#008C8C;
+  }
+  html,body{height:100%;margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .app{display:flex;flex-direction:column;height:100dvh;max-width:900px;margin:0 auto}
+  header, footer{background:var(--green);color:white;padding:10px 12px}
+  header{display:flex;align-items:center;gap:10px;justify-content:space-between;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+  .brand{font-weight:700;letter-spacing:.2px}
+  .res{display:flex;gap:10px;font-weight:600}
+  .res span{background:rgba(255,255,255,.15);padding:4px 8px;border-radius:10px;font-size:13px}
+  .hud{display:flex;gap:8px}
+  .hud button{border:0;border-radius:12px;padding:8px 12px;background:white;color:var(--ink);font-weight:700}
+  #game{flex:1;display:grid;grid-template-rows:auto 1fr auto;gap:8px;padding:10px}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--taupe)}
+  .legend .k{display:flex;align-items:center;gap:6px}
+  .dot{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.2)}
+  .canvas-wrap{position:relative;display:flex;justify-content:center;align-items:center}
+  canvas{touch-action:none;background:#ffffff;border:2px solid var(--ink);border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+  .tooltip{position:absolute;pointer-events:none;background:#111;color:#fff;font-size:12px;padding:6px 8px;border-radius:8px;opacity:0;transform:translate(-50%,-140%);white-space:nowrap}
+  .toolbar{display:flex;gap:8px;justify-content:center}
+  .toolbar button{padding:10px 14px;border-radius:14px;border:1px solid var(--ink);background:var(--orange);color:white;font-weight:800}
+  .toolbar button.secondary{background:var(--teal)}
+  .toolbar button.ghost{background:white;color:var(--ink)}
+  dialog{border:0;border-radius:16px;padding:0;max-width:420px;width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .dlg-h{background:var(--teal);color:#fff;padding:12px 16px;border-radius:16px 16px 0 0;font-weight:800}
+  .dlg-b{padding:14px 16px}
+  .upg-list{display:grid;gap:8px}
+  .upg{border:1px solid #ddd;border-radius:12px;padding:10px}
+  .upg h4{margin:0 0 2px 0}
+  .upg small{color:var(--taupe)}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .upg button{background:var(--green);color:white;border:0;border-radius:10px;padding:8px 12px;font-weight:800}
+  footer{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">Pixel Colonies</div>
+    <div class="res" id="resbar">
+      <span>🍞 <b id="food">0</b></span>
+      <span>🪵 <b id="wood">0</b></span>
+      <span>⛰️ <b id="ore">0</b></span>
+      <span>⭐ <b id="inf">0</b></span>
+      <span>⏱️ <b id="turn">1</b></span>
+    </div>
+    <div class="hud">
+      <button id="btnUpgrades" title="Choose an upgrade">Upgrades</button>
+      <button id="btnReset" class="ghost" title="Restart daily map">Reset</button>
+    </div>
+  </header>
+
+  <main id="game">
+    <div class="legend" id="legend">
+      <div class="k"><span class="dot" style="background:#9bd18b"></span>Forest (Wood)</div>
+      <div class="k"><span class="dot" style="background:#8ec5ff"></span>River (Food)</div>
+      <div class="k"><span class="dot" style="background:#c9c9c9"></span>Mountain (Ore)</div>
+      <div class="k"><span class="dot" style="background:#f5d48a"></span>Desert (—)</div>
+      <div class="k"><span class="dot" style="background:#ff8e8e"></span>City (Influence)</div>
+      <div class="k"><span class="dot" style="background:#e8e8e8"></span>Fog (Tap to reveal)</div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="c"></canvas>
+      <div class="tooltip" id="tip"></div>
+    </div>
+
+    <div class="toolbar">
+      <button id="modeExpand">Expand</button>
+      <button id="modeDiplomacy" class="secondary">Diplomacy</button>
+      <button id="modeInfo" class="ghost">Info</button>
+    </div>
+  </main>
+
+  <footer>
+    <div>Seed: <b id="seedOut"></b></div>
+    <div>JBTgames ©2025</div>
+  </footer>
+</div>
+
+<!-- Upgrades dialog -->
+<dialog id="dlgUpg">
+  <div class="dlg-h">Choose an Upgrade</div>
+  <div class="dlg-b">
+    <div class="row" style="margin-bottom:6px">
+      <div><b>Points:</b> <span id="upgPts">0</span></div>
+      <button id="closeUpg" class="ghost" style="border:1px solid #ccc;border-radius:10px;padding:6px 10px">Close</button>
+    </div>
+    <div class="upg-list" id="upgList"></div>
+  </div>
+</dialog>
+
+<script>
+/* =========================
+   Utility: PRNG (daily seed)
+   ========================= */
+function xmur3(str){for(var i=1779033703^str.length,h,i2;i<str.length;i++){h=Math.imul(i>>>16^i.charCodeAt(i),597399067);h=h^h>>>24; i2=Math.imul(h,2869860233); i = (i&65535)+((i>>>16)+str.charCodeAt(i)|0)<<16; } return function(){i=Math.imul(i^i>>>16,2246822507); i=i^Math.imul(i^i>>>13,3266489909); return (i^i>>>16)>>>0}}
+function mulberry32(a){return function(){var t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,1|t);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296}}
+
+const todayStr = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+const seedString = (localStorage.getItem('pxc_seed_override')) || todayStr;
+document.getElementById('seedOut').textContent = seedString;
+const rng = mulberry32(xmur3(seedString)());
+
+/* =====================
+   Game Configuration
+   ===================== */
+const CFG = {
+  W: 26, H: 26,                // grid size (small map for phones)
+  tileSize: 14,                // updated in resize for DPR
+  padding: 10,
+  playerColor: '#22B34B',
+  aiColors: ['#E4572E','#008C8C','#2C1E1E'],
+  revealFirstTap: true,
+  expandFoodCost: 2,
+  attackInfCost: 1,
+  prodIntervalMs: 900,
+  turnLimit: 200,
+  upgEveryNTurns: 10
+};
+
+const TILE = { FOG:0, FOREST:1, RIVER:2, MOUNTAIN:3, DESERT:4, CITY:5 };
+const TYPE_COLOR = {
+  [TILE.FOREST]  : '#9bd18b',
+  [TILE.RIVER]   : '#8ec5ff',
+  [TILE.MOUNTAIN]: '#c9c9c9',
+  [TILE.DESERT]  : '#f5d48a',
+  [TILE.CITY]    : '#ff8e8e',
+  fog: '#e8e8e8'
+};
+const OWNER = { NEUTRAL: -1, PLAYER: 0, AI1: 1, AI2: 2, AI3: 3 };
+
+const state = {
+  grid: [], // {type, owner, revealed}
+  turn: 1,
+  mode: 'expand', // expand | diplo | info
+  res: { food: 6, wood: 0, ore: 0, inf: 1 },
+  upgrades: new Set(),
+  upgPoints: 0,
+  players: [
+    { id: OWNER.PLAYER, color: CFG.playerColor, tiles: new Set() },
+    { id: OWNER.AI1, color: CFG.aiColors[0], tiles: new Set(), strat:'agg' },
+    { id: OWNER.AI2, color: CFG.aiColors[1], tiles: new Set(), strat:'bal' },
+    { id: OWNER.AI3, color: CFG.aiColors[2], tiles: new Set(), strat:'turt' }
+  ]
+};
+
+/* =====================
+   Map Generation
+   ===================== */
+function rand(){return rng();}
+function pickType(){
+  // Weighted terrain (tuned for fun)
+  const r = rand();
+  if (r < 0.30) return TILE.FOREST;
+  if (r < 0.52) return TILE.RIVER;
+  if (r < 0.72) return TILE.MOUNTAIN;
+  if (r < 0.92) return TILE.DESERT;
+  return TILE.CITY; // rare
+}
+function idx(x,y){return y*CFG.W + x}
+function inb(x,y){return x>=0 && y>=0 && x<CFG.W && y<CFG.H}
+
+function genMap(){
+  state.grid = new Array(CFG.W*CFG.H).fill(0).map(()=>({type: pickType(), owner: OWNER.NEUTRAL, revealed: false}));
+  // Spawn positions (spread out)
+  const spawns = [];
+  const margin = 4;
+  const candidates = [
+    {x:margin,y:margin},
+    {x:CFG.W-margin-1,y:margin},
+    {x:margin,y:CFG.H-margin-1},
+    {x:CFG.W-margin-1,y:CFG.H-margin-1}
+  ];
+  // shuffle candidates
+  for(let i=candidates.length-1;i>0;i--){const j=(rand()* (i+1))|0; [candidates[i],candidates[j]]=[candidates[j],candidates[i]]}
+  // assign player + AIs
+  const allPlayers = [OWNER.PLAYER, OWNER.AI1, OWNER.AI2, OWNER.AI3];
+  for (let p=0;p<allPlayers.length;p++){
+    const s = candidates[p];
+    claimTile(s.x,s.y, allPlayers[p], true);
+    revealAround(s.x,s.y);
+    spawns.push(s);
+  }
+}
+
+function neighbors4(x,y){
+  return [[x+1,y],[x-1,y],[x,y+1],[x,y-1]].filter(([a,b])=>inb(a,b));
+}
+function revealAround(x,y){
+  for (const [a,b] of neighbors4(x,y)){
+    const t = state.grid[idx(a,b)];
+    t.revealed = true;
+  }
+}
+
+/* =====================
+   Ownership & Combat
+   ===================== */
+function claimTile(x,y, owner, free=false){
+  const t = state.grid[idx(x,y)];
+  const prevOwner = t.owner;
+  if (prevOwner === owner) return false;
+  t.owner = owner;
+  t.revealed = true;
+
+  // track sets
+  const pEntry = state.players.find(p=>p.id===owner);
+  if (pEntry) pEntry.tiles.add(idx(x,y));
+  if (prevOwner >= 0){
+    const prev = state.players.find(p=>p.id===prevOwner);
+    if (prev) prev.tiles.delete(idx(x,y));
+  }
+
+  // player costs on expand
+  if (!free && owner===OWNER.PLAYER){
+    state.res.food = Math.max(0, state.res.food - expandCost());
+  }
+  return true;
+}
+
+function expandCost(){
+  let cost = CFG.expandFoodCost;
+  if (state.upgrades.has('cheaper-expansion')) cost = Math.max(1, cost-1);
+  return cost;
+}
+
+function canPlayerExpandTo(x,y){
+  const t = state.grid[idx(x,y)];
+  if (!t.revealed) return true; // explore step allowed
+  if (t.owner === OWNER.PLAYER) return false;
+  // must be adjacent to owned
+  for (const [a,b] of neighbors4(x,y)){
+    if (state.grid[idx(a,b)].owner === OWNER.PLAYER) return true;
+  }
+  return false;
+}
+
+function playerAttackChance(vsOwner){
+  // Very simple resolution: advantage for larger empires + upgrade
+  const you = state.players.find(p=>p.id===OWNER.PLAYER).tiles.size;
+  const them = state.players.find(p=>p.id===vsOwner).tiles.size || 1;
+  let base = Math.min(0.85, Math.max(0.35, 0.5 + (you-them)*0.02));
+  if (state.upgrades.has('militia')) base += 0.1;
+  return Math.min(0.95, Math.max(0.05, base));
+}
+
+/* =====================
+   Resources & Upgrades
+   ===================== */
+function tickProduction(){
+  // per owned tile yields
+  let addFood=0, addWood=0, addOre=0, addInf=0;
+  const mult = {
+    forest: state.upgrades.has('forestry')?1.25:1,
+    river: state.upgrades.has('farms')?1.25:1,
+    mountain: state.upgrades.has('miners')?1.25:1,
+    city: state.upgrades.has('civic')?1.25:1
+  };
+  for (const p of state.players){
+    if (p.id!==OWNER.PLAYER) continue;
+    for (const id of p.tiles){
+      const t = state.grid[id];
+      if (t.type===TILE.FOREST) addWood += 1*mult.forest;
+      else if (t.type===TILE.RIVER) addFood += 1*mult.river;
+      else if (t.type===TILE.MOUNTAIN) addOre += 1*mult.mountain;
+      else if (t.type===TILE.CITY) addInf += 0.3*mult.city; // slower trickle
+    }
+  }
+  state.res.food += addFood;
+  state.res.wood += addWood;
+  state.res.ore  += addOre;
+  state.res.inf  += addInf;
+  updateResbar();
+}
+
+const UPGRADES = [
+  { id:'forestry', name:'Forestry Guild', desc:'+25% wood from forests' },
+  { id:'farms', name:'Irrigated Farms', desc:'+25% food from rivers' },
+  { id:'miners', name:'Miners Union', desc:'+25% ore from mountains' },
+  { id:'civic', name:'Civic Council', desc:'+25% influence from cities' },
+  { id:'cheaper-expansion', name:'Expansionist Policy', desc:'-1 food to expand (min 1)' },
+  { id:'militia', name:'Citizen Militia', desc:'+10% attack success' }
+];
+
+function maybeGrantUpgradePoint(){
+  if (state.turn>1 && state.turn % CFG.upgEveryNTurns === 0){
+    state.upgPoints++;
+    openUpgrades();
+  }
+}
+
+/* =====================
+   Rendering
+   ===================== */
+const canvas = document.getElementById('c');
+const tip = document.getElementById('tip');
+const dpr = Math.max(1, Math.min(2, window.devicePixelRatio||1));
+
+function resizeCanvas(){
+  // Fit as big as possible within viewport
+  const wrap = canvas.parentElement;
+  const maxW = wrap.clientWidth - 8;
+  const maxH = Math.min( wrap.clientHeight - 8, window.innerHeight*0.7 );
+  const size = Math.min(maxW, maxH);
+  const t = Math.floor(size / Math.max(CFG.W, CFG.H));
+  CFG.tileSize = Math.max(10, t);
+  canvas.width  = Math.floor(CFG.W * CFG.tileSize * dpr);
+  canvas.height = Math.floor(CFG.H * CFG.tileSize * dpr);
+  canvas.style.width  = (CFG.W * CFG.tileSize)+'px';
+  canvas.style.height = (CFG.H * CFG.tileSize)+'px';
+  draw();
+}
+
+function draw(){
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,canvas.width/dpr, canvas.height/dpr);
+  const ts = CFG.tileSize;
+
+  for (let y=0;y<CFG.H;y++){
+    for (let x=0;x<CFG.W;x++){
+      const t = state.grid[idx(x,y)];
+      const px = x*ts, py = y*ts;
+
+      // base terrain
+      let col = TYPE_COLOR.fog;
+      if (t.revealed){
+        if (t.type===TILE.FOREST) col = TYPE_COLOR[TILE.FOREST];
+        else if (t.type===TILE.RIVER) col = TYPE_COLOR[TILE.RIVER];
+        else if (t.type===TILE.MOUNTAIN) col = TYPE_COLOR[TILE.MOUNTAIN];
+        else if (t.type===TILE.DESERT) col = TYPE_COLOR[TILE.DESERT];
+        else if (t.type===TILE.CITY) col = TYPE_COLOR[TILE.CITY];
+      }
+      ctx.fillStyle = col;
+      ctx.fillRect(px,py,ts,ts);
+
+      // owner overlay
+      if (t.owner>=0){
+        const owner = state.players.find(p=>p.id===t.owner);
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = owner.color;
+        ctx.fillRect(px,py,ts,ts);
+        ctx.globalAlpha = 1;
+      }
+
+      // grid hairlines for readability
+      ctx.strokeStyle = 'rgba(0,0,0,.06)';
+      ctx.strokeRect(px+0.5,py+0.5,ts-1,ts-1);
+    }
+  }
+  ctx.restore();
+}
+
+/* =====================
+   Input
+   ===================== */
+function eventToCell(ev){
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(( (ev.touches? ev.touches[0].clientX:ev.clientX) - rect.left) / (CFG.tileSize));
+  const y = Math.floor(( (ev.touches? ev.touches[0].clientY:ev.clientY) - rect.top ) / (CFG.tileSize));
+  return {x,y};
+}
+
+canvas.addEventListener('mousemove', showTip);
+canvas.addEventListener('touchmove', showTip, {passive:true});
+function showTip(ev){
+  const {x,y} = eventToCell(ev);
+  if (!inb(x,y)) { tip.style.opacity=0; return; }
+  const t = state.grid[idx(x,y)];
+  let text = inb(x,y)? `(${x},${y}) `: '';
+  text += t.revealed ? typeName(t.type) : 'Fog';
+  if (t.owner>=0){ const owner = state.players.find(p=>p.id===t.owner); text += ` • Owned`; }
+  tip.textContent = text;
+  tip.style.left = ( (ev.touches? ev.touches[0].clientX:ev.clientX) )+'px';
+  tip.style.top  = ( (ev.touches? ev.touches[0].clientY:ev.clientY) )+'px';
+  tip.style.opacity = 0.92;
+}
+
+canvas.addEventListener('mouseleave', ()=> tip.style.opacity=0);
+
+canvas.addEventListener('click', onTap);
+canvas.addEventListener('touchend', (e)=>{ e.preventDefault(); onTap(e.changedTouches[0]) }, {passive:false});
+
+function onTap(ev){
+  const pos = ev.clientX? ev : { clientX: ev.clientX, clientY: ev.clientY };
+  const {x,y} = eventToCell(pos);
+  if (!inb(x,y)) return;
+
+  const t = state.grid[idx(x,y)];
+  if (state.mode==='info'){ /* no-op, just reveal tooltip */ return; }
+
+  // Step 1: Explore (reveal fog)
+  if (!t.revealed){
+    t.revealed = true;
+    // revealing doesn't consume resources but doesn't end turn
+    draw(); updateResbar();
+    return;
+  }
+
+  // Step 2: Expand / Attack only if adjacent to player's territory
+  if (!canPlayerExpandTo(x,y)) return;
+
+  if (t.owner===OWNER.NEUTRAL){
+    // Expand
+    if (state.res.food < expandCost()) return flashHUD('🍞 Need more food');
+    claimTile(x,y, OWNER.PLAYER, false);
+    revealAround(x,y);
+    endTurn();
+  } else if (t.owner>=1){
+    // Attack
+    if (state.res.inf < CFG.attackInfCost) return flashHUD('⭐ Need more influence');
+    state.res.inf -= CFG.attackInfCost;
+
+    const chance = playerAttackChance(t.owner);
+    if (Math.random() < chance){
+      claimTile(x,y, OWNER.PLAYER, true);
+      revealAround(x,y);
+      flashHUD('⚔️ Captured!');
+    } else {
+      flashHUD('🛡️ Defended!');
+    }
+    endTurn();
+  }
+}
+
+/* =====================
+   AI
+   ===================== */
+function aiTurn(ai){
+  // try up to N random border tiles to expand
+  const attempts = 10;
+  // collect border candidates (revealed or fog) adjacent to AI tiles
+  const borders = [];
+  for (const id of ai.tiles){
+    const x = id % CFG.W, y = (id/CFG.W)|0;
+    for (const [a,b] of neighbors4(x,y)){
+      const t = state.grid[idx(a,b)];
+      if (t.owner!==ai.id){
+        borders.push({x:a,y:b});
+      }
+    }
+  }
+  // prioritize neutral > player > other AIs
+  function desirability(t){
+    if (t.owner===OWNER.NEUTRAL) return 3;
+    if (t.owner===OWNER.PLAYER) return 2;
+    return 1; // other AI
+  }
+  borders.sort((A,B)=> desirability(state.grid[idx(B.x,B.y)]) - desirability(state.grid[idx(A.x,A.y)]) || (rand()-.5));
+  for (let k=0;k<Math.min(attempts,borders.length);k++){
+    const {x,y} = borders[k];
+    const t = state.grid[idx(x,y)];
+    if (!t.revealed) t.revealed = true;
+    if (t.owner===OWNER.NEUTRAL){
+      claimTile(x,y, ai.id, true);
+      revealAround(x,y);
+      return true;
+    } else if (t.owner!==ai.id){
+      // simple combat: bigger wins more often
+      const me = ai.tiles.size, them = state.players.find(p=>p.id===t.owner)?.tiles.size||1;
+      const chance = Math.min(0.9, Math.max(0.1, 0.5 + (me-them)*0.02));
+      if (rand() < chance){
+        claimTile(x,y, ai.id, true);
+        revealAround(x,y);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/* =====================
+   Turns, HUD, Loops
+   ===================== */
+function updateResbar(){
+  food.textContent = Math.floor(state.res.food);
+  wood.textContent = Math.floor(state.res.wood);
+  ore.textContent  = Math.floor(state.res.ore);
+  inf.textContent  = Math.floor(state.res.inf);
+  turn.textContent = state.turn;
+}
+function flashHUD(msg){
+  // quick toast via header title
+  const b = document.querySelector('.brand');
+  const prev = b.textContent;
+  b.textContent = msg;
+  setTimeout(()=> b.textContent=prev, 800);
+}
+
+function endTurn(){
+  state.turn++;
+  maybeGrantUpgradePoint();
+
+  // AIs act
+  for (const ai of state.players.slice(1)){
+    aiTurn(ai);
+  }
+  // Tick resources once per endTurn (plus periodic timer)
+  tickProduction();
+  draw();
+  updateResbar();
+
+  // End conditions
+  if (state.turn>=CFG.turnLimit) {
+    conclude();
+  }
+}
+
+function conclude(){
+  // Simple scoring: owned tiles
+  const you = state.players.find(p=>p.id===OWNER.PLAYER).tiles.size;
+  const total = CFG.W*CFG.H;
+  const share = Math.round(100*you/total);
+  alert(`Game Over — You control ${share}% of the map.`);
+}
+
+/* =====================
+   Upgrades UI
+   ===================== */
+const dlg = document.getElementById('dlgUpg');
+const upgList = document.getElementById('upgList');
+function openUpgrades(){
+  document.getElementById('upgPts').textContent = state.upgPoints;
+  // render options you don't already have
+  upgList.innerHTML = '';
+  for (const u of UPGRADES){
+    const owned = state.upgrades.has(u.id);
+    const div = document.createElement('div');
+    div.className='upg';
+    div.innerHTML = `
+      <div class="row">
+        <div>
+          <h4>${u.name}${owned?' ✅':''}</h4>
+          <small>${u.desc}</small>
+        </div>
+        <button ${owned||state.upgPoints<=0?'disabled':''} data-id="${u.id}">Unlock</button>
+      </div>
+    `;
+    upgList.appendChild(div);
+  }
+  dlg.showModal();
+}
+upgList.addEventListener('click',(e)=>{
+  const id = e.target.dataset.id;
+  if (!id) return;
+  if (state.upgPoints<=0 || state.upgrades.has(id)) return;
+  state.upgrades.add(id);
+  state.upgPoints--;
+  updateResbar();
+  openUpgrades(); // re-render
+});
+
+/* =====================
+   Controls & Modes
+   ===================== */
+document.getElementById('btnUpgrades').onclick = openUpgrades;
+document.getElementById('closeUpg').onclick = ()=> dlg.close();
+
+document.getElementById('btnReset').onclick = ()=>{
+  localStorage.removeItem('pxc_seed_override');
+  init(true);
+};
+
+document.getElementById('modeExpand').onclick = ()=>{ state.mode='expand'; flashHUD('🟩 Expand mode') };
+document.getElementById('modeDiplomacy').onclick = ()=>{ state.mode='diplo'; flashHUD('⚖️ Diplomacy: tap enemy to attack (costs ⭐)') };
+document.getElementById('modeInfo').onclick = ()=>{ state.mode='info'; flashHUD('ℹ️ Info mode') };
+
+/* =====================
+   Init & Save
+   ===================== */
+function init(fresh=false){
+  // reset dynamic state
+  for (const p of state.players) p.tiles.clear();
+  state.turn = 1;
+  state.res = { food: 6, wood: 0, ore: 0, inf: 1 };
+  state.upgrades.clear();
+  state.upgPoints = 0;
+  genMap();
+  placeStartingOwnership();
+  resizeCanvas();
+  draw();
+  updateResbar();
+}
+function placeStartingOwnership(){
+  // already claimed during genMap
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+/* Periodic production tick */
+setInterval(()=>{ tickProduction(); updateResbar(); }, CFG.prodIntervalMs);
+
+/* =====================
+   Helpers
+   ===================== */
+function typeName(t){
+  return t===TILE.FOREST?'Forest':
+         t===TILE.RIVER?'River':
+         t===TILE.MOUNTAIN?'Mountain':
+         t===TILE.DESERT?'Desert':
+         t===TILE.CITY?'City':'Fog';
+}
+
+/* Boot */
+init();
+</script>
+</body>
+</html>
