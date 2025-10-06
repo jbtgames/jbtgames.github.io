@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TweetStream</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="logo">TweetStream</div>
+      <div class="header-actions" id="headerActions">
+        <button class="btn primary" id="loginBtn">Log In</button>
+        <button class="btn" id="signupBtn">Sign Up</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="auth-card" id="authCard">
+        <h1 id="authTitle">Welcome back</h1>
+        <p id="authSubtitle">Sign in to catch up with your friends.</p>
+        <form id="authForm">
+          <div class="input-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" autocomplete="username" required />
+          </div>
+          <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" autocomplete="current-password" required />
+          </div>
+          <button class="btn primary" type="submit" id="authSubmit">Log In</button>
+          <p class="auth-switch">No account yet? <a href="#" id="toggleAuth">Sign up</a></p>
+        </form>
+      </section>
+
+      <section class="feed" id="feed" hidden>
+        <aside class="sidebar">
+          <div class="profile-card" id="profileCard">
+            <div class="avatar" id="profileAvatar"></div>
+            <div class="profile-info">
+              <h2 id="profileName"></h2>
+              <p id="profileHandle"></p>
+            </div>
+            <button class="btn" id="logoutBtn">Log out</button>
+          </div>
+
+          <div class="friends-card">
+            <h3>Friends</h3>
+            <ul id="friendsList"></ul>
+            <form id="addFriendForm" class="add-friend-form">
+              <input type="text" id="friendSearch" placeholder="Add by username" required />
+              <button class="btn primary" type="submit">Add Friend</button>
+            </form>
+          </div>
+        </aside>
+
+        <section class="timeline">
+          <div class="composer">
+            <textarea id="postInput" rows="3" placeholder="What's happening?" maxlength="280" required></textarea>
+            <div class="composer-actions">
+              <span class="char-count" id="charCount">280</span>
+              <button class="btn primary" id="postBtn">Post</button>
+            </div>
+          </div>
+          <div class="feed-toggle">
+            <button class="btn pill active" data-feed="hot">Hot</button>
+            <button class="btn pill" data-feed="fresh">Fresh</button>
+            <button class="btn pill" data-feed="friends">Friends</button>
+          </div>
+          <ul class="posts" id="posts"></ul>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <template id="postTemplate">
+    <li class="post">
+      <div class="post-avatar"></div>
+      <div class="post-body">
+        <header>
+          <span class="post-author"></span>
+          <span class="post-handle"></span>
+          <span class="post-time"></span>
+        </header>
+        <p class="post-content"></p>
+        <footer>
+          <button class="btn icon" data-action="like">
+            <span class="material-symbols-rounded">favorite</span>
+            <span class="count"></span>
+          </button>
+          <span class="score"></span>
+        </footer>
+      </div>
+    </li>
+  </template>
+
+  <script src="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@400" defer></script>
+  <script src="app.js" type="module"></script>
+</body>
+</html>
