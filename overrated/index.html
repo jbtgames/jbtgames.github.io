@@ -2,113 +2,73 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="A tongue-in-cheek look at the most overrated video game trends."
+      content="Swipe through culture's biggest talking points and decide if they're overrated."
     />
-    <title>Overrated | JBT Games</title>
+    <title>Overrated? | Swipe to vote</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header>
-      <h1>Overrated</h1>
-      <p>
-        A lovingly sarcastic tribute to the trends that dominate the gaming
-        scene. Tap on a card to discover why these fads deserve a time-out.
-      </p>
-    </header>
-
-    <main>
-      <article class="game-card">
-        <h2>Endless Battle Passes</h2>
-        <div class="game-meta">
-          <span class="meta-pill">grind fatigue</span>
-          <span>Introduced: 2017</span>
-          <span>Popularized by: Fortnite &amp; friends</span>
-        </div>
-        <p>
-          Battle passes promised rewarding progression, but the modern reality is
-          more like a part-time job.
+    <main class="layout">
+      <header class="masthead" role="banner">
+        <p class="masthead-tag">Hot takes only</p>
+        <h1 class="masthead-title">Overrated<span>?</span></h1>
+        <p class="masthead-copy">
+          One subject, one vote. Swipe through the feed and decide whether the hype is
+          deserved.
         </p>
-        <button class="toggle" aria-expanded="false" type="button">
-          Why it's overrated
-        </button>
-        <div class="toggle-panel" id="battle-pass-panel">
-          <p>
-            The pressure to log in daily can turn a hobby into a chore.
-            Meanwhile, the rewards often feel like virtual clutter.
-          </p>
-          <ul class="reasons">
-            <li>Artificial fear-of-missing-out tactics.</li>
-            <li>Confusing currencies and tier unlocks.</li>
-            <li>Cosmetics that rarely feel worth the grind.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="game-card">
-        <h2>Ultra-Realistic Mud Physics</h2>
-        <div class="game-meta">
-          <span class="meta-pill">tech flex</span>
-          <span>Introduced: 2015</span>
-          <span>Popularized by: Racing sims</span>
-        </div>
-        <p>
-          Yes, the mud looks fantastic. No, it does not make the gameplay more
-          exciting.
+        <p class="masthead-progress" aria-live="polite">
+          <span id="progress-current">0</span>
+          <span class="progress-divider">of</span>
+          <span id="progress-total">0</span>
         </p>
-        <button class="toggle" aria-expanded="false" type="button">
-          Why it's overrated
-        </button>
-        <div class="toggle-panel" id="mud-physics-panel">
-          <p>
-            When studios brag about dirt realism more than track design, maybe
-            priorities need a patch.
-          </p>
-          <ul class="reasons">
-            <li>The novelty wears off after the first splash.</li>
-            <li>Often masks lackluster vehicle handling.</li>
-            <li>Consumes dev time better spent on smarter AI.</li>
-          </ul>
-        </div>
-      </article>
+      </header>
 
-      <article class="game-card">
-        <h2>Non-Stop Cinematic Cutscenes</h2>
-        <div class="game-meta">
-          <span class="meta-pill">passive play</span>
-          <span>Introduced: 2001</span>
-          <span>Popularized by: Prestige action titles</span>
+      <section class="swipe-zone" aria-label="Swipe through culture picks">
+        <div class="card-wrapper" id="card-wrapper">
+          <article class="card current" id="card-current"></article>
+          <article class="card standby" id="card-standby" aria-hidden="true"></article>
         </div>
-        <p>
-          Games that forget to let you actually play them? A bold creative
-          choice, sure.
-        </p>
-        <button class="toggle" aria-expanded="false" type="button">
-          Why it's overrated
-        </button>
-        <div class="toggle-panel" id="cutscene-panel">
-          <p>
-            Storytelling is great, but skipping 12-minute cutscenes to get back
-            to the action should not feel like a crime.
+        <div class="actions" role="group" aria-label="Cast your vote">
+          <button class="action action-no" id="action-no" type="button">
+            <span aria-hidden="true">👎</span>
+            <span class="action-label">Not overrated</span>
+          </button>
+          <button class="action action-yes" id="action-yes" type="button">
+            <span aria-hidden="true">🔥</span>
+            <span class="action-label">Overrated</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="leaderboard" aria-label="Most overrated right now">
+        <div class="leaderboard-shell">
+          <h2 class="leaderboard-title">Most overrated right now</h2>
+          <p class="leaderboard-copy">
+            Scores update from the same deck you're swiping.
           </p>
-          <ul class="reasons">
-            <li>Breaks the pacing and immersion.</li>
-            <li>Disrespects player agency.</li>
-            <li>Unskippable scenes are the real boss fights.</li>
-          </ul>
+          <ol class="leaderboard-list" id="leaderboard-list"></ol>
+          <p class="leaderboard-note">See one you disagree with? Keep swiping.</p>
         </div>
-      </article>
+      </section>
+
+      <footer class="footer">
+        <button class="restart" id="restart" type="button" hidden>Shuffle a fresh stack</button>
+        <p class="footer-copy">Tip: You can use the arrow keys or swipe to vote.</p>
+      </footer>
     </main>
 
-    <footer>
-      <p>
-        Built with playful bias by the JBT Games crew. Share your own overrated
-        trends and let's commiserate.
-      </p>
-    </footer>
+    <div class="sr-only" id="aria-status" aria-live="polite"></div>
 
+    <script src="data.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
