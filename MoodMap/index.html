@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MoodMap 🌈</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="app">
+    <header class="app__header">
+      <div class="app__branding">
+        <h1 class="app__title">MoodMap <span aria-hidden="true">🌈</span></h1>
+        <p class="app__subtitle" id="currentDate">Tuesday, March 12</p>
+      </div>
+      <div class="app__status">
+        <div class="status-card">
+          <span class="status-card__label">Streak</span>
+          <span class="status-card__value" id="streakCount">0 days</span>
+        </div>
+        <button class="button button--primary" id="logMoodButton" type="button">Log Mood</button>
+      </div>
+    </header>
+
+    <main class="app__main" aria-live="polite">
+      <section class="grid" aria-label="Mood grid for current month">
+        <div class="grid__header" id="gridMonth">March 2024</div>
+        <div class="grid__weekdays">
+          <span>Sun</span>
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+          <span>Fri</span>
+          <span>Sat</span>
+        </div>
+        <div class="grid__cells" id="moodGrid" role="grid"></div>
+        <div class="grid__legend">
+          <h2 class="grid__legend-title">Legend</h2>
+          <ul class="legend-list" id="legendList"></ul>
+        </div>
+      </section>
+    </main>
+
+    <nav class="app__nav" aria-label="Primary">
+      <button class="nav__item nav__item--active" type="button">My Map</button>
+      <button class="nav__item" type="button">Global</button>
+      <button class="nav__item" type="button">Profile</button>
+    </nav>
+  </div>
+
+  <dialog class="modal" id="moodModal" aria-labelledby="modalTitle">
+    <form method="dialog" class="modal__content">
+      <header class="modal__header">
+        <h2 class="modal__title" id="modalTitle">How are you feeling today?</h2>
+        <button type="submit" class="modal__close" aria-label="Close">×</button>
+      </header>
+      <div class="modal__body">
+        <ul class="palette" id="palette"></ul>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
