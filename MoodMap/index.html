@@ -76,7 +76,7 @@
     </header>
 
     <main class="app__main" aria-live="polite">
-      <section class="grid" aria-label="Mood grid for current month">
+      <section class="grid" id="mapView" aria-label="Mood grid for current month">
         <div class="grid__header">
           <button class="grid__nav-button" id="previousMonth" type="button" aria-label="View previous month">◀</button>
           <div class="grid__header-month" id="gridMonth">March 2024</div>
@@ -97,12 +97,38 @@
           <ul class="legend-list" id="legendList"></ul>
         </div>
       </section>
+
+      <section class="history view--hidden" id="historyView" aria-label="Mood history overview">
+        <header class="history__header">
+          <h2 class="history__title">Mood history</h2>
+          <p class="history__subtitle">Track how you&rsquo;ve been feeling over time and spot the rhythms in your days.</p>
+        </header>
+
+        <div class="history__panes">
+          <section class="history__panel" aria-label="Recent mood timeline">
+            <div class="history__panel-header">
+              <h3 class="history__panel-title">Recent reflections</h3>
+              <p class="history__panel-subtitle">Your latest check-ins at a glance.</p>
+            </div>
+            <ul class="timeline" id="historyTimeline" aria-live="polite"></ul>
+            <p class="history__empty view--hidden" id="historyEmpty">Log your mood to start building your personal history.</p>
+          </section>
+
+          <section class="history__panel" aria-label="Mood calendar overview">
+            <div class="history__panel-header">
+              <h3 class="history__panel-title">Calendar of color</h3>
+              <p class="history__panel-subtitle">A softer, year-at-a-glance calendar that grows with you.</p>
+            </div>
+            <div class="history-calendar" id="historyCalendar"></div>
+          </section>
+        </div>
+      </section>
     </main>
 
     <nav class="app__nav" aria-label="Primary">
-      <button class="nav__item nav__item--active" type="button">My Map</button>
-      <button class="nav__item" type="button">Global</button>
-      <button class="nav__item" type="button">Profile</button>
+      <button class="nav__item nav__item--active" type="button" data-view-target="map">My Map</button>
+      <button class="nav__item" type="button" data-view-target="history">Mood History</button>
+      <button class="nav__item nav__item--ghost" type="button" disabled title="More views coming soon">Soon</button>
     </nav>
   </div>
 
