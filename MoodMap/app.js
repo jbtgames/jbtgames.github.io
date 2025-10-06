@@ -23,9 +23,12 @@ const starterMoods = [
 const STORAGE_PREFIX = "moodmap.";
 const USERS_KEY = `${STORAGE_PREFIX}users`;
 const CURRENT_USER_KEY = `${STORAGE_PREFIX}currentUser`;
+const USER_META_PREFIX = `${STORAGE_PREFIX}meta.`;
 
 let currentUser = null;
 let authMode = "signIn";
+let activeView = "map";
+let hasPromptedForToday = false;
 
 const gridElement = document.getElementById("moodGrid");
 const paletteElement = document.getElementById("palette");
@@ -40,6 +43,12 @@ const currentDateLabel = document.getElementById("currentDate");
 const appElement = document.querySelector(".app");
 const authPanel = document.getElementById("authPanel");
 const signOutButton = document.getElementById("signOutButton");
+const mapView = document.getElementById("mapView");
+const historyView = document.getElementById("historyView");
+const historyTimeline = document.getElementById("historyTimeline");
+const historyCalendar = document.getElementById("historyCalendar");
+const historyEmptyState = document.getElementById("historyEmpty");
+const navButtons = Array.from(document.querySelectorAll("[data-view-target]"));
 
 const signInForm = document.getElementById("signInForm");
 const createForm = document.getElementById("createForm");
@@ -95,6 +104,121 @@ function getISODate(date) {
 
 function getMoodColorByName(name) {
   return palette.find((entry) => entry.mood === name)?.color ?? "#f1f5f9";
+}
+
+function getMoodNameByColor(color) {
+  return palette.find((entry) => entry.color === color)?.mood ?? null;
+}
+
+function getUserMeta(username) {
+  if (!username) return null;
+
+  try {
+    const stored = localStorage.getItem(`${USER_META_PREFIX}${username}`);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.warn("Unable to parse user meta", error);
+    return null;
+  }
+}
+
+function saveUserMeta(username, meta) {
+  if (!username) return;
+  const existing = getUserMeta(username) ?? {};
+  const updated = { ...existing, ...meta };
+  localStorage.setItem(`${USER_META_PREFIX}${username}`, JSON.stringify(updated));
+}
+
+function loadUserMoods(targetUser = currentUser) {
+  if (!targetUser) {
+    return [];
+  }
+
+  const key = `${STORAGE_PREFIX}moods.${targetUser}`;
+  const stored = localStorage.getItem(key);
+
+  if (!stored) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("Unable to parse mood data", error);
+    return [];
+  }
+}
+
+function fillMissingDays(data, targetUser = currentUser) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const meta = getUserMeta(targetUser);
+  let startDate = null;
+
+  data.forEach((item) => {
+    if (!item?.date) return;
+    const parsed = new Date(item.date);
+    if (Number.isNaN(parsed)) return;
+    parsed.setHours(0, 0, 0, 0);
+    if (!startDate || parsed < startDate) {
+      startDate = parsed;
+    }
+  });
+
+  if (meta?.createdAt) {
+    const created = new Date(meta.createdAt);
+    if (!Number.isNaN(created)) {
+      created.setHours(0, 0, 0, 0);
+      if (!startDate || created < startDate) {
+        startDate = created;
+      }
+    }
+  }
+
+  if (!startDate) {
+    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+
+  const moodMap = new Map();
+  data.forEach((item) => {
+    if (!item?.date) return;
+    moodMap.set(item.date, item.color ?? null);
+  });
+
+  const filled = [];
+  const cursor = new Date(startDate);
+  let changed = false;
+
+  while (cursor <= today) {
+    const iso = getISODate(cursor);
+    const storedColor = moodMap.has(iso) ? moodMap.get(iso) ?? null : null;
+    if (!moodMap.has(iso)) {
+      changed = true;
+    } else if (moodMap.get(iso) !== storedColor) {
+      changed = true;
+    }
+    filled.push({ date: iso, color: storedColor });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  if (filled.length !== data.length) {
+    changed = true;
+  }
+
+  return { data: filled, changed };
+}
+
+function ensureCompleteHistory(targetUser = currentUser) {
+  const source = loadUserMoods(targetUser);
+  const { data, changed } = fillMissingDays(source, targetUser);
+
+  if (changed) {
+    saveUserMoods(data, targetUser, { skipNormalization: true });
+  }
+
+  return data;
 }
 
 function updateComboUI(key) {
@@ -205,6 +329,24 @@ function ensureUserData(username) {
   const key = `${STORAGE_PREFIX}moods.${username}`;
   if (!localStorage.getItem(key)) {
     localStorage.setItem(key, JSON.stringify(starterMoods));
+    if (starterMoods.length > 0) {
+      const earliest = starterMoods.reduce(
+        (min, item) => (item.date < min ? item.date : min),
+        starterMoods[0].date
+      );
+      saveUserMeta(username, { createdAt: earliest });
+    } else {
+      saveUserMeta(username, { createdAt: getISODate(new Date()) });
+    }
+  } else if (!getUserMeta(username)) {
+    const stored = loadUserMoods(username);
+    const earliest = stored.length
+      ? stored.reduce(
+          (min, item) => (item.date < min ? item.date : min),
+          stored[0].date
+        )
+      : getISODate(new Date());
+    saveUserMeta(username, { createdAt: earliest });
   }
 }
 
@@ -213,25 +355,16 @@ function getUserMoods(targetUser = currentUser) {
     return [];
   }
 
-  const key = `${STORAGE_PREFIX}moods.${targetUser}`;
-  const stored = localStorage.getItem(key);
-
-  if (!stored) {
-    return [];
-  }
-
-  try {
-    return JSON.parse(stored);
-  } catch (error) {
-    console.warn("Unable to parse mood data", error);
-    return [];
-  }
+  return ensureCompleteHistory(targetUser);
 }
 
-function saveUserMoods(data, targetUser = currentUser) {
+function saveUserMoods(data, targetUser = currentUser, options = {}) {
   if (!targetUser) return;
   const key = `${STORAGE_PREFIX}moods.${targetUser}`;
   localStorage.setItem(key, JSON.stringify(data));
+  if (!options.skipNormalization) {
+    ensureCompleteHistory(targetUser);
+  }
 }
 
 function toggleAuthMode(mode) {
@@ -266,18 +399,26 @@ function setCurrentUser(username) {
   if (username) {
     localStorage.setItem(CURRENT_USER_KEY, username);
     ensureUserData(username);
+    ensureCompleteHistory(username);
     showAppPanel();
     logButton.disabled = false;
     signOutButton.hidden = false;
     signOutButton.textContent = `Sign out (${username})`;
+    hasPromptedForToday = false;
   } else {
     localStorage.removeItem(CURRENT_USER_KEY);
     showAuthPanel();
     logButton.disabled = true;
     signOutButton.hidden = true;
+    hasPromptedForToday = false;
+    setActiveView("map");
   }
 
   renderGrid();
+
+  if (username) {
+    promptForTodayIfNeeded();
+  }
 }
 
 function calculateStreak(data, today) {
@@ -309,6 +450,7 @@ function logMood(color) {
   }
 
   saveUserMoods(data);
+  hasPromptedForToday = true;
   renderGrid();
 }
 
@@ -357,7 +499,7 @@ function renderGrid() {
 
       const moodLabel = document.createElement("span");
       moodLabel.className = "cell__mood";
-      moodLabel.textContent = palette.find((entry) => entry.color === color)?.mood ?? "";
+      moodLabel.textContent = getMoodNameByColor(color) ?? "";
 
       cellContent.append(label, moodLabel);
       cell.appendChild(cellContent);
@@ -383,11 +525,275 @@ function renderGrid() {
     viewDate.getFullYear() === now.getFullYear() && viewDate.getMonth() === now.getMonth();
 
   nextMonthButton.disabled = isCurrentMonth;
+
+  renderHistory();
 }
 
 function changeMonth(offset) {
   currentViewDate = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + offset, 1);
   renderGrid();
+}
+
+function renderTimeline(data) {
+  if (!historyTimeline) return false;
+
+  historyTimeline.innerHTML = "";
+
+  if (!data.length) {
+    return false;
+  }
+
+  const sorted = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const recent = sorted.slice(0, 28);
+  let hasLoggedMood = false;
+
+  const dateFormatter = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric"
+  });
+
+  recent.forEach((item) => {
+    const moodName = item.color ? getMoodNameByColor(item.color) : null;
+    if (item.color && moodName) {
+      hasLoggedMood = true;
+    }
+
+    const entry = document.createElement("li");
+    entry.className = "timeline__item";
+
+    const swatch = document.createElement("span");
+    swatch.className = "timeline__swatch";
+    if (item.color) {
+      swatch.style.background = item.color;
+    } else {
+      swatch.style.background = "linear-gradient(135deg, rgba(31, 42, 55, 0.1), rgba(31, 42, 55, 0.02))";
+    }
+
+    const details = document.createElement("div");
+    details.className = "timeline__details";
+
+    const dateLabel = document.createElement("span");
+    dateLabel.className = "timeline__date";
+    dateLabel.textContent = dateFormatter.format(new Date(item.date));
+
+    const moodLabel = document.createElement("span");
+    moodLabel.className = "timeline__mood";
+    moodLabel.textContent = moodName ? `${moodName} check-in` : "No mood logged";
+
+    details.append(dateLabel, moodLabel);
+    entry.append(swatch, details);
+    historyTimeline.appendChild(entry);
+  });
+
+  return hasLoggedMood;
+}
+
+function renderHistoryCalendar(data) {
+  if (!historyCalendar) return;
+
+  historyCalendar.innerHTML = "";
+
+  if (!data.length) {
+    return;
+  }
+
+  const monthBuckets = new Map();
+  data.forEach((item) => {
+    if (!item?.date) return;
+    const date = new Date(item.date);
+    if (Number.isNaN(date)) return;
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    if (!monthBuckets.has(key)) {
+      monthBuckets.set(key, []);
+    }
+    monthBuckets.get(key).push(item);
+  });
+
+  if (monthBuckets.size === 0) {
+    return;
+  }
+
+  const sortedKeys = Array.from(monthBuckets.keys()).sort(
+    (a, b) => new Date(`${a}-01`) - new Date(`${b}-01`)
+  );
+  const keysToRender = sortedKeys.slice(-12);
+  const todayISO = getISODate(new Date());
+
+  keysToRender.forEach((key) => {
+    const [year, month] = key.split("-").map(Number);
+    const monthDate = new Date(year, month - 1, 1);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const startOffset = monthDate.getDay();
+    const monthData = monthBuckets.get(key) ?? [];
+    const monthMap = new Map(monthData.map((entry) => [entry.date, entry.color]));
+
+    const monthElement = document.createElement("section");
+    monthElement.className = "history-calendar__month";
+
+    const header = document.createElement("div");
+    header.className = "history-calendar__header";
+
+    const headerLabel = document.createElement("span");
+    headerLabel.textContent = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric"
+    }).format(monthDate);
+
+    const headerBadge = document.createElement("span");
+    headerBadge.className = "history-calendar__badge";
+    const loggedCount = monthData.filter((entry) => entry.color).length;
+    headerBadge.textContent = loggedCount ? `${loggedCount} logged` : "No logs";
+
+    header.append(headerLabel, headerBadge);
+
+    const weekdaysRow = document.createElement("div");
+    weekdaysRow.className = "history-calendar__weekdays";
+    ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((day) => {
+      const span = document.createElement("span");
+      span.textContent = day;
+      weekdaysRow.appendChild(span);
+    });
+
+    const grid = document.createElement("div");
+    grid.className = "history-calendar__grid";
+
+    const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+
+    for (let index = 0; index < totalCells; index += 1) {
+      const dayNumber = index - startOffset + 1;
+      if (dayNumber <= 0 || dayNumber > daysInMonth) {
+        const paddingCell = document.createElement("div");
+        paddingCell.className = "history-calendar__cell history-calendar__cell--padding";
+        paddingCell.setAttribute("aria-hidden", "true");
+        grid.appendChild(paddingCell);
+        continue;
+      }
+
+      const cellDate = new Date(year, month - 1, dayNumber);
+      const iso = getISODate(cellDate);
+      const color = monthMap.get(iso);
+
+      const cell = document.createElement("div");
+      cell.className = "history-calendar__cell";
+      cell.dataset.day = String(dayNumber);
+
+      if (color) {
+        cell.dataset.color = color;
+        cell.style.setProperty("--history-color", color);
+        const moodName = getMoodNameByColor(color) ?? "Mood";
+        cell.title = `${moodName} on ${cellDate.toDateString()}`;
+      } else {
+        cell.classList.add("history-calendar__cell--empty");
+        cell.title = `No mood logged on ${cellDate.toDateString()}`;
+      }
+
+      if (iso === todayISO) {
+        cell.classList.add("history-calendar__cell--today");
+      }
+
+      grid.appendChild(cell);
+    }
+
+    monthElement.append(header, weekdaysRow, grid);
+    historyCalendar.appendChild(monthElement);
+  });
+}
+
+function renderHistory() {
+  if (!historyView) return;
+
+  if (!currentUser) {
+    if (historyTimeline) {
+      historyTimeline.innerHTML = "";
+    }
+    if (historyCalendar) {
+      historyCalendar.innerHTML = "";
+    }
+    if (historyEmptyState) {
+      historyEmptyState.textContent = "Sign in to see your history.";
+      historyEmptyState.classList.remove("view--hidden");
+    }
+    return;
+  }
+
+  const data = getUserMoods();
+
+  if (!data.length) {
+    if (historyTimeline) {
+      historyTimeline.innerHTML = "";
+    }
+    if (historyCalendar) {
+      historyCalendar.innerHTML = "";
+    }
+    if (historyEmptyState) {
+      historyEmptyState.textContent = "Log your mood to start building your personal history.";
+      historyEmptyState.classList.remove("view--hidden");
+    }
+    return;
+  }
+
+  const hasLoggedMood = renderTimeline(data);
+  renderHistoryCalendar(data);
+
+  if (historyEmptyState) {
+    if (hasLoggedMood) {
+      historyEmptyState.classList.add("view--hidden");
+    } else {
+      historyEmptyState.textContent = "Log your mood to start building your personal history.";
+      historyEmptyState.classList.remove("view--hidden");
+    }
+  }
+}
+
+function setActiveView(view) {
+  activeView = view;
+
+  mapView?.classList.toggle("view--hidden", view !== "map");
+  historyView?.classList.toggle("view--hidden", view !== "history");
+
+  navButtons.forEach((button) => {
+    const target = button.getAttribute("data-view-target");
+    if (!target) return;
+    button.classList.toggle("nav__item--active", target === view);
+  });
+
+  if (view === "history") {
+    renderHistory();
+  }
+}
+
+function openMoodModal() {
+  if (!modal) return;
+  if (typeof modal.showModal === "function") {
+    if (!modal.open) {
+      modal.showModal();
+    }
+  } else {
+    modal.setAttribute("open", "true");
+  }
+}
+
+function shouldPromptForToday() {
+  if (!currentUser) return false;
+  const todayISO = getISODate(new Date());
+  const data = getUserMoods();
+  const entry = data.find((item) => item.date === todayISO);
+  return !entry || !entry.color;
+}
+
+function promptForTodayIfNeeded() {
+  if (!currentUser || hasPromptedForToday) return;
+
+  if (!shouldPromptForToday()) {
+    hasPromptedForToday = true;
+    return;
+  }
+
+  hasPromptedForToday = true;
+  setTimeout(() => {
+    openMoodModal();
+  }, 200);
 }
 
 function hydrateLegend() {
@@ -433,6 +839,14 @@ function initialiseAuth() {
     button.addEventListener("click", () => {
       const key = button.getAttribute("data-reset-combo");
       resetCombo(key);
+    });
+  });
+
+  navButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const target = button.getAttribute("data-view-target");
+      if (!target) return;
+      setActiveView(target);
     });
   });
 
@@ -516,7 +930,10 @@ function initialiseAuth() {
 
     users[username] = moodSequenceKey(comboState.create);
     saveUsers(users);
-    ensureUserData(username);
+    const todayISO = getISODate(new Date());
+    saveUserMeta(username, { createdAt: todayISO });
+    saveUserMoods([], username, { skipNormalization: true });
+    ensureCompleteHistory(username);
 
     setAuthMessage("create", "Account created! Signing you in...", "success");
     createForm.reset();
@@ -525,6 +942,7 @@ function initialiseAuth() {
   });
 
   toggleAuthMode("signIn");
+  setActiveView(activeView);
 
   const storedUser = localStorage.getItem(CURRENT_USER_KEY);
   const knownUsers = loadUsers();
@@ -546,11 +964,7 @@ logButton.addEventListener("click", () => {
     return;
   }
 
-  if (typeof modal.showModal === "function") {
-    modal.showModal();
-  } else {
-    modal.setAttribute("open", "true");
-  }
+  openMoodModal();
 });
 
 modal.addEventListener("cancel", (event) => {
