@@ -1,1 +1,491 @@
-!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover,user-scalable=no" />
+  <title>Overrated — JBTgames</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:#1a1325;
+      --bg:#f5f3ff;
+      --accent:#7f5af0;
+      --accent-dark:#6141c2;
+      --surface:#ffffff;
+      --correct:#22b34b;
+      --wrong:#ff4b6e;
+      --muted:#7c7a8c;
+      --card1:#f4d9ff;
+      --card2:#ffe7d3;
+      --card3:#d8f5ff;
+      --card4:#fff3d6;
+      --radius:18px;
+      color-scheme:only light;
+    }
+
+    * { box-sizing:border-box; }
+
+    body {
+      margin:0;
+      min-height:100dvh;
+      font-family:'Inter',system-ui,sans-serif;
+      background:radial-gradient(circle at top,#ffffff 0%,#f3f1ff 55%,#ece8ff 100%);
+      color:var(--ink);
+      display:flex;
+      justify-content:center;
+    }
+
+    .wrapper {
+      width:100%;
+      max-width:480px;
+      min-height:100dvh;
+      display:flex;
+      flex-direction:column;
+      padding:18px 18px 28px;
+      gap:18px;
+    }
+
+    header {
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      align-items:center;
+      text-align:center;
+    }
+
+    .logo {
+      font-family:'Bungee',cursive;
+      font-size:46px;
+      letter-spacing:2px;
+      color:var(--accent);
+      text-shadow:0 4px 14px rgba(127,90,240,0.25);
+    }
+
+    .tagline {
+      font-size:16px;
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:1.5px;
+      color:var(--muted);
+    }
+
+    #progress {
+      font-size:14px;
+      font-weight:700;
+      color:var(--ink);
+      background:rgba(127,90,240,0.1);
+      padding:6px 14px;
+      border-radius:999px;
+    }
+
+    main {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+
+    .prompt-box {
+      background:linear-gradient(135deg,rgba(127,90,240,0.12),rgba(127,90,240,0));
+      border-radius:var(--radius);
+      padding:14px 16px 18px;
+      box-shadow:0 12px 35px rgba(26,19,37,0.08);
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    #stageLabel {
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:1.6px;
+      text-transform:uppercase;
+      color:var(--accent-dark);
+    }
+
+    #prompt {
+      font-size:18px;
+      line-height:1.4;
+      margin:0;
+    }
+
+    #options {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      flex:1;
+    }
+
+    .choice {
+      position:relative;
+      border-radius:var(--radius);
+      padding:16px;
+      background:var(--surface);
+      border:3px solid transparent;
+      box-shadow:0 14px 30px rgba(26,19,37,0.08);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .choice:hover { transform:translateY(-4px); box-shadow:0 18px 36px rgba(26,19,37,0.12); }
+    .choice:active { transform:translateY(-1px); }
+
+    .choice:nth-child(1) { background:var(--card1); }
+    .choice:nth-child(2) { background:var(--card2); }
+    .choice:nth-child(3) { background:var(--card3); }
+    .choice:nth-child(4) { background:var(--card4); }
+
+    .choice h3 {
+      font-size:17px;
+      margin:0;
+      font-weight:800;
+    }
+
+    .scores {
+      display:flex;
+      justify-content:space-between;
+      font-size:13px;
+      font-weight:600;
+    }
+
+    .scores span strong { display:block; font-size:21px; }
+
+    .note {
+      font-size:12px;
+      color:var(--muted);
+      font-weight:600;
+      line-height:1.3;
+    }
+
+    .choice.correct {
+      border-color:var(--correct);
+      box-shadow:0 18px 36px rgba(34,179,75,0.25);
+    }
+
+    .choice.wrong {
+      border-color:var(--wrong);
+      box-shadow:0 18px 36px rgba(255,75,110,0.25);
+      opacity:0.75;
+    }
+
+    .choice.disabled { pointer-events:none; }
+
+    footer {
+      text-align:center;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+      padding:8px 12px;
+    }
+
+    .overlay, .end-screen {
+      position:fixed;
+      inset:0;
+      background:rgba(18,12,32,0.78);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:20;
+    }
+
+    .overlay.show, .end-screen.show { display:flex; }
+
+    .modal {
+      background:var(--surface);
+      border-radius:22px;
+      padding:26px;
+      width:min(420px,calc(100% - 40px));
+      text-align:center;
+      box-shadow:0 16px 40px rgba(26,19,37,0.25);
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .modal h1 {
+      margin:0;
+      font-family:'Bungee',cursive;
+      font-size:28px;
+      letter-spacing:1px;
+      color:var(--accent);
+    }
+
+    .modal p {
+      margin:0;
+      font-size:15px;
+      line-height:1.45;
+      color:var(--ink);
+    }
+
+    button {
+      border:none;
+      border-radius:999px;
+      padding:12px 20px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      font-family:'Inter',system-ui,sans-serif;
+      background:var(--accent);
+      color:#fff;
+      transition:transform .15s ease, background .15s ease;
+    }
+
+    button:hover { background:var(--accent-dark); }
+    button:active { transform:translateY(1px); }
+
+    #shareBtn { display:none; }
+
+    #shareNotice {
+      font-size:12px;
+      color:var(--muted);
+      min-height:16px;
+    }
+
+    @media (max-width:420px) {
+      .wrapper { padding:16px 14px 24px; }
+      .logo { font-size:40px; }
+      .choice { padding:14px; }
+      .scores span strong { font-size:18px; }
+      #prompt { font-size:17px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <div class="logo">OVERRATED</div>
+      <div class="tagline">Critics swooned. Audiences shrugged.</div>
+      <div id="progress">Loading…</div>
+    </header>
+
+    <main>
+      <div class="prompt-box">
+        <div id="stageLabel">Warmup</div>
+        <p id="prompt">Fetching today's matchups…</p>
+      </div>
+      <div id="options"></div>
+    </main>
+
+    <footer id="footerInfo">Rotten Tomatoes score snapshots for fun only.</footer>
+  </div>
+
+  <div id="overlay" class="overlay">
+    <div class="modal">
+      <h1 id="result">Nice!</h1>
+      <p id="explanation"></p>
+      <button id="continueBtn">Next matchup</button>
+    </div>
+  </div>
+
+  <div id="endScreen" class="end-screen">
+    <div class="modal">
+      <h1>Final Verdict</h1>
+      <div id="endIcons" style="font-size:28px; letter-spacing:6px;"></div>
+      <p id="endText"></p>
+      <p id="endComment" style="color:var(--muted);"></p>
+      <button id="shareBtn">Share my verdict</button>
+      <div id="shareNotice"></div>
+      <button id="playAgainBtn" style="background:var(--surface); color:var(--accent); border:2px solid var(--accent);">Play again tomorrow</button>
+    </div>
+  </div>
+
+  <script>
+    const DATA_URL = "puzzles.json";
+    const STAGES = [
+      { key: "easy", label: "Warmup" },
+      { key: "medium", label: "Main Event" },
+      { key: "hard", label: "Finale" }
+    ];
+
+    const progressEl = document.getElementById('progress');
+    const stageLabel = document.getElementById('stageLabel');
+    const promptEl = document.getElementById('prompt');
+    const optionsEl = document.getElementById('options');
+    const footerInfo = document.getElementById('footerInfo');
+
+    const overlay = document.getElementById('overlay');
+    const resultEl = document.getElementById('result');
+    const explanationEl = document.getElementById('explanation');
+    const continueBtn = document.getElementById('continueBtn');
+
+    const endScreen = document.getElementById('endScreen');
+    const endIcons = document.getElementById('endIcons');
+    const endText = document.getElementById('endText');
+    const endComment = document.getElementById('endComment');
+    const shareBtn = document.getElementById('shareBtn');
+    const shareNotice = document.getElementById('shareNotice');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+
+    let puzzles = [];
+    let todaySet;
+    let level = 0;
+    let results = [];
+
+    const comments = {
+      0: [
+        "A clean sweep of terrible takes. Critics everywhere are sobbing.",
+        "You picked zero. That’s a perfect display of contrarian chaos.",
+        "Utter meltdown. Maybe check the scores next time?"
+      ],
+      1: [
+        "One right. Statistically, that’s almost a fluke.",
+        "You found a single overrated pick. The critics still have your number.",
+        "1/3 — barely a blip on the snob radar."
+      ],
+      2: [
+        "Two correct! You’re reading the room… mostly.",
+        "Solid instincts. Just one critic darling slipped past you.",
+        "Almost perfect. Rotten Tomatoes might call you for backup."
+      ],
+      3: [
+        "Flawless taste. You’re the voice of the people now.",
+        "3/3 — the critics can’t hide from you.",
+        "Perfect score! Hollywood’s hype machine fears you."
+      ]
+    };
+
+    init();
+
+    async function init() {
+      try {
+        await loadPuzzles();
+        footerInfo.textContent = todaySet.footer || 'Score data gathered from public Rotten Tomatoes listings.';
+        level = 0;
+        results = [];
+        renderLevel();
+      } catch (err) {
+        console.error(err);
+        progressEl.textContent = 'Failed to load puzzles. Try refreshing.';
+        promptEl.textContent = 'We could not reach the score vault right now.';
+      }
+    }
+
+    function ymd() {
+      const d = new Date();
+      return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+    }
+
+    function ymdDash() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    async function loadPuzzles() {
+      const res = await fetch(`${DATA_URL}?v=${ymd()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Network error loading puzzles');
+      const data = await res.json();
+      puzzles = data.days;
+      const index = parseInt(ymd(), 10) % puzzles.length;
+      todaySet = puzzles[index];
+    }
+
+    function renderLevel() {
+      const stage = STAGES[level];
+      const puzzle = todaySet[stage.key];
+      stageLabel.textContent = stage.label;
+      promptEl.textContent = puzzle.prompt;
+      progressEl.textContent = `Match ${level + 1} of ${STAGES.length}`;
+
+      optionsEl.innerHTML = '';
+      puzzle.items.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'choice';
+        card.dataset.title = item.title;
+        card.innerHTML = `
+          <h3>${item.title}</h3>
+          <div class="scores">
+            <span>Critics<strong>${item.critics}%</strong></span>
+            <span>Audience<strong>${item.audience}%</strong></span>
+          </div>
+          <div class="note">${item.note}</div>
+        `;
+        card.onclick = () => evaluateChoice(item, card);
+        optionsEl.appendChild(card);
+      });
+    }
+
+    function evaluateChoice(item, card) {
+      const stage = STAGES[level];
+      const puzzle = todaySet[stage.key];
+      const correctTitle = puzzle.answer;
+      const cards = Array.from(optionsEl.children);
+      cards.forEach((c) => {
+        c.classList.add('disabled');
+        c.onclick = null;
+      });
+
+      const isCorrect = item.title === correctTitle;
+      card.classList.add(isCorrect ? 'correct' : 'wrong');
+      if (!isCorrect) {
+        const correctCard = cards.find((c) => c.dataset.title === correctTitle);
+        if (correctCard) {
+          correctCard.classList.add('correct');
+          correctCard.classList.remove('wrong');
+        }
+      }
+
+      results.push(isCorrect ? '✅' : '❌');
+      const header = isCorrect ? randomFrom(['Spot on!', 'Nice call!', 'Dead accurate!']) : randomFrom(['Not quite!', 'Close miss!', 'Off the mark!']);
+      resultEl.textContent = header;
+      explanationEl.textContent = puzzle.explanation;
+      continueBtn.textContent = level === STAGES.length - 1 ? 'See final verdict' : 'Next matchup';
+
+      overlay.classList.add('show');
+    }
+
+    continueBtn.onclick = () => {
+      overlay.classList.remove('show');
+      level += 1;
+      if (level < STAGES.length) {
+        renderLevel();
+      } else {
+        finishGame();
+      }
+    };
+
+    function finishGame() {
+      endIcons.textContent = results.join(' ');
+      const score = results.filter((r) => r === '✅').length;
+      endText.textContent = `You spotted ${score} out of ${STAGES.length} critic darlings.`;
+      const pool = comments[score] || comments[0];
+      endComment.textContent = randomFrom(pool);
+      shareBtn.style.display = 'inline-flex';
+      shareNotice.textContent = '';
+      endScreen.classList.add('show');
+    }
+
+    shareBtn.onclick = async () => {
+      const score = results.filter((r) => r === '✅').length;
+      const shareText = `Overrated ${ymdDash()} — ${results.join(' ')} (${score}/${STAGES.length})\n${location.href}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'Overrated — JBTgames', text: shareText, url: location.href });
+          shareNotice.textContent = 'Shared! May your hot takes spread far.';
+        } catch (err) {
+          console.warn('Share cancelled', err);
+        }
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(shareText);
+          shareNotice.textContent = 'Copied to clipboard. Paste it where the people gather.';
+        } catch (err) {
+          shareNotice.textContent = 'Copy failed — try selecting the text manually.';
+        }
+      } else {
+        shareNotice.textContent = shareText;
+      }
+    };
+
+    playAgainBtn.onclick = () => {
+      endScreen.classList.remove('show');
+    };
+
+    function randomFrom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+  </script>
+</body>
+</html>
