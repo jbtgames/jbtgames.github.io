@@ -29,12 +29,16 @@ let currentUser = null;
 let authMode = "signIn";
 let activeView = "map";
 let hasPromptedForToday = false;
+let modalContextDate = null;
 
 const gridElement = document.getElementById("moodGrid");
 const paletteElement = document.getElementById("palette");
 const legendList = document.getElementById("legendList");
 const logButton = document.getElementById("logMoodButton");
 const modal = document.getElementById("moodModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalSubtitle = document.getElementById("modalSubtitle");
+const clearMoodButton = document.getElementById("clearMoodButton");
 const streakCount = document.getElementById("streakCount");
 const gridMonth = document.getElementById("gridMonth");
 const previousMonthButton = document.getElementById("previousMonth");
@@ -108,6 +112,24 @@ function getMoodColorByName(name) {
 
 function getMoodNameByColor(color) {
   return palette.find((entry) => entry.color === color)?.mood ?? null;
+}
+
+function normalizeToISO(dateInput) {
+  if (!dateInput) {
+    return getISODate(new Date());
+  }
+
+  if (typeof dateInput === "string") {
+    return dateInput;
+  }
+
+  const candidate = dateInput instanceof Date ? dateInput : new Date(dateInput);
+
+  if (Number.isNaN(candidate.valueOf())) {
+    return getISODate(new Date());
+  }
+
+  return getISODate(candidate);
 }
 
 function getUserMeta(username) {
@@ -434,24 +456,70 @@ function calculateStreak(data, today) {
   return streak;
 }
 
-function logMood(color) {
+function logMood(color, targetDate = getISODate(new Date())) {
   if (!currentUser) {
     return;
   }
 
-  const today = getISODate(new Date());
+  const isoDate = normalizeToISO(targetDate);
   const data = getUserMoods();
-  const existing = data.find((item) => item.date === today);
+  const existing = data.find((item) => item.date === isoDate);
 
   if (existing) {
     existing.color = color;
   } else {
-    data.push({ date: today, color });
+    data.push({ date: isoDate, color });
   }
 
   saveUserMoods(data);
-  hasPromptedForToday = true;
+  if (isoDate === getISODate(new Date())) {
+    hasPromptedForToday = true;
+  }
   renderGrid();
+}
+
+function clearMoodForDate(targetDate) {
+  if (!currentUser || !targetDate) {
+    return;
+  }
+
+  const isoDate = normalizeToISO(targetDate);
+  const data = getUserMoods();
+  const existing = data.find((item) => item.date === isoDate);
+
+  if (existing) {
+    existing.color = null;
+  } else {
+    data.push({ date: isoDate, color: null });
+  }
+
+  saveUserMoods(data);
+
+  if (isoDate === getISODate(new Date())) {
+    hasPromptedForToday = false;
+  }
+
+  renderGrid();
+}
+
+function addDateInteractions(element, isoDate) {
+  if (!element || !isoDate) return;
+
+  const open = () => {
+    openMoodModal(isoDate);
+  };
+
+  if (!element.hasAttribute("tabindex")) {
+    element.tabIndex = 0;
+  }
+
+  element.addEventListener("click", open);
+  element.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      open();
+    }
+  });
 }
 
 function renderGrid() {
@@ -505,6 +573,12 @@ function renderGrid() {
       cell.appendChild(cellContent);
       cell.dataset.date = isoDate;
       cell.title = color ? `${moodLabel.textContent} on ${date.toDateString()}` : date.toDateString();
+
+      if (currentUser) {
+        cell.classList.add("cell--interactive");
+        cell.tabIndex = 0;
+        addDateInteractions(cell, isoDate);
+      }
     } else {
       cell.classList.add("cell--empty");
       cellContent.style.visibility = "hidden";
@@ -527,6 +601,7 @@ function renderGrid() {
   nextMonthButton.disabled = isCurrentMonth;
 
   renderHistory();
+  promptForTodayIfNeeded();
 }
 
 function changeMonth(offset) {
@@ -575,7 +650,9 @@ function renderTimeline(data) {
 
     const dateLabel = document.createElement("span");
     dateLabel.className = "timeline__date";
-    dateLabel.textContent = dateFormatter.format(new Date(item.date));
+    const entryDate = new Date(item.date);
+    const isValidDate = !Number.isNaN(entryDate.valueOf());
+    dateLabel.textContent = isValidDate ? dateFormatter.format(entryDate) : item.date;
 
     const moodLabel = document.createElement("span");
     moodLabel.className = "timeline__mood";
@@ -583,6 +660,14 @@ function renderTimeline(data) {
 
     details.append(dateLabel, moodLabel);
     entry.append(swatch, details);
+
+    if (currentUser && isValidDate) {
+      entry.classList.add("timeline__item--interactive");
+      entry.setAttribute("role", "button");
+      entry.setAttribute("aria-label", `Update mood for ${formatDate(entryDate)}`);
+      addDateInteractions(entry, item.date);
+    }
+
     historyTimeline.appendChild(entry);
   });
 
@@ -692,6 +777,12 @@ function renderHistoryCalendar(data) {
         cell.classList.add("history-calendar__cell--today");
       }
 
+      if (currentUser) {
+        cell.classList.add("history-calendar__cell--interactive");
+        cell.setAttribute("role", "button");
+        addDateInteractions(cell, iso);
+      }
+
       grid.appendChild(cell);
     }
 
@@ -763,8 +854,79 @@ function setActiveView(view) {
   }
 }
 
-function openMoodModal() {
+function updateModalForDate() {
+  if (!modal || !modalContextDate) return;
+
+  const data = getUserMoods();
+  const entry = data.find((item) => item.date === modalContextDate) ?? null;
+  const color = entry?.color ?? null;
+  const moodName = color ? getMoodNameByColor(color) : null;
+  const targetDate = new Date(modalContextDate);
+  const isValidDate = !Number.isNaN(targetDate.valueOf());
+  const todayISO = getISODate(new Date());
+
+  if (modalTitle) {
+    if (modalContextDate === todayISO) {
+      modalTitle.textContent = "How are you feeling today?";
+    } else if (isValidDate) {
+      modalTitle.textContent = `Log your mood for ${formatDate(targetDate)}`;
+    } else {
+      modalTitle.textContent = "Log your mood";
+    }
+  }
+
+  if (modalSubtitle) {
+    if (moodName) {
+      modalSubtitle.textContent = `Currently logged: ${moodName}. Tap a mood to update it.`;
+    } else {
+      modalSubtitle.textContent = "No mood logged yet. Tap a mood to log it.";
+    }
+  }
+
+  if (clearMoodButton) {
+    clearMoodButton.disabled = !color;
+  }
+
+  if (paletteElement) {
+    Array.from(paletteElement.querySelectorAll(".palette__option")).forEach((option) => {
+      const optionColor = option.getAttribute("data-color");
+      const isActive = Boolean(color) && optionColor === color;
+      option.classList.toggle("palette__option--active", isActive);
+      option.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+  }
+}
+
+function handlePaletteSelection(color) {
+  if (!currentUser) {
+    modal.close();
+    showAuthPanel();
+    toggleAuthMode("signIn");
+    return;
+  }
+
+  const targetDate = modalContextDate ?? getISODate(new Date());
+  logMood(color, targetDate);
+
+  if (modal.open) {
+    modal.close();
+  } else {
+    modal.removeAttribute("open");
+  }
+}
+
+function openMoodModal(targetDate = new Date()) {
   if (!modal) return;
+
+  if (!currentUser) {
+    showAuthPanel();
+    toggleAuthMode("signIn");
+    return;
+  }
+
+  modalContextDate = normalizeToISO(targetDate);
+  updateModalForDate();
+
   if (typeof modal.showModal === "function") {
     if (!modal.open) {
       modal.showModal();
@@ -792,11 +954,12 @@ function promptForTodayIfNeeded() {
 
   hasPromptedForToday = true;
   setTimeout(() => {
-    openMoodModal();
+    openMoodModal(new Date());
   }, 200);
 }
 
 function hydrateLegend() {
+  if (!legendList) return;
   legendList.innerHTML = "";
   palette.forEach(({ mood, color }) => {
     const item = document.createElement("li");
@@ -810,6 +973,7 @@ function hydrateLegend() {
 }
 
 function hydratePalette() {
+  if (!paletteElement) return;
   paletteElement.innerHTML = "";
   palette.forEach(({ mood, color }) => {
     const option = document.createElement("button");
@@ -817,16 +981,20 @@ function hydratePalette() {
     option.className = "palette__option";
     option.dataset.color = color;
     option.dataset.mood = mood;
+    option.setAttribute("aria-pressed", "false");
     option.innerHTML = `
       <span class="palette__swatch" style=\"background: ${color}\"></span>
       <span>${mood}</span>
     `;
     option.addEventListener("click", () => {
-      modal.close();
-      logMood(color);
+      handlePaletteSelection(color);
     });
     paletteElement.appendChild(option);
   });
+
+  if (modalContextDate) {
+    updateModalForDate();
+  }
 }
 
 function initialiseAuth() {
@@ -955,6 +1123,16 @@ function initialiseAuth() {
   }
 }
 
+clearMoodButton?.addEventListener("click", () => {
+  if (!currentUser || !modalContextDate) return;
+  clearMoodForDate(modalContextDate);
+  if (typeof modal.close === "function") {
+    modal.close();
+  } else {
+    modal.removeAttribute("open");
+  }
+});
+
 logButton.addEventListener("click", () => {
   if (!currentUser) {
     showAuthPanel();
@@ -964,12 +1142,32 @@ logButton.addEventListener("click", () => {
     return;
   }
 
-  openMoodModal();
+  openMoodModal(new Date());
+});
+
+modal.addEventListener("close", () => {
+  modalContextDate = null;
+  if (modalSubtitle) {
+    modalSubtitle.textContent = "Tap a mood to log it.";
+  }
+  if (clearMoodButton) {
+    clearMoodButton.disabled = true;
+  }
+  if (paletteElement) {
+    Array.from(paletteElement.querySelectorAll(".palette__option")).forEach((option) => {
+      option.classList.remove("palette__option--active");
+      option.setAttribute("aria-pressed", "false");
+    });
+  }
 });
 
 modal.addEventListener("cancel", (event) => {
   event.preventDefault();
-  modal.close();
+  if (typeof modal.close === "function") {
+    modal.close();
+  } else {
+    modal.removeAttribute("open");
+  }
 });
 
 previousMonthButton.addEventListener("click", () => {

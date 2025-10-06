@@ -234,6 +234,21 @@ body {
   color: var(--color-muted);
 }
 
+.cell--interactive {
+  cursor: pointer;
+}
+
+.cell--interactive:hover,
+.cell--interactive:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(31, 42, 55, 0.18);
+}
+
+.cell--interactive:focus-visible {
+  outline: 2px solid rgba(6, 214, 160, 0.55);
+  outline-offset: 3px;
+}
+
 .cell--filled .cell__content {
   color: #ffffff;
   font-weight: 600;
@@ -419,6 +434,23 @@ body {
   box-shadow: inset 0 0 0 1px rgba(31, 42, 55, 0.06);
 }
 
+.timeline__item--interactive {
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.timeline__item--interactive:hover,
+.timeline__item--interactive:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(31, 42, 55, 0.18);
+  background: rgba(241, 245, 249, 0.95);
+}
+
+.timeline__item--interactive:focus-visible {
+  outline: 2px solid rgba(90, 179, 230, 0.6);
+  outline-offset: 2px;
+}
+
 .timeline__swatch {
   width: 42px;
   height: 42px;
@@ -494,6 +526,22 @@ body {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.7);
   box-shadow: inset 0 0 0 1px rgba(31, 42, 55, 0.04);
+}
+
+.history-calendar__cell--interactive {
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.history-calendar__cell--interactive:hover,
+.history-calendar__cell--interactive:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(31, 42, 55, 0.18);
+}
+
+.history-calendar__cell--interactive:focus-visible {
+  outline: 2px solid rgba(6, 214, 160, 0.55);
+  outline-offset: 3px;
 }
 
 .history-calendar__cell--padding {
@@ -592,6 +640,27 @@ body {
   font-weight: 600;
 }
 
+.modal__subtitle {
+  font-size: 0.92rem;
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal__clear {
+  font-size: 0.85rem;
+  padding: 10px 18px;
+}
+
+.modal__clear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .modal__close {
   border: none;
   background: #f1f5f9;
@@ -625,6 +694,16 @@ body {
 .palette__option:focus-visible {
   transform: translateY(-1px);
   box-shadow: 0 10px 18px rgba(31, 42, 55, 0.12);
+}
+
+.palette__option--active {
+  background: linear-gradient(140deg, rgba(6, 214, 160, 0.18), rgba(90, 179, 230, 0.16));
+  box-shadow: 0 12px 24px rgba(6, 214, 160, 0.18);
+  transform: translateY(-1px);
+}
+
+.palette__option--active .palette__swatch {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 4px rgba(6, 214, 160, 0.45);
 }
 
 .palette__swatch {
