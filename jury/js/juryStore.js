@@ -702,9 +702,20 @@
   }
 
   function runBotCatchUp() {
-    if (isTimestampDue(state.bots?.nextCaseAt)) {
-      state.bots.nextCaseAt = null;
-      spawnBotCase();
+    let catchUpCases = 0;
+    const maxCaseCatchUp = Math.max(24, botCaseDeck.length * 6);
+    while (isTimestampDue(state.bots?.nextCaseAt) && catchUpCases < maxCaseCatchUp) {
+      const scheduledTime = state.bots.nextCaseAt;
+      if (!Number.isFinite(scheduledTime)) {
+        break;
+      }
+      const nextDelay = randomBetween(CASE_BOT_INTERVAL);
+      state.bots.nextCaseAt = scheduledTime + nextDelay;
+      spawnBotCase({ scheduledAt: scheduledTime, instant: true, preserveSchedule: true });
+      catchUpCases += 1;
+    }
+    if (catchUpCases >= maxCaseCatchUp && isTimestampDue(state.bots?.nextCaseAt)) {
+      state.bots.nextCaseAt = Date.now() + randomBetween(CASE_BOT_INTERVAL);
     }
 
     let pendingInitialComment = !Number.isFinite(state.bots?.lastCommentAt);
@@ -761,14 +772,19 @@
     }, delay);
   }
 
-  function spawnBotCase() {
+  function spawnBotCase(options = {}) {
+    const {
+      scheduledAt = Date.now(),
+      instant = false,
+      preserveSchedule = false
+    } = options;
     if (!botCaseDeck.length) {
       return;
     }
     const index = state.bots.caseIndex % botCaseDeck.length;
     state.bots.caseIndex = (state.bots.caseIndex + 1) % botCaseDeck.length;
     const template = botCaseDeck[index];
-    const createdAt = Date.now();
+    const createdAt = Number.isFinite(scheduledAt) ? Number(scheduledAt) : Date.now();
     const uniqueId = `${template.id}-${createdAt}-${Math.random().toString(36).slice(2, 6)}`;
     const baseCase = normaliseCase({
       ...template,
@@ -780,16 +796,26 @@
     addCase(baseCase, { skipNormalise: true, suppressEmit: true });
     if (Array.isArray(template.initialComments)) {
       template.initialComments.forEach((comment, offset) => {
-        setTimeout(() => {
+        const commentCreatedAt = createdAt + offset * 600;
+        const shouldAddImmediately = instant || commentCreatedAt <= Date.now();
+        const enqueueComment = () => {
           addComment(baseCase.id, {
             ...comment,
-            createdAt: createdAt + offset * 600,
+            createdAt: commentCreatedAt,
             isBot: true
           });
-        }, offset * 800);
+        };
+        if (shouldAddImmediately) {
+          enqueueComment();
+        } else {
+          const delay = instant ? 0 : offset * 800;
+          setTimeout(enqueueComment, delay);
+        }
       });
     }
-    state.bots.nextCaseAt = null;
+    if (!preserveSchedule) {
+      state.bots.nextCaseAt = null;
+    }
     persist();
     emit();
   }
