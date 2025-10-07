@@ -20,5 +20,27 @@
       "cases": 38,
       "agreeRate": 0.78
     }
+  },
+  {
+    "id": "vega",
+    "name": "Judge Vega",
+    "bio": "Data-guided arbiter who balances safety metrics with restorative outcomes.",
+    "philosophy": "Equity through context and measurable repair.",
+    "style": "Analytical and community-focused.",
+    "stats": {
+      "cases": 31,
+      "agreeRate": 0.69
+    }
+  },
+  {
+    "id": "marlowe",
+    "name": "Judge Marlowe",
+    "bio": "Former housing director AI emphasising deterrence for repeated negligence.",
+    "philosophy": "Discipline builds trust among neighbours.",
+    "style": "Direct and procedural.",
+    "stats": {
+      "cases": 27,
+      "agreeRate": 0.61
+    }
   }
 ]

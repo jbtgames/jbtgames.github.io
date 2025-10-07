@@ -20,21 +20,36 @@
         <p id="case-story" class="text-slate-300 leading-relaxed"></p>
         <p id="case-filed-by" class="text-xs text-indigo-200"></p>
         <div class="case-roster" id="case-roster">
+          <div class="roster-card accuser">
+            <p class="label">Accuser</p>
+            <p class="name" id="case-accuser-name"></p>
+            <p class="summary" id="case-accuser-summary"></p>
+            <p class="summary note" id="case-accuser-note"></p>
+          </div>
           <div class="roster-card prosecutor">
             <p class="label">Prosecutor</p>
             <p class="name" id="case-prosecutor-name"></p>
             <p class="summary" id="case-prosecutor-summary"></p>
+            <p class="summary note" id="case-prosecutor-note"></p>
           </div>
           <div class="roster-card defendant">
             <p class="label">Defendant</p>
             <p class="name" id="case-defendant-name"></p>
             <p class="summary" id="case-defendant-summary"></p>
+            <p class="summary note" id="case-defendant-note"></p>
           </div>
           <div class="roster-card defense">
             <p class="label">Defense Counsel</p>
             <p class="name" id="case-defense-name"></p>
             <p class="summary" id="case-defense-summary"></p>
+            <p class="summary note" id="case-defense-note"></p>
           </div>
+        </div>
+        <div class="judge-card" id="case-judge-card">
+          <p class="label">Presiding Judge</p>
+          <p class="name" id="case-judge-name"></p>
+          <p class="summary" id="case-judge-summary"></p>
+          <p class="leaning" id="case-judge-leaning"></p>
         </div>
         <div class="text-xs uppercase tracking-wide text-slate-500" id="case-status"></div>
       </header>
@@ -137,18 +152,28 @@
       const verdictSection = document.getElementById('verdict-section');
       const scoreWrap = document.getElementById('score-wrap');
       const filedBy = document.getElementById('case-filed-by');
+      const accuserName = document.getElementById('case-accuser-name');
+      const accuserSummary = document.getElementById('case-accuser-summary');
+      const accuserNote = document.getElementById('case-accuser-note');
       const prosecutorName = document.getElementById('case-prosecutor-name');
       const prosecutorSummary = document.getElementById('case-prosecutor-summary');
+      const prosecutorNote = document.getElementById('case-prosecutor-note');
       const defendantName = document.getElementById('case-defendant-name');
       const defendantSummary = document.getElementById('case-defendant-summary');
+      const defendantNote = document.getElementById('case-defendant-note');
       const defenseName = document.getElementById('case-defense-name');
       const defenseSummary = document.getElementById('case-defense-summary');
+      const defenseNote = document.getElementById('case-defense-note');
       const chargesList = document.getElementById('case-charges');
       const evidenceList = document.getElementById('case-evidence');
       const timelineList = document.getElementById('case-timeline');
       const juryBoxCard = document.getElementById('jury-box-card');
       const juryBoxTally = document.getElementById('jury-box-tally');
       const juryBoxStance = document.getElementById('jury-box-stance');
+      const judgeCard = document.getElementById('case-judge-card');
+      const judgeNameEl = document.getElementById('case-judge-name');
+      const judgeSummaryEl = document.getElementById('case-judge-summary');
+      const judgeLeaningEl = document.getElementById('case-judge-leaning');
 
       await store.loadCases();
       let currentCase = store.getCase(caseId);
@@ -174,6 +199,24 @@
           li.textContent = item;
           target.appendChild(li);
         });
+      }
+
+      function setRosterDetails(nameEl, summaryEl, noteEl, party, fallback) {
+        if (nameEl) {
+          nameEl.textContent = party?.name || fallback;
+        }
+        if (summaryEl) {
+          summaryEl.textContent = party?.summary || party?.title || '';
+        }
+        if (noteEl) {
+          const noteText = party?.roleNote || party?.profile || '';
+          if (noteText) {
+            noteEl.textContent = noteText;
+            noteEl.hidden = false;
+          } else {
+            noteEl.hidden = true;
+          }
+        }
       }
 
       function renderTimeline(target, entries) {
@@ -245,23 +288,32 @@
         }
 
         const parties = currentCase.parties || {};
-        if (prosecutorName) {
-          prosecutorName.textContent = parties.prosecutor?.name || 'Prosecutor';
-        }
-        if (prosecutorSummary) {
-          prosecutorSummary.textContent = parties.prosecutor?.summary || parties.prosecutor?.title || '';
-        }
-        if (defendantName) {
-          defendantName.textContent = parties.defendant?.name || 'Defendant';
-        }
-        if (defendantSummary) {
-          defendantSummary.textContent = parties.defendant?.summary || parties.defendant?.title || '';
-        }
-        if (defenseName) {
-          defenseName.textContent = parties.defense?.name || 'Defense Counsel';
-        }
-        if (defenseSummary) {
-          defenseSummary.textContent = parties.defense?.summary || parties.defense?.title || '';
+        setRosterDetails(accuserName, accuserSummary, accuserNote, parties.accuser, 'Accuser');
+        setRosterDetails(prosecutorName, prosecutorSummary, prosecutorNote, parties.prosecutor, 'Prosecutor');
+        setRosterDetails(defendantName, defendantSummary, defendantNote, parties.defendant, 'Defendant');
+        setRosterDetails(defenseName, defenseSummary, defenseNote, parties.defense, 'Defense Counsel');
+
+        if (judgeCard) {
+          const profile = currentCase.judgeProfile || {};
+          const hasJudge = Boolean(profile.name || currentCase.verdict?.judge);
+          judgeCard.hidden = !hasJudge;
+          if (hasJudge) {
+            if (judgeNameEl) {
+              judgeNameEl.textContent = profile.name || currentCase.verdict?.judge || 'Assigned Judge';
+            }
+            if (judgeSummaryEl) {
+              const summaryText = [profile.summary, profile.philosophy].filter(Boolean).join(' ');
+              judgeSummaryEl.textContent = summaryText || profile.title || '';
+            }
+            if (judgeLeaningEl) {
+              const leaningText = currentCase.verdict?.siding
+                ? `Currently siding with the ${currentCase.verdict.siding.toUpperCase()} — ${currentCase.verdict.decision || 'Deliberating'}`
+                : profile.leaning
+                  ? `Usual leaning: ${profile.leaning}`
+                  : 'Neutral stance reported.';
+              judgeLeaningEl.textContent = leaningText;
+            }
+          }
         }
 
         renderSimpleList(chargesList, currentCase.charges, 'No charges submitted.');
@@ -288,10 +340,13 @@
           verdictSection.hidden = false;
           document.getElementById('verdict-decision').textContent = currentCase.verdict.decision;
           document.getElementById('verdict-reasoning').textContent = currentCase.verdict.reasoning;
-          const judgeName = currentCase.verdict.judge || 'Unknown Judge';
-          const metaBits = [judgeName];
+          const judgeLabel = currentCase.verdict.judge || 'Unknown Judge';
+          const metaBits = [judgeLabel];
           if (Number.isFinite(currentCase.verdict.confidence)) {
             metaBits.push(`Confidence ${currentCase.verdict.confidence}%`);
+          }
+          if (currentCase.verdict.siding) {
+            metaBits.push(`Sides with ${currentCase.verdict.siding}`);
           }
           document.getElementById('verdict-meta').textContent = metaBits.join(' • ');
           if (Number.isFinite(currentCase.finalScore)) {
