@@ -697,6 +697,31 @@
     });
   }
 
+  function isTimestampDue(value) {
+    return Number.isFinite(value) && value <= Date.now();
+  }
+
+  function runBotCatchUp() {
+    if (isTimestampDue(state.bots?.nextCaseAt)) {
+      state.bots.nextCaseAt = null;
+      spawnBotCase();
+    }
+
+    let pendingInitialComment = !Number.isFinite(state.bots?.lastCommentAt);
+    let catchUpRuns = 0;
+    while (
+      catchUpRuns < 3 &&
+      (pendingInitialComment || isTimestampDue(state.bots?.nextCommentAt))
+    ) {
+      if (isTimestampDue(state.bots?.nextCommentAt)) {
+        state.bots.nextCommentAt = null;
+      }
+      spawnBotComment();
+      pendingInitialComment = false;
+      catchUpRuns += 1;
+    }
+  }
+
   function scheduleBots() {
     if (caseTimer) {
       clearTimeout(caseTimer);
@@ -796,6 +821,7 @@
       };
       persist();
     }
+    runBotCatchUp();
     scheduleBots();
     emit();
   }
