@@ -1,5 +1,19 @@
 (function () {
-  const STORAGE_KEY = 'jury_cases_v1';
+  const globalObject = typeof window !== 'undefined' ? window : globalThis;
+  const config = (globalObject && globalObject.JuryConfig) || {};
+  if (globalObject && globalObject.JuryConfig) {
+    try {
+      delete globalObject.JuryConfig;
+    } catch (error) {
+      globalObject.JuryConfig = undefined;
+    }
+  }
+  const STORAGE_KEY = typeof config.storageKey === 'string' && config.storageKey.trim().length
+    ? config.storageKey.trim()
+    : 'jury_cases_v1';
+  const CASES_PATH = typeof config.casesPath === 'string' && config.casesPath.trim().length
+    ? config.casesPath.trim()
+    : 'data/cases.json';
   const memoryFallback = (() => {
     const data = {};
     return {
@@ -40,7 +54,7 @@
 
   async function fetchBaseCases() {
     if (!baseLoadPromise) {
-      baseLoadPromise = fetch('data/cases.json')
+      baseLoadPromise = fetch(CASES_PATH)
         .then((response) => {
           if (!response.ok) {
             throw new Error('Failed to load base cases');
