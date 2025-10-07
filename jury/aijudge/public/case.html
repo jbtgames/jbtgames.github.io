@@ -31,6 +31,11 @@
             <h3 class="font-semibold text-slate-100 mb-1">Judge Reasoning</h3>
             <p id="verdict-reasoning" class="text-slate-300"></p>
             <p class="text-xs text-slate-500 mt-2" id="verdict-meta"></p>
+            <div class="space-y-2 mt-3" id="score-wrap" hidden>
+              <div class="text-xs uppercase tracking-wide text-slate-500">Composite Score</div>
+              <div class="score-bar"><div id="score-fill" class="score-bar-fill"></div></div>
+              <p class="text-xs text-slate-400" id="score-note"></p>
+            </div>
           </div>
         </div>
         <section class="space-y-3">
@@ -66,6 +71,11 @@
         <button type="submit" class="button-primary w-full">Add Comment</button>
       </form>
     </section>
+
+    <section class="card space-y-3" id="summary-section" hidden>
+      <h2 class="text-xl font-semibold">Community Summary</h2>
+      <ul id="summary-list" class="summary-list"></ul>
+    </section>
   </main>
 
   <script>
@@ -88,14 +98,51 @@
       document.getElementById('case-votes').textContent = item.votes;
       document.getElementById('case-status').textContent = item.status === 'judged' ? 'VERDICT PUBLISHED' : 'AWAITING TRIAL';
 
+      const verdictSection = document.getElementById('verdict-section');
+      const scoreWrap = document.getElementById('score-wrap');
+
       if (item.verdict) {
-        document.getElementById('verdict-section').hidden = false;
+        verdictSection.hidden = false;
         document.getElementById('verdict-decision').textContent = item.verdict.decision;
         document.getElementById('verdict-reasoning').textContent = item.verdict.reasoning;
         const judgeName = item.verdict.judge || 'Unknown Judge';
-        document.getElementById('verdict-meta').textContent = `${judgeName} • Confidence ${item.verdict.confidence ?? '—'}%`;
+        const metaBits = [judgeName];
+        if (Number.isFinite(item.verdict.confidence)) {
+          metaBits.push(`Confidence ${item.verdict.confidence}%`);
+        }
+        document.getElementById('verdict-meta').textContent = metaBits.join(' • ');
+        if (Number.isFinite(item.finalScore)) {
+          scoreWrap.hidden = false;
+          const scoreFill = document.getElementById('score-fill');
+          const clamped = Math.max(0, Math.min(100, Math.round(item.finalScore)));
+          scoreFill.style.width = clamped + '%';
+          document.getElementById('score-note').textContent = `Composite score ${clamped}/100 from judge and crowd weighting.`;
+        } else {
+          scoreWrap.hidden = true;
+        }
         document.querySelector('#prosecution p').textContent = item.prosecution || 'Awaiting trial.';
         document.querySelector('#defense p').textContent = item.defense || 'Awaiting trial.';
+      } else {
+        verdictSection.hidden = true;
+        scoreWrap.hidden = true;
+      }
+
+      const summarySection = document.getElementById('summary-section');
+      const summaryList = document.getElementById('summary-list');
+      if (item.ai_summary) {
+        summarySection.hidden = false;
+        summaryList.innerHTML = '';
+        item.ai_summary
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .forEach((line) => {
+            const entry = document.createElement('li');
+            entry.textContent = line.replace(/^•\s*/, '');
+            summaryList.appendChild(entry);
+          });
+      } else {
+        summarySection.hidden = true;
       }
 
       const comments = item.comments || [];
