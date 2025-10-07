@@ -1,1 +1,256 @@
-!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Judge • Moral Court</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/variable.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100">
+  <main class="max-w-5xl mx-auto px-4 py-10 space-y-12">
+    <header class="text-center space-y-4">
+      <span class="badge">Hourly AI Trials</span>
+      <h1 class="text-4xl font-semibold tracking-tight">AI Judge — Moral Court</h1>
+      <p class="text-slate-300 max-w-2xl mx-auto">
+        Upload dilemmas, debate with the crowd, then let our AI tribunal deliver a nightly verdict.
+      </p>
+      <div class="flex flex-wrap justify-center gap-3 text-sm text-slate-400">
+        <span>🚀 Upload cases</span>
+        <span>💬 Sentiment-weighted comments</span>
+        <span>⚖️ AI prosecution, defense &amp; judge</span>
+      </div>
+    </header>
+
+    <section class="grid gap-6 md:grid-cols-[2fr,1fr]">
+      <article class="card space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="text-xl font-semibold">Live Docket</h2>
+            <button id="run-trial" class="button-secondary text-sm">Run AI Trial</button>
+          </div>
+          <a href="judges.html" class="text-sm text-indigo-300 hover:text-indigo-200">Meet the Judges →</a>
+        </div>
+        <p id="trial-message" class="text-xs text-indigo-200" hidden></p>
+        <div id="case-feed" class="space-y-4"></div>
+      </article>
+
+      <aside class="card space-y-4">
+        <h2 class="text-xl font-semibold">Submit a Case</h2>
+        <form id="upload-form" class="space-y-3">
+          <div>
+            <label class="block text-sm text-slate-300 mb-1">Title</label>
+            <input type="text" name="title" required class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400" placeholder="Caught lying to a friend" />
+          </div>
+          <div>
+            <label class="block text-sm text-slate-300 mb-1">Story</label>
+            <textarea name="story" rows="5" required class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400" placeholder="Explain what happened"></textarea>
+          </div>
+          <button type="submit" class="button-primary w-full">Send to the Jury</button>
+          <p class="text-xs text-slate-400">
+            Uploads are saved in your browser so you can keep refining the debate.
+          </p>
+          <p id="upload-feedback" class="text-xs text-emerald-300" hidden>Case added to the docket. Refresh the page to reset.</p>
+        </form>
+      </aside>
+    </section>
+
+    <section class="card space-y-4">
+      <h2 class="text-xl font-semibold">How the Court Works</h2>
+      <div class="grid md:grid-cols-3 gap-4 text-sm text-slate-300">
+        <div>
+          <h3 class="font-semibold text-slate-100 mb-2">Daytime Debate</h3>
+          <p>People vote and leave comments. A sentiment bot keeps score and builds the crowd summary.</p>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-100 mb-2">Hourly Session</h3>
+          <p>Top cases face prosecution, defense, and a neutral judge prompt. Verdicts land automatically.</p>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-100 mb-2">Transparency</h3>
+          <p>Every verdict includes public mood, AI arguments, and judge confidence.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <template id="case-template">
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-4">
+      <header class="space-y-1">
+        <div class="flex items-center justify-between gap-4">
+          <h3 class="text-lg font-semibold"></h3>
+          <span class="badge"><span class="emoji">🗳️</span><span class="votes"></span></span>
+        </div>
+        <p class="text-sm text-slate-300 story"></p>
+      </header>
+      <div class="space-y-2 text-sm text-slate-400">
+        <div class="progress-bar"><div class="sentiment" style="width:50%"></div></div>
+        <p><strong class="text-slate-200">Public Mood:</strong> <span class="summary"></span></p>
+        <p class="status text-xs uppercase tracking-wide text-slate-500"></p>
+      </div>
+      <footer class="flex items-center justify-between text-sm">
+        <div class="flex gap-2">
+          <button class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 vote-up">👍</button>
+          <button class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 vote-down">👎</button>
+        </div>
+        <a class="text-indigo-300 hover:text-indigo-200 text-sm" href="#">View Case →</a>
+      </footer>
+    </article>
+  </template>
+
+  <script src="js/juryStore.js"></script>
+  <script>
+    (async function () {
+      const store = window.JuryStore;
+      const ai = window.JuryAI;
+      const feed = document.getElementById('case-feed');
+      const template = document.getElementById('case-template');
+      const uploadForm = document.getElementById('upload-form');
+      const runTrialButton = document.getElementById('run-trial');
+      const trialMessage = document.getElementById('trial-message');
+      const uploadFeedback = document.getElementById('upload-feedback');
+
+      let cases = [];
+
+      async function initialise() {
+        try {
+          cases = await store.loadCases();
+          renderCases();
+        } catch (error) {
+          console.error('Failed to load cases', error);
+          feed.innerHTML = '<p class="text-sm text-rose-300">Unable to load the docket right now. Try again shortly.</p>';
+        }
+      }
+
+      function renderCases() {
+        feed.innerHTML = '';
+        if (!cases.length) {
+          feed.innerHTML = '<p class="text-sm text-slate-300">No cases yet. Submit a dilemma to start the debate.</p>';
+          return;
+        }
+
+        cases.forEach((item) => {
+          const node = template.content.cloneNode(true);
+          node.querySelector('h3').textContent = item.title;
+          node.querySelector('.story').textContent = item.story;
+          node.querySelector('.votes').textContent = item.votes;
+
+          const summaryText = item.ai_summary
+            ? item.ai_summary.split('\n')[0].replace(/^•\s*/, '')
+            : ai.summariseComments(item.comments || []).lines[0].replace(/^•\s*/, '');
+          node.querySelector('.summary').textContent = summaryText;
+
+          const status = node.querySelector('.status');
+          if (item.status === 'judged') {
+            const details = [item.verdict?.decision, item.verdict?.judge ? `Judge ${item.verdict.judge}` : null];
+            if (Number.isFinite(item.finalScore)) {
+              details.push(`Score ${Math.round(item.finalScore)}`);
+            }
+            status.textContent = details.filter(Boolean).join(' • ') || 'Verdict published';
+          } else {
+            status.textContent = 'Awaiting trial';
+          }
+
+          const sentimentInfo = ai.summariseComments(item.comments || []);
+          const sentimentWidth = Math.max(0, Math.min(100, Math.round((sentimentInfo.average + 1) * 50)));
+          node.querySelector('.sentiment').style.width = sentimentWidth + '%';
+
+          const link = node.querySelector('a');
+          link.href = `case.html?id=${encodeURIComponent(item.id)}`;
+
+          node.querySelector('.vote-up').addEventListener('click', () => adjustVotes(item.id, 1));
+          node.querySelector('.vote-down').addEventListener('click', () => adjustVotes(item.id, -1));
+
+          feed.appendChild(node);
+        });
+      }
+
+      function adjustVotes(id, delta) {
+        cases = cases.map((item) => {
+          if (item.id !== id) return item;
+          const nextVotes = Math.max(0, (Number(item.votes) || 0) + delta);
+          return { ...item, votes: nextVotes };
+        });
+        cases = store.saveCases(cases);
+        renderCases();
+      }
+
+      async function runTrial() {
+        if (!runTrialButton) return;
+        runTrialButton.disabled = true;
+        runTrialButton.textContent = 'Running…';
+        if (trialMessage) {
+          trialMessage.hidden = true;
+        }
+        try {
+          const pending = cases.filter((item) => item.status !== 'judged');
+          const toProcess = pending.slice(0, 3);
+          if (!toProcess.length) {
+            if (trialMessage) {
+              trialMessage.textContent = 'No pending cases were ready for trial yet.';
+              trialMessage.hidden = false;
+            }
+            return;
+          }
+          const ids = new Set(toProcess.map((item) => item.id));
+          cases = cases.map((item) => (ids.has(item.id) ? ai.processCaseForVerdict(item) : item));
+          cases = store.saveCases(cases);
+          if (trialMessage) {
+            const processed = Array.from(ids);
+            trialMessage.textContent = `Processed ${processed.length} case${processed.length > 1 ? 's' : ''}: ${processed.join(', ')}`;
+            trialMessage.hidden = false;
+          }
+          renderCases();
+        } catch (error) {
+          console.error('Trial run failed', error);
+          if (trialMessage) {
+            trialMessage.textContent = 'Could not run the AI trial. Please try again.';
+            trialMessage.hidden = false;
+          }
+        } finally {
+          runTrialButton.disabled = false;
+          runTrialButton.textContent = 'Run AI Trial';
+        }
+      }
+
+      uploadForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(uploadForm);
+        const title = (formData.get('title') || '').toString().trim();
+        const story = (formData.get('story') || '').toString().trim();
+        if (!title || !story) return;
+
+        const emptySummary = ai.summariseComments([]);
+        const newCase = {
+          id: `local_${Date.now().toString(36)}`,
+          title: title.slice(0, 120),
+          story,
+          votes: 0,
+          comments: [],
+          ai_summary: emptySummary.lines.join('\n'),
+          status: 'pending',
+          prosecution: '',
+          defense: '',
+          verdict: null,
+          publicSentiment: emptySummary.average
+        };
+        cases = [newCase, ...cases];
+        cases = store.saveCases(cases);
+        uploadForm.reset();
+        if (uploadFeedback) {
+          uploadFeedback.hidden = false;
+          uploadFeedback.textContent = 'Case added to the docket. It lives in your browser storage.';
+        }
+        renderCases();
+      });
+
+      if (runTrialButton) {
+        runTrialButton.addEventListener('click', runTrial);
+      }
+
+      initialise();
+    })();
+  </script>
+</body>
+</html>
