@@ -927,9 +927,23 @@
         const comments = Array.isArray(working.comments) ? working.comments : [];
         const existingUsers = new Set(comments.map((comment) => comment.user));
         const newComments = [];
+        const previousVoiceLog =
+          working.botMeta && typeof working.botMeta.voiceLog === 'object' && !Array.isArray(working.botMeta.voiceLog)
+            ? working.botMeta.voiceLog
+            : {};
+        const voiceLog = { ...previousVoiceLog };
+        let voiceLogChanged = false;
         const voices = [...botCommentAuthors, ...publicVoices];
         voices.forEach((author) => {
-          if (!forceComments && existingUsers.has(author.user)) {
+          const user = author.user;
+          const lastVoiceDay = voiceLog[user];
+          const hasSpokenBefore = existingUsers.has(user);
+          const alreadyLoggedToday = lastVoiceDay === dayKey;
+          if (!forceComments && hasSpokenBefore && alreadyLoggedToday) {
+            return;
+          }
+          const canSpeak = forceComments || !hasSpokenBefore || lastVoiceDay !== dayKey;
+          if (!canSpeak) {
             return;
           }
           const stance = author.stance || 'mixed';
@@ -940,10 +954,15 @@
             sentiment = -0.45;
           }
           newComments.push({
-            user: author.user,
+            user,
             text: composeBotComment(working, author),
             sentiment
           });
+          existingUsers.add(user);
+          if (voiceLog[user] !== dayKey) {
+            voiceLog[user] = dayKey;
+            voiceLogChanged = true;
+          }
         });
         let changed = false;
         if (newComments.length) {
@@ -965,6 +984,9 @@
           trendingScore,
           uploads: Number(working.botMeta?.uploads) || (working.botMeta?.uploadedOn ? 1 : 0)
         };
+        if (voiceLogChanged || Object.keys(voiceLog).length) {
+          botMeta.voiceLog = voiceLog;
+        }
         if (JSON.stringify(botMeta) !== JSON.stringify(working.botMeta || {})) {
           working.botMeta = botMeta;
           changed = true;

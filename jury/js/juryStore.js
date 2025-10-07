@@ -219,6 +219,26 @@
       return {};
     }
     const result = {};
+    if (meta.voiceLog && typeof meta.voiceLog === 'object' && !Array.isArray(meta.voiceLog)) {
+      const entries = Object.entries(meta.voiceLog).reduce((acc, [user, day]) => {
+        if (typeof user !== 'string' && typeof user !== 'number') {
+          return acc;
+        }
+        const key = user.toString().slice(0, 80);
+        if (!key) {
+          return acc;
+        }
+        if (day === null || day === undefined) {
+          return acc;
+        }
+        const value = day.toString().slice(0, 24);
+        acc[key] = value;
+        return acc;
+      }, {});
+      if (Object.keys(entries).length) {
+        result.voiceLog = entries;
+      }
+    }
     if (meta.uploadedOn) {
       result.uploadedOn = meta.uploadedOn.toString().slice(0, 24);
     }
