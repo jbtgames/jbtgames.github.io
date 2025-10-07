@@ -767,17 +767,29 @@
     }
     const index = state.bots.caseIndex % botCaseDeck.length;
     state.bots.caseIndex = (state.bots.caseIndex + 1) % botCaseDeck.length;
-    state.bots.lastCaseAt = Date.now();
     const template = botCaseDeck[index];
-    const baseCase = normaliseCase({ ...template, isBot: true, createdAt: Date.now() });
+    const createdAt = Date.now();
+    const uniqueId = `${template.id}-${createdAt}-${Math.random().toString(36).slice(2, 6)}`;
+    const baseCase = normaliseCase({
+      ...template,
+      id: uniqueId,
+      isBot: true,
+      createdAt
+    });
+    state.bots.lastCaseAt = createdAt;
     addCase(baseCase, { skipNormalise: true, suppressEmit: true });
     if (Array.isArray(template.initialComments)) {
       template.initialComments.forEach((comment, offset) => {
         setTimeout(() => {
-          addComment(baseCase.id, { ...comment, isBot: true });
+          addComment(baseCase.id, {
+            ...comment,
+            createdAt: createdAt + offset * 600,
+            isBot: true
+          });
         }, offset * 800);
       });
     }
+    state.bots.nextCaseAt = null;
     persist();
     emit();
   }
@@ -820,6 +832,10 @@
         }
       };
       persist();
+    }
+    if (botCaseDeck.length) {
+      state.bots.nextCaseAt = null;
+      spawnBotCase();
     }
     runBotCatchUp();
     scheduleBots();
