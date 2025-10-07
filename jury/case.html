@@ -92,19 +92,23 @@
             </div>
           </div>
         </div>
-        <section class="space-y-3">
-          <h3 class="font-semibold text-slate-100">AI Arguments</h3>
-          <details class="bg-slate-900/40 rounded-xl p-4" id="prosecution">
-            <summary class="cursor-pointer text-sm font-semibold text-rose-300">Prosecution Case</summary>
-            <p class="mt-2 text-sm text-slate-300"></p>
-          </details>
-          <details class="bg-slate-900/40 rounded-xl p-4" id="defense">
-            <summary class="cursor-pointer text-sm font-semibold text-emerald-300">Defense Case</summary>
-            <p class="mt-2 text-sm text-slate-300"></p>
-          </details>
-        </section>
       </section>
     </article>
+
+    <section class="card space-y-3" id="arguments-section">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold">AI Trial Briefs</h2>
+        <span id="arguments-status" class="text-xs text-slate-400"></span>
+      </div>
+      <details class="bg-slate-900/40 rounded-xl p-4" id="argument-prosecution">
+        <summary class="cursor-pointer text-sm font-semibold text-rose-300">Prosecution Case</summary>
+        <p class="mt-2 text-sm text-slate-300"></p>
+      </details>
+      <details class="bg-slate-900/40 rounded-xl p-4" id="argument-defense">
+        <summary class="cursor-pointer text-sm font-semibold text-emerald-300">Defense Case</summary>
+        <p class="mt-2 text-sm text-slate-300"></p>
+      </details>
+    </section>
 
     <section class="card space-y-4">
       <header class="flex items-center justify-between">
@@ -151,6 +155,10 @@
       const commentList = document.getElementById('comment-list');
       const verdictSection = document.getElementById('verdict-section');
       const scoreWrap = document.getElementById('score-wrap');
+      const argumentsSection = document.getElementById('arguments-section');
+      const argumentsStatus = document.getElementById('arguments-status');
+      const argumentProsecution = document.querySelector('#argument-prosecution p');
+      const argumentDefense = document.querySelector('#argument-defense p');
       const filedBy = document.getElementById('case-filed-by');
       const accuserName = document.getElementById('case-accuser-name');
       const accuserSummary = document.getElementById('case-accuser-summary');
@@ -358,11 +366,28 @@
           } else {
             scoreWrap.hidden = true;
           }
-          document.querySelector('#prosecution p').textContent = currentCase.prosecution || 'Awaiting trial.';
-          document.querySelector('#defense p').textContent = currentCase.defense || 'Awaiting trial.';
         } else {
           verdictSection.hidden = true;
           scoreWrap.hidden = true;
+        }
+
+        if (argumentsSection) {
+          const prosecutionBrief = currentCase.prosecution || 'Awaiting trial.';
+          const defenseBrief = currentCase.defense || 'Awaiting trial.';
+          if (argumentProsecution) {
+            argumentProsecution.textContent = prosecutionBrief;
+          }
+          if (argumentDefense) {
+            argumentDefense.textContent = defenseBrief;
+          }
+          if (argumentsStatus) {
+            if (currentCase.status === 'judged' && currentCase.verdict?.judge) {
+              argumentsStatus.textContent = `Verdict issued by Judge ${currentCase.verdict.judge}.`;
+            } else {
+              argumentsStatus.textContent = 'Briefs prepared — awaiting trial.';
+            }
+          }
+          argumentsSection.hidden = !prosecutionBrief && !defenseBrief;
         }
 
         const summaryInfo = currentCase.ai_summary
