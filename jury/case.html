@@ -12,20 +12,59 @@
   <main class="max-w-3xl mx-auto px-4 py-10 space-y-8">
     <a href="index.html" class="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-200">← Back to docket</a>
     <article class="card space-y-6" id="case-card">
-      <header class="space-y-2">
+      <header class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h1 class="text-2xl font-semibold" id="case-title"></h1>
           <span class="badge"><span>🗳️</span><span id="case-votes"></span></span>
         </div>
         <p id="case-story" class="text-slate-300 leading-relaxed"></p>
+        <p id="case-filed-by" class="text-xs text-indigo-200"></p>
+        <div class="case-roster" id="case-roster">
+          <div class="roster-card prosecutor">
+            <p class="label">Prosecutor</p>
+            <p class="name" id="case-prosecutor-name"></p>
+            <p class="summary" id="case-prosecutor-summary"></p>
+          </div>
+          <div class="roster-card defendant">
+            <p class="label">Defendant</p>
+            <p class="name" id="case-defendant-name"></p>
+            <p class="summary" id="case-defendant-summary"></p>
+          </div>
+          <div class="roster-card defense">
+            <p class="label">Defense Counsel</p>
+            <p class="name" id="case-defense-name"></p>
+            <p class="summary" id="case-defense-summary"></p>
+          </div>
+        </div>
         <div class="text-xs uppercase tracking-wide text-slate-500" id="case-status"></div>
       </header>
+      <section class="case-matrix">
+        <div class="case-panel">
+          <h2 class="panel-title">Charges</h2>
+          <ul id="case-charges" class="case-list"></ul>
+        </div>
+        <div class="case-panel">
+          <h2 class="panel-title">Key Evidence</h2>
+          <ul id="case-evidence" class="case-list"></ul>
+        </div>
+      </section>
+      <section class="case-matrix">
+        <div class="case-panel">
+          <h2 class="panel-title">Timeline of Events</h2>
+          <ol id="case-timeline" class="timeline-list"></ol>
+        </div>
+        <div class="case-panel" id="jury-box-card">
+          <h2 class="panel-title">Jury Box Tally</h2>
+          <p id="jury-box-tally" class="text-slate-200 font-semibold"></p>
+          <p id="jury-box-stance" class="text-sm text-slate-300"></p>
+        </div>
+      </section>
       <section class="space-y-4" id="verdict-section" hidden>
         <h2 class="text-lg font-semibold">Latest Verdict</h2>
         <div class="grid gap-4 md:grid-cols-3 text-sm text-slate-200">
           <div class="bg-slate-900/50 rounded-xl p-4">
             <h3 class="font-semibold text-slate-100 mb-1">Verdict</h3>
-            <p id="verdict-decision" class="text-indigo-300"></p>
+            <p id="verdict-decision" class="verdict-headline"></p>
           </div>
           <div class="bg-slate-900/50 rounded-xl p-4 md:col-span-2">
             <h3 class="font-semibold text-slate-100 mb-1">Judge Reasoning</h3>
@@ -97,6 +136,19 @@
       const commentList = document.getElementById('comment-list');
       const verdictSection = document.getElementById('verdict-section');
       const scoreWrap = document.getElementById('score-wrap');
+      const filedBy = document.getElementById('case-filed-by');
+      const prosecutorName = document.getElementById('case-prosecutor-name');
+      const prosecutorSummary = document.getElementById('case-prosecutor-summary');
+      const defendantName = document.getElementById('case-defendant-name');
+      const defendantSummary = document.getElementById('case-defendant-summary');
+      const defenseName = document.getElementById('case-defense-name');
+      const defenseSummary = document.getElementById('case-defense-summary');
+      const chargesList = document.getElementById('case-charges');
+      const evidenceList = document.getElementById('case-evidence');
+      const timelineList = document.getElementById('case-timeline');
+      const juryBoxCard = document.getElementById('jury-box-card');
+      const juryBoxTally = document.getElementById('jury-box-tally');
+      const juryBoxStance = document.getElementById('jury-box-stance');
 
       await store.loadCases();
       let currentCase = store.getCase(caseId);
@@ -107,11 +159,130 @@
         return;
       }
 
+      function renderSimpleList(target, list, emptyText) {
+        if (!target) return;
+        target.innerHTML = '';
+        if (!Array.isArray(list) || !list.length) {
+          const li = document.createElement('li');
+          li.className = 'text-sm text-slate-400';
+          li.textContent = emptyText;
+          target.appendChild(li);
+          return;
+        }
+        list.forEach((item) => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          target.appendChild(li);
+        });
+      }
+
+      function renderTimeline(target, entries) {
+        if (!target) return;
+        target.innerHTML = '';
+        if (!Array.isArray(entries) || !entries.length) {
+          const li = document.createElement('li');
+          li.className = 'text-sm text-slate-400';
+          li.textContent = 'Timeline not submitted yet.';
+          target.appendChild(li);
+          return;
+        }
+        entries.forEach((entry) => {
+          const li = document.createElement('li');
+          li.className = 'timeline-entry';
+          const time = document.createElement('span');
+          time.className = 'timeline-time';
+          time.textContent = entry.time || '';
+          const event = document.createElement('span');
+          event.className = 'timeline-event';
+          event.textContent = entry.event || '';
+          li.appendChild(time);
+          li.appendChild(event);
+          target.appendChild(li);
+        });
+      }
+
+      function buildRoleBadge(user) {
+        if (!user) return null;
+        const lower = user.toLowerCase();
+        let roleClass = '';
+        let label = '';
+        if (lower.includes('prosecutor')) {
+          roleClass = 'role-prosecution';
+          label = 'PROSECUTION';
+        } else if (lower.includes('defense') || lower.includes('defence')) {
+          roleClass = 'role-defense';
+          label = 'DEFENSE';
+        } else if (lower.includes('jury box')) {
+          roleClass = 'role-jury';
+          label = 'JURY BOX';
+        } else if (lower.includes('judge')) {
+          roleClass = 'role-judge';
+          label = 'JUDGE';
+        }
+        if (!roleClass) return null;
+        const badge = document.createElement('span');
+        badge.className = `role-badge ${roleClass}`;
+        badge.textContent = label;
+        return badge;
+      }
+
       function renderCase() {
         document.getElementById('case-title').textContent = currentCase.title;
         document.getElementById('case-story').textContent = currentCase.story;
         document.getElementById('case-votes').textContent = currentCase.votes;
-        document.getElementById('case-status').textContent = currentCase.status === 'judged' ? 'VERDICT PUBLISHED' : 'AWAITING TRIAL';
+        const statusText = currentCase.status === 'judged'
+          ? `VERDICT: ${currentCase.verdict?.decision || 'Published'}`
+          : 'AWAITING TRIAL';
+        document.getElementById('case-status').textContent = statusText;
+
+        if (filedBy) {
+          if (currentCase.filedBy) {
+            filedBy.hidden = false;
+            filedBy.textContent = `Filed by ${currentCase.filedBy}`;
+          } else {
+            filedBy.hidden = true;
+          }
+        }
+
+        const parties = currentCase.parties || {};
+        if (prosecutorName) {
+          prosecutorName.textContent = parties.prosecutor?.name || 'Prosecutor';
+        }
+        if (prosecutorSummary) {
+          prosecutorSummary.textContent = parties.prosecutor?.summary || parties.prosecutor?.title || '';
+        }
+        if (defendantName) {
+          defendantName.textContent = parties.defendant?.name || 'Defendant';
+        }
+        if (defendantSummary) {
+          defendantSummary.textContent = parties.defendant?.summary || parties.defendant?.title || '';
+        }
+        if (defenseName) {
+          defenseName.textContent = parties.defense?.name || 'Defense Counsel';
+        }
+        if (defenseSummary) {
+          defenseSummary.textContent = parties.defense?.summary || parties.defense?.title || '';
+        }
+
+        renderSimpleList(chargesList, currentCase.charges, 'No charges submitted.');
+        const evidenceItems = (currentCase.evidence || []).map((item) => `${item.label}: ${item.detail}`);
+        renderSimpleList(evidenceList, evidenceItems, 'Evidence will be uploaded before trial.');
+        renderTimeline(timelineList, currentCase.timeline);
+
+        const box = currentCase.juryBox || null;
+        if (juryBoxCard) {
+          if (box) {
+            juryBoxCard.hidden = false;
+            if (juryBoxTally) {
+              juryBoxTally.textContent = `Prosecution ${box.votesForProsecution ?? 0} • Defense ${box.votesForDefense ?? 0}`;
+            }
+            if (juryBoxStance) {
+              juryBoxStance.textContent = box.stance || 'Jury Box has not provided commentary yet.';
+            }
+          } else {
+            juryBoxCard.hidden = true;
+          }
+        }
 
         if (currentCase.verdict) {
           verdictSection.hidden = false;
@@ -158,7 +329,28 @@
         (currentCase.comments || []).forEach((comment) => {
           const li = document.createElement('li');
           li.className = 'bg-slate-900/40 rounded-xl p-3 text-sm flex flex-col gap-1';
-          li.innerHTML = `<div class="flex items-center justify-between text-slate-400"><span>${comment.user}</span><span>${formatSentiment(comment.sentiment)}</span></div><p class="text-slate-200">${comment.text}</p>`;
+          const meta = document.createElement('div');
+          meta.className = 'flex items-center justify-between text-slate-400 gap-2 flex-wrap';
+          const userWrap = document.createElement('div');
+          userWrap.className = 'flex items-center gap-2';
+          const name = document.createElement('span');
+          name.textContent = comment.user;
+          userWrap.appendChild(name);
+          const badge = buildRoleBadge(comment.user || '');
+          if (badge) {
+            userWrap.appendChild(badge);
+          }
+          meta.appendChild(userWrap);
+          const sentimentLabel = document.createElement('span');
+          sentimentLabel.textContent = formatSentiment(comment.sentiment);
+          meta.appendChild(sentimentLabel);
+
+          const body = document.createElement('p');
+          body.className = 'text-slate-200';
+          body.textContent = comment.text;
+
+          li.appendChild(meta);
+          li.appendChild(body);
           commentList.appendChild(li);
         });
         const average = ai.summariseComments(currentCase.comments || []).average;

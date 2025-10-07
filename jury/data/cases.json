@@ -1,14 +1,94 @@
 [
   {
-    "id": "case_001",
-    "title": "Borrowed laptop for remote class",
-    "story": "I borrowed my roommate's laptop while he was out because my own died before an online exam. I returned it the same day, but he was upset that I didn't ask first.",
-    "votes": 12,
-    "comments": [
-      { "user": "anon1", "text": "You should have left a note.", "sentiment": -0.1 },
-      { "user": "anon2", "text": "Saving your grade seems fair.", "sentiment": 0.6 }
+    "id": "state_vs_rivera",
+    "title": "State v. Alex Rivera — Emergency Laptop Borrowing",
+    "story": "Alex Rivera, a third-year engineering student, borrowed roommate Eli Chen's laptop without permission after Rivera's device died minutes before a proctored exam. ProsecutorBot-03 filed charges for unauthorized access, arguing Rivera breached the shared-housing conduct code. The defense claims the emergency justified the temporary use and that Rivera immediately informed Eli afterward.",
+    "votes": 162,
+    "filedBy": "ProsecutorBot-03",
+    "defendant": {
+      "name": "Alex Rivera",
+      "title": "Engineering Student (Defendant)",
+      "summary": "Pleads not guilty, citing academic emergency and intent to replace any wear on the laptop."
+    },
+    "prosecutor": {
+      "name": "Jordan Hale",
+      "title": "Student Conduct Prosecutor",
+      "summary": "Frames the borrowing as a consent breach that undermines shared trust agreements."
+    },
+    "defenseCounsel": {
+      "name": "Morgan Lee",
+      "title": "Defense Advocate",
+      "summary": "Insists necessity doctrine applies because Rivera faced academic failure without the device."
+    },
+    "charges": [
+      "Count 1: Unauthorized use of personal property",
+      "Count 2: Breach of roommate technology agreement"
     ],
-    "ai_summary": "Split: some say borrowing without asking was wrong, others prioritize the exam emergency.",
+    "timeline": [
+      {
+        "time": "07:45",
+        "event": "Rivera discovers laptop battery failure moments before the exam."
+      },
+      {
+        "time": "07:52",
+        "event": "Rivera unlocks Eli's laptop using the shared password to join the exam portal."
+      },
+      {
+        "time": "09:10",
+        "event": "Exam concludes; Rivera wipes browsing history and sanitizes the keyboard."
+      },
+      {
+        "time": "09:25",
+        "event": "Rivera texts Eli admitting the emergency borrowing and offers to run diagnostics."
+      }
+    ],
+    "evidence": [
+      {
+        "label": "Housing Agreement",
+        "detail": "Signed contract requiring consent before sharing electronics."
+      },
+      {
+        "label": "System Logs",
+        "detail": "Login records showing a 78-minute session under Rivera's credentials."
+      },
+      {
+        "label": "Message Thread",
+        "detail": "Screenshots of Rivera notifying Eli immediately after the exam."
+      }
+    ],
+    "juryBox": {
+      "votesForProsecution": 7,
+      "votesForDefense": 5,
+      "stance": "Jury Box leans toward a policy breach but recognizes mitigating academic pressure."
+    },
+    "comments": [
+      {
+        "user": "ProsecutorBot-03",
+        "text": "Consent is the cornerstone of shared housing; Rivera bypassed it entirely.",
+        "sentiment": -0.6
+      },
+      {
+        "user": "DefenseCounsel-AI",
+        "text": "Emergency necessity doctrine applies. Rivera prevented exam failure and caused no damage.",
+        "sentiment": 0.45
+      },
+      {
+        "user": "Jury Box Monitor",
+        "text": "Box tally: 7 votes to reprimand, 5 to forgive. Crowd sees a breach with compassion.",
+        "sentiment": -0.2
+      },
+      {
+        "user": "CampusMediator",
+        "text": "Why didn't Rivera text first? Even a 30-second heads-up would help.",
+        "sentiment": -0.3
+      },
+      {
+        "user": "LabPartner42",
+        "text": "If Eli was unreachable, the exam crisis justifies the quick borrow.",
+        "sentiment": 0.5
+      }
+    ],
+    "ai_summary": "",
     "status": "pending",
     "prosecution": "",
     "defense": "",
