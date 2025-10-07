@@ -25,10 +25,14 @@
 
     <section class="grid gap-6 md:grid-cols-[2fr,1fr]">
       <article class="card space-y-6">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold">Live Docket</h2>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="text-xl font-semibold">Live Docket</h2>
+            <button id="run-trial" class="button-secondary text-sm">Run AI Trial</button>
+          </div>
           <a href="judges.html" class="text-sm text-indigo-300 hover:text-indigo-200">Meet the Judges →</a>
         </div>
+        <p id="trial-message" class="text-xs text-indigo-200" hidden></p>
         <div id="case-feed" class="space-y-4"></div>
       </article>
 
@@ -98,22 +102,45 @@
     const feed = document.getElementById('case-feed');
     const template = document.getElementById('case-template');
     const uploadForm = document.getElementById('upload-form');
+    const runTrialButton = document.getElementById('run-trial');
+    const trialMessage = document.getElementById('trial-message');
 
     async function fetchCases() {
-      const response = await fetch('../data/cases.json');
-      const cases = await response.json();
-      renderCases(cases);
+      try {
+        const response = await fetch('../data/cases.json?_=' + Date.now());
+        if (!response.ok) throw new Error('Failed to fetch cases');
+        const cases = await response.json();
+        renderCases(cases);
+      } catch (error) {
+        console.error('Failed to load cases', error);
+        feed.innerHTML = '<p class="text-sm text-rose-300">Unable to load the docket right now. Try again shortly.</p>';
+      }
     }
 
     function renderCases(cases) {
       feed.innerHTML = '';
+      if (!cases.length) {
+        feed.innerHTML = '<p class="text-sm text-slate-300">No cases yet. Submit a dilemma to start the debate.</p>';
+        return;
+      }
+
       cases.forEach((item) => {
         const node = template.content.cloneNode(true);
         node.querySelector('h3').textContent = item.title;
         node.querySelector('.story').textContent = item.story;
         node.querySelector('.votes').textContent = item.votes;
-        node.querySelector('.summary').textContent = item.ai_summary || 'Awaiting community input.';
-        node.querySelector('.status').textContent = item.status === 'judged' ? 'VERDICT PUBLISHED' : 'AWAITING TRIAL';
+        const summaryText = item.ai_summary ? item.ai_summary.split('\n')[0].replace(/^•\s*/, '') : 'Awaiting community input.';
+        node.querySelector('.summary').textContent = summaryText;
+        const status = node.querySelector('.status');
+        if (item.status === 'judged') {
+          const details = [item.verdict?.decision, item.verdict?.judge ? `Judge ${item.verdict.judge}` : null];
+          if (Number.isFinite(item.finalScore)) {
+            details.push(`Score ${item.finalScore}`);
+          }
+          status.textContent = details.filter(Boolean).join(' • ') || 'Verdict published';
+        } else {
+          status.textContent = 'Awaiting trial';
+        }
         const sentiment = Math.max(0, Math.min(100, Math.round(((item.comments || []).reduce((acc, c) => acc + (c.sentiment || 0), 0) / Math.max(1, (item.comments || []).length) + 1) * 50)));
         node.querySelector('.sentiment').style.width = sentiment + '%';
         node.querySelector('a').href = `case.html?id=${encodeURIComponent(item.id)}`;
@@ -121,6 +148,39 @@
         node.querySelector('.vote-down').addEventListener('click', () => vote(item.id, -1));
         feed.appendChild(node);
       });
+    }
+
+    async function triggerTrial() {
+      if (!runTrialButton) return;
+      runTrialButton.disabled = true;
+      runTrialButton.textContent = 'Running…';
+      if (trialMessage) {
+        trialMessage.hidden = true;
+      }
+      try {
+        const response = await fetch('/api/runTrial', { method: 'POST' });
+        if (!response.ok) throw new Error('Trial failed');
+        const result = await response.json();
+        const processed = result.processed || [];
+        if (trialMessage) {
+          if (processed.length) {
+            trialMessage.textContent = `Processed ${processed.length} case${processed.length > 1 ? 's' : ''}: ${processed.join(', ')}`;
+          } else {
+            trialMessage.textContent = 'No pending cases were ready for trial yet.';
+          }
+          trialMessage.hidden = false;
+        }
+        fetchCases();
+      } catch (error) {
+        console.error('Trial run failed', error);
+        if (trialMessage) {
+          trialMessage.textContent = 'Could not run the AI trial. Please try again.';
+          trialMessage.hidden = false;
+        }
+      } finally {
+        runTrialButton.disabled = false;
+        runTrialButton.textContent = 'Run AI Trial';
+      }
     }
 
     async function vote(id, delta) {
@@ -134,6 +194,10 @@
       } catch (error) {
         console.error('Vote failed', error);
       }
+    }
+
+    if (runTrialButton) {
+      runTrialButton.addEventListener('click', triggerTrial);
     }
 
     uploadForm.addEventListener('submit', async (event) => {
