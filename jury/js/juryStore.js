@@ -10,7 +10,7 @@
   }
   const STORAGE_KEY = typeof config.storageKey === 'string' && config.storageKey.trim().length
     ? config.storageKey.trim()
-    : 'jury_cases_v1';
+    : 'jury_cases_v2';
   const CASES_PATH = typeof config.casesPath === 'string' && config.casesPath.trim().length
     ? config.casesPath.trim()
     : 'data/cases.json';
@@ -466,6 +466,53 @@
     return `${time}${pivotal.event}`;
   }
 
+  function describePublicSentimentForRole(score, role) {
+    if (score === null || score === undefined) {
+      return '';
+    }
+    const numeric = Number(score);
+    if (!Number.isFinite(numeric)) {
+      return '';
+    }
+    const leaning = numeric > 0.3 ? 'defense' : numeric < -0.3 ? 'prosecution' : 'split';
+    if (leaning === 'split') {
+      return role === 'prosecution'
+        ? 'Crowd sentiment is split, so the prosecution emphasises clear policy language.'
+        : 'Crowd sentiment is split, so the defense leans on context and proportionality.';
+    }
+    if (leaning === 'defense') {
+      return role === 'prosecution'
+        ? 'Public mood softens toward the defense, forcing the prosecution to highlight lingering harm.'
+        : 'Public mood is trending toward the defense, reinforcing mitigation arguments.';
+    }
+    return role === 'prosecution'
+      ? 'Public mood backs the accuser, reinforcing the call for accountability.'
+      : 'Public mood leans toward the accuser, so the defense focuses on restorative outcomes.';
+  }
+
+  function describeJuryLeanForRole(juryBox = {}, role) {
+    const pro = Number.isFinite(Number(juryBox.votesForProsecution)) ? Number(juryBox.votesForProsecution) : 0;
+    const def = Number.isFinite(Number(juryBox.votesForDefense)) ? Number(juryBox.votesForDefense) : 0;
+    if (pro === 0 && def === 0) {
+      return '';
+    }
+    const spread = pro - def;
+    const base = `Jury Box tally sits at ${pro} for the prosecution versus ${def} for the defense.`;
+    if (spread >= 2) {
+      return role === 'prosecution'
+        ? `${base} The state leans into that majority to urge a firm sanction.`
+        : `${base} Defense counsel acknowledges the headwind and underscores proportional remedies.`;
+    }
+    if (spread <= -2) {
+      return role === 'prosecution'
+        ? `${base} The prosecution works to overcome that sympathy by re-centering policy duties.`
+        : `${base} Defense counsel notes the majority favours mitigation.`;
+    }
+    return role === 'prosecution'
+      ? `${base} With the split so narrow, the prosecution argues every procedure lapse matters.`
+      : `${base} With the split so narrow, the defense stresses intent and collaboration.`;
+  }
+
   function generateArgument(role, caseItem = {}) {
     const story = caseItem.story || '';
     const parties = caseItem.parties || {};
@@ -486,6 +533,12 @@
     const chargeSummary = describeCharge(caseItem.charges);
     const evidenceSummary = describeEvidence(caseItem.evidence);
     const timelineSummary = describeTimeline(caseItem.timeline);
+    const juryLine = describeJuryLeanForRole(caseItem.juryBox, role);
+    const sentimentValue = Number(caseItem.publicSentiment);
+    const sentimentLine = describePublicSentimentForRole(
+      Number.isFinite(sentimentValue) ? sentimentValue : null,
+      role
+    );
 
     if (role === 'prosecution') {
       const harmLine = prosecutionSentence
@@ -507,7 +560,9 @@
         harmLine,
         evidenceLine,
         timelineLine,
-        defenseLine
+        defenseLine,
+        sentimentLine ? ensureSentence(sentimentLine) : '',
+        juryLine ? ensureSentence(juryLine) : ''
       ]
         .filter(Boolean)
         .join(' ');
@@ -532,7 +587,9 @@
       prosecutionLine,
       contextLine,
       supportLine,
-      timelineLine
+      timelineLine,
+      sentimentLine ? ensureSentence(sentimentLine) : '',
+      juryLine ? ensureSentence(juryLine) : ''
     ]
       .filter(Boolean)
       .join(' ');
