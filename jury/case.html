@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Case Detail • AI Judge</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/variable.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100">
+  <main class="max-w-3xl mx-auto px-4 py-10 space-y-8">
+    <a href="index.html" class="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-200">← Back to docket</a>
+    <article class="card space-y-6" id="case-card">
+      <header class="space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h1 class="text-2xl font-semibold" id="case-title"></h1>
+          <span class="badge"><span>🗳️</span><span id="case-votes"></span></span>
+        </div>
+        <p id="case-story" class="text-slate-300 leading-relaxed"></p>
+        <div class="text-xs uppercase tracking-wide text-slate-500" id="case-status"></div>
+      </header>
+      <section class="space-y-4" id="verdict-section" hidden>
+        <h2 class="text-lg font-semibold">Latest Verdict</h2>
+        <div class="grid gap-4 md:grid-cols-3 text-sm text-slate-200">
+          <div class="bg-slate-900/50 rounded-xl p-4">
+            <h3 class="font-semibold text-slate-100 mb-1">Verdict</h3>
+            <p id="verdict-decision" class="text-indigo-300"></p>
+          </div>
+          <div class="bg-slate-900/50 rounded-xl p-4 md:col-span-2">
+            <h3 class="font-semibold text-slate-100 mb-1">Judge Reasoning</h3>
+            <p id="verdict-reasoning" class="text-slate-300"></p>
+            <p class="text-xs text-slate-500 mt-2" id="verdict-meta"></p>
+            <div class="space-y-2 mt-3" id="score-wrap" hidden>
+              <div class="text-xs uppercase tracking-wide text-slate-500">Composite Score</div>
+              <div class="score-bar"><div id="score-fill" class="score-bar-fill"></div></div>
+              <p class="text-xs text-slate-400" id="score-note"></p>
+            </div>
+          </div>
+        </div>
+        <section class="space-y-3">
+          <h3 class="font-semibold text-slate-100">AI Arguments</h3>
+          <details class="bg-slate-900/40 rounded-xl p-4" id="prosecution">
+            <summary class="cursor-pointer text-sm font-semibold text-rose-300">Prosecution Case</summary>
+            <p class="mt-2 text-sm text-slate-300"></p>
+          </details>
+          <details class="bg-slate-900/40 rounded-xl p-4" id="defense">
+            <summary class="cursor-pointer text-sm font-semibold text-emerald-300">Defense Case</summary>
+            <p class="mt-2 text-sm text-slate-300"></p>
+          </details>
+        </section>
+      </section>
+    </article>
+
+    <section class="card space-y-4">
+      <header class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold">Community Reactions</h2>
+        <span id="sentiment-score" class="text-sm text-slate-400"></span>
+      </header>
+      <ul id="comment-list" class="space-y-3"></ul>
+      <form id="comment-form" class="space-y-3">
+        <div class="grid gap-3 md:grid-cols-2">
+          <input type="text" name="user" placeholder="Username" required class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400">
+          <select name="sentiment" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400">
+            <option value="0.6">Supportive</option>
+            <option value="0.2">Mixed</option>
+            <option value="-0.4">Critical</option>
+          </select>
+        </div>
+        <textarea name="text" rows="3" placeholder="Share your view" required class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400"></textarea>
+        <button type="submit" class="button-primary w-full">Add Comment</button>
+      </form>
+    </section>
+
+    <section class="card space-y-3" id="summary-section" hidden>
+      <h2 class="text-xl font-semibold">Community Summary</h2>
+      <ul id="summary-list" class="summary-list"></ul>
+    </section>
+  </main>
+
+  <script src="js/juryStore.js"></script>
+  <script>
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const caseId = params.get('id');
+      if (!caseId) {
+        window.location.replace('index.html');
+        return;
+      }
+
+      const store = window.JuryStore;
+      const ai = window.JuryAI;
+      const commentForm = document.getElementById('comment-form');
+      const summarySection = document.getElementById('summary-section');
+      const summaryList = document.getElementById('summary-list');
+      const sentimentScore = document.getElementById('sentiment-score');
+      const commentList = document.getElementById('comment-list');
+      const verdictSection = document.getElementById('verdict-section');
+      const scoreWrap = document.getElementById('score-wrap');
+
+      await store.loadCases();
+      let currentCase = store.getCase(caseId);
+      if (!currentCase) {
+        document.getElementById('case-card').innerHTML = '<p class="text-slate-300">Case not found.</p>';
+        commentForm.hidden = true;
+        summarySection.hidden = true;
+        return;
+      }
+
+      function renderCase() {
+        document.getElementById('case-title').textContent = currentCase.title;
+        document.getElementById('case-story').textContent = currentCase.story;
+        document.getElementById('case-votes').textContent = currentCase.votes;
+        document.getElementById('case-status').textContent = currentCase.status === 'judged' ? 'VERDICT PUBLISHED' : 'AWAITING TRIAL';
+
+        if (currentCase.verdict) {
+          verdictSection.hidden = false;
+          document.getElementById('verdict-decision').textContent = currentCase.verdict.decision;
+          document.getElementById('verdict-reasoning').textContent = currentCase.verdict.reasoning;
+          const judgeName = currentCase.verdict.judge || 'Unknown Judge';
+          const metaBits = [judgeName];
+          if (Number.isFinite(currentCase.verdict.confidence)) {
+            metaBits.push(`Confidence ${currentCase.verdict.confidence}%`);
+          }
+          document.getElementById('verdict-meta').textContent = metaBits.join(' • ');
+          if (Number.isFinite(currentCase.finalScore)) {
+            scoreWrap.hidden = false;
+            const scoreFill = document.getElementById('score-fill');
+            const clamped = Math.max(0, Math.min(100, Math.round(currentCase.finalScore)));
+            scoreFill.style.width = clamped + '%';
+            document.getElementById('score-note').textContent = `Composite score ${clamped}/100 from judge and crowd weighting.`;
+          } else {
+            scoreWrap.hidden = true;
+          }
+          document.querySelector('#prosecution p').textContent = currentCase.prosecution || 'Awaiting trial.';
+          document.querySelector('#defense p').textContent = currentCase.defense || 'Awaiting trial.';
+        } else {
+          verdictSection.hidden = true;
+          scoreWrap.hidden = true;
+        }
+
+        const summaryInfo = currentCase.ai_summary
+          ? { lines: currentCase.ai_summary.split('\n').filter(Boolean), average: currentCase.publicSentiment ?? ai.summariseComments(currentCase.comments || []).average }
+          : ai.summariseComments(currentCase.comments || []);
+        if (summaryInfo.lines.length) {
+          summarySection.hidden = false;
+          summaryList.innerHTML = '';
+          summaryInfo.lines.forEach((line) => {
+            const entry = document.createElement('li');
+            entry.textContent = line.replace(/^•\s*/, '');
+            summaryList.appendChild(entry);
+          });
+        } else {
+          summarySection.hidden = true;
+        }
+
+        commentList.innerHTML = '';
+        (currentCase.comments || []).forEach((comment) => {
+          const li = document.createElement('li');
+          li.className = 'bg-slate-900/40 rounded-xl p-3 text-sm flex flex-col gap-1';
+          li.innerHTML = `<div class="flex items-center justify-between text-slate-400"><span>${comment.user}</span><span>${formatSentiment(comment.sentiment)}</span></div><p class="text-slate-200">${comment.text}</p>`;
+          commentList.appendChild(li);
+        });
+        const average = ai.summariseComments(currentCase.comments || []).average;
+        sentimentScore.textContent = `Crowd Sentiment: ${(average * 100).toFixed(0)} / 100`;
+      }
+
+      function formatSentiment(score = 0) {
+        if (score > 0.25) return 'Supportive';
+        if (score < -0.25) return 'Critical';
+        return 'Mixed';
+      }
+
+      commentForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const comment = {
+          user: (formData.get('user') || '').toString().trim() || 'anon',
+          text: (formData.get('text') || '').toString().trim(),
+          sentiment: Number(formData.get('sentiment')) || 0
+        };
+        if (!comment.text) {
+          return;
+        }
+        currentCase = store.updateCase(caseId, (entry) => {
+          const next = { ...entry };
+          next.comments = [...(entry.comments || []), comment];
+          const summary = ai.summariseComments(next.comments);
+          next.ai_summary = summary.lines.join('\n');
+          next.publicSentiment = summary.average;
+          return next;
+        });
+        event.target.reset();
+        renderCase();
+      });
+
+      renderCase();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "case_001",
+    "title": "Borrowed laptop for remote class",
+    "story": "I borrowed my roommate's laptop while he was out because my own died before an online exam. I returned it the same day, but he was upset that I didn't ask first.",
+    "votes": 12,
+    "comments": [
+      { "user": "anon1", "text": "You should have left a note.", "sentiment": -0.1 },
+      { "user": "anon2", "text": "Saving your grade seems fair.", "sentiment": 0.6 }
+    ],
+    "ai_summary": "Split: some say borrowing without asking was wrong, others prioritize the exam emergency.",
+    "status": "pending",
+    "prosecution": "",
+    "defense": "",
+    "verdict": null
+  }
+]
