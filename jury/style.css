@@ -116,3 +116,127 @@ input, textarea {
   width: 0;
   transition: width 0.4s ease;
 }
+
+.case-roster {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.roster-card {
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 0.85rem;
+  padding: 0.75rem;
+}
+
+.roster-card .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #cbd5f5;
+}
+
+.roster-card .name {
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-top: 0.25rem;
+}
+
+.roster-card .summary {
+  font-size: 0.8rem;
+  color: #cbd5f5;
+  margin-top: 0.35rem;
+}
+
+.case-matrix {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.case-panel {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(129, 140, 248, 0.15);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #a5b4fc;
+}
+
+.case-list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+}
+
+.timeline-list {
+  list-style: none;
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  margin: 0;
+}
+
+.timeline-entry {
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: minmax(64px, auto) 1fr;
+  font-size: 0.85rem;
+  color: #cbd5f5;
+}
+
+.timeline-time {
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.timeline-event {
+  color: #e2e8f0;
+}
+
+.verdict-headline {
+  font-size: 1.35rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #c7d2fe;
+}
+
+.role-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.role-prosecution {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fecaca;
+}
+
+.role-defense {
+  background: rgba(16, 185, 129, 0.25);
+  color: #bbf7d0;
+}
+
+.role-jury {
+  background: rgba(249, 115, 22, 0.25);
+  color: #fed7aa;
+}
+
+.role-judge {
+  background: rgba(99, 102, 241, 0.25);
+  color: #ede9fe;
+}

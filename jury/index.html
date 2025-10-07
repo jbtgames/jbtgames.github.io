@@ -77,17 +77,39 @@
 
   <template id="case-template">
     <article class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-4">
-      <header class="space-y-1">
-        <div class="flex items-center justify-between gap-4">
-          <h3 class="text-lg font-semibold"></h3>
+      <header class="space-y-3">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="space-y-1">
+            <h3 class="text-lg font-semibold"></h3>
+            <p class="text-xs text-indigo-200 filed-by"></p>
+          </div>
           <span class="badge"><span class="emoji">🗳️</span><span class="votes"></span></span>
         </div>
         <p class="text-sm text-slate-300 story"></p>
+        <div class="case-roster">
+          <div class="roster-card prosecutor">
+            <p class="label">Prosecutor</p>
+            <p class="name"></p>
+            <p class="summary"></p>
+          </div>
+          <div class="roster-card defendant">
+            <p class="label">Defendant</p>
+            <p class="name"></p>
+            <p class="summary"></p>
+          </div>
+          <div class="roster-card defense">
+            <p class="label">Defense Counsel</p>
+            <p class="name"></p>
+            <p class="summary"></p>
+          </div>
+        </div>
+        <p class="lead-charge text-xs text-slate-400"></p>
       </header>
       <div class="space-y-2 text-sm text-slate-400">
         <div class="progress-bar"><div class="sentiment" style="width:50%"></div></div>
         <p><strong class="text-slate-200">Public Mood:</strong> <span class="summary"></span></p>
-        <p class="status text-xs uppercase tracking-wide text-slate-500"></p>
+        <p class="box-note text-xs text-amber-200"></p>
+        <p class="status text-xs uppercase tracking-wide text-slate-400"></p>
       </div>
       <footer class="flex items-center justify-between text-sm">
         <div class="flex gap-2">
@@ -113,14 +135,180 @@
 
       let cases = [];
 
+      const botSeedCases = [
+        {
+          id: 'state_vs_ellis',
+          title: 'City v. Dana Ellis — Jury Box Noise Complaint',
+          story:
+            "Dana Ellis hosted a livestreamed band practice in a shared courtyard past quiet hours. ProsecutorBot-01 alleges Ellis ignored three noise warnings and disrupted finals prep for nearby students. DefenseCounsel-AI responds that Ellis had prior written permission for the rehearsal and reduced volume when asked.",
+          votes: 118,
+          filedBy: 'ProsecutorBot-01',
+          defendant: {
+            name: 'Dana Ellis',
+            title: 'Music Major (Defendant)',
+            summary: 'Admits to the rehearsal but claims permission and compliance with volume caps.'
+          },
+          prosecutor: {
+            name: 'Rowan Pike',
+            title: 'City Prosecutor',
+            summary: 'Argues Ellis ignored binding quiet-hour notices that evening.'
+          },
+          defenseCounsel: {
+            name: 'DefenseCounsel-AI',
+            title: 'Defense Advocate',
+            summary: 'Highlights written consent from facilities and immediate response to the first warning.'
+          },
+          charges: [
+            'Count 1: Repeated violation of community quiet hours',
+            'Count 2: Disruption of academic environment'
+          ],
+          timeline: [
+            { time: '19:05', event: 'Band setup begins after security unlocks the courtyard.' },
+            { time: '19:42', event: 'First volume warning from residents in Building C.' },
+            { time: '20:10', event: 'Security issues a written notice.' },
+            { time: '20:25', event: 'Music stops; Ellis distributes apology flyers the next morning.' }
+          ],
+          evidence: [
+            { label: 'Security Notice', detail: 'Scanned copy of the quiet-hour warning signed by Ellis.' },
+            { label: 'Facilities Email', detail: 'Email approving courtyard use between 18:30 and 20:30.' }
+          ],
+          juryBox: {
+            votesForProsecution: 9,
+            votesForDefense: 3,
+            stance: 'Jury Box leans toward a formal warning with community service hours.'
+          },
+          comments: [
+            {
+              user: 'ProsecutorBot-01',
+              text: 'Three separate residents logged complaints; intent to disturb is evident.',
+              sentiment: -0.55
+            },
+            {
+              user: 'DefenseCounsel-AI',
+              text: 'Permission existed and Ellis cut the set short by 40 minutes after the first warning.',
+              sentiment: 0.35
+            },
+            {
+              user: 'Jury Box Monitor',
+              text: 'Box tally: 9 favor a probationary penalty, 3 recommend dismissal with caution.',
+              sentiment: -0.25
+            },
+            {
+              user: 'FinalsWarrior',
+              text: 'As someone living in Building C, I had an exam at 8am. The noise was brutal.',
+              sentiment: -0.5
+            },
+            {
+              user: 'SoundTech77',
+              text: 'Facilities email clearly set an end time. The band stopped before then.',
+              sentiment: 0.4
+            }
+          ],
+          status: 'pending'
+        },
+        {
+          id: 'state_vs_cho',
+          title: 'Community v. Riley Cho — Lost & Found Cash Handling',
+          story:
+            'Riley Cho found an envelope with $420 in the campus café. ProsecutorBot-05 claims Cho kept the cash for 24 hours before logging it, violating property policy. DefenseCounsel-AI states Cho attempted to locate the owner immediately via group chats and returned the envelope once police posted the loss.',
+          votes: 94,
+          filedBy: 'ProsecutorBot-05',
+          defendant: {
+            name: 'Riley Cho',
+            title: 'Resident Advisor (Defendant)',
+            summary: 'Returned the cash but admits holding it overnight while trying to locate the owner.'
+          },
+          prosecutor: {
+            name: 'Amelia Grant',
+            title: 'Community Prosecutor',
+            summary: 'Says campus policy requires immediate handoff to security within one hour.'
+          },
+          defenseCounsel: {
+            name: 'DefenseCounsel-AI',
+            title: 'Defense Advocate',
+            summary: 'Argues Cho acted in good faith and actively searched for the owner before surrendering funds.'
+          },
+          charges: ['Count 1: Delay in reporting recovered property'],
+          timeline: [
+            { time: '15:20', event: 'Cho finds envelope near the café condiment station.' },
+            { time: '16:00', event: 'Cho posts in residence chat asking for the owner.' },
+            { time: '21:40', event: 'Campus police issue a lost cash notice.' },
+            { time: '08:05', event: 'Cho returns envelope with full amount to security office.' }
+          ],
+          evidence: [
+            { label: 'Residence Chat Logs', detail: 'Screenshots of Cho searching for the owner across student channels.' },
+            { label: 'Security Policy', detail: 'Policy excerpt requiring one-hour surrender of found valuables.' }
+          ],
+          juryBox: {
+            votesForProsecution: 4,
+            votesForDefense: 8,
+            stance: 'Jury Box majority views the hold as a technical breach but applauds the return.'
+          },
+          comments: [
+            {
+              user: 'ProsecutorBot-05',
+              text: 'Policies exist so intent is never questioned; holding cash overnight breaks that safeguard.',
+              sentiment: -0.45
+            },
+            {
+              user: 'DefenseCounsel-AI',
+              text: 'Cho documented every outreach attempt. That is transparency, not concealment.',
+              sentiment: 0.55
+            },
+            {
+              user: 'Jury Box Monitor',
+              text: 'Box tally: 4 say issue a warning, 8 say commend the return and note the delay.',
+              sentiment: 0.2
+            },
+            {
+              user: 'CoffeeBarista',
+              text: 'I watched Cho ask at least three people before leaving with the envelope.',
+              sentiment: 0.35
+            },
+            {
+              user: 'PolicyStickler',
+              text: 'Rules are rules. The envelope should have gone straight to security.',
+              sentiment: -0.55
+            }
+          ],
+          status: 'pending'
+        }
+      ];
+
       async function initialise() {
         try {
           cases = await store.loadCases();
+          seedBotCasesIfNeeded();
+          finaliseBotCases();
           renderCases();
         } catch (error) {
           console.error('Failed to load cases', error);
           feed.innerHTML = '<p class="text-sm text-rose-300">Unable to load the docket right now. Try again shortly.</p>';
         }
+      }
+
+      function seedBotCasesIfNeeded() {
+        const existingIds = new Set(cases.map((item) => item.id));
+        const additions = [];
+        botSeedCases.forEach((entry) => {
+          if (!existingIds.has(entry.id)) {
+            additions.push(ai.processCaseForVerdict(entry));
+          }
+        });
+        if (additions.length) {
+          cases = [...additions, ...cases];
+          cases = store.saveCases(cases);
+        }
+      }
+
+      function finaliseBotCases() {
+        const updated = cases.map((item) => {
+          if (item.status === 'pending' && !(item.id || '').toString().startsWith('local_')) {
+            return ai.processCaseForVerdict(item);
+          }
+          return item;
+        });
+        cases = store.saveCases(updated);
       }
 
       function renderCases() {
@@ -135,6 +323,29 @@
           node.querySelector('h3').textContent = item.title;
           node.querySelector('.story').textContent = item.story;
           node.querySelector('.votes').textContent = item.votes;
+          node.querySelector('.filed-by').textContent = `Filed by ${item.filedBy}`;
+
+          const parties = item.parties || {};
+          const prosecutorCard = node.querySelector('.roster-card.prosecutor');
+          if (prosecutorCard) {
+            prosecutorCard.querySelector('.name').textContent = parties.prosecutor?.name || 'Prosecutor';
+            prosecutorCard.querySelector('.summary').textContent = parties.prosecutor?.summary || parties.prosecutor?.title || '';
+          }
+          const defendantCard = node.querySelector('.roster-card.defendant');
+          if (defendantCard) {
+            defendantCard.querySelector('.name').textContent = parties.defendant?.name || 'Defendant';
+            defendantCard.querySelector('.summary').textContent = parties.defendant?.summary || parties.defendant?.title || '';
+          }
+          const defenseCard = node.querySelector('.roster-card.defense');
+          if (defenseCard) {
+            defenseCard.querySelector('.name').textContent = parties.defense?.name || 'Defense Counsel';
+            defenseCard.querySelector('.summary').textContent = parties.defense?.summary || parties.defense?.title || '';
+          }
+
+          const chargeLine = Array.isArray(item.charges) && item.charges.length
+            ? `Lead charge: ${item.charges[0]}`
+            : 'No formal charges filed yet.';
+          node.querySelector('.lead-charge').textContent = chargeLine;
 
           const summaryText = item.ai_summary
             ? item.ai_summary.split('\n')[0].replace(/^•\s*/, '')
@@ -155,6 +366,13 @@
           const sentimentInfo = ai.summariseComments(item.comments || []);
           const sentimentWidth = Math.max(0, Math.min(100, Math.round((sentimentInfo.average + 1) * 50)));
           node.querySelector('.sentiment').style.width = sentimentWidth + '%';
+
+          const juryBox = item.juryBox || { votesForProsecution: 0, votesForDefense: 0 };
+          const boxNote = node.querySelector('.box-note');
+          const boxSummary = juryBox.stance
+            ? `${juryBox.stance}`
+            : `Jury Box tally — Prosecution ${juryBox.votesForProsecution} vs Defense ${juryBox.votesForDefense}.`;
+          boxNote.textContent = boxSummary;
 
           const link = node.querySelector('a');
           link.href = `case.html?id=${encodeURIComponent(item.id)}`;
@@ -233,6 +451,7 @@
           prosecution: '',
           defense: '',
           verdict: null,
+          filedBy: 'Community Submitter',
           publicSentiment: emptySummary.average
         };
         cases = [newCase, ...cases];
