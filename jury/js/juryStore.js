@@ -373,21 +373,149 @@
     return clone(cache.find((item) => item.id === id) || null);
   }
 
-  function generateArgument(role, story, parties = {}) {
-    const intro = (story || '')
+  function splitSentences(text) {
+    return (text || '')
       .split(/(?<=[.!?])\s+/)
-      .slice(0, 2)
-      .join(' ')
-      .trim();
-    const defendantName = parties?.defendant?.name || 'the defendant';
-    const defendantTitle = parties?.defendant?.title || '';
-    const prosecutorName = parties?.prosecutor?.name || 'the prosecutor';
-    const defenseCounselName = parties?.defense?.name || 'defense counsel';
-    const accuserName = parties?.accuser?.name || 'the accuser';
-    if (role === 'prosecution') {
-      return `${prosecutorName} represents ${accuserName} and argues that ${defendantName}'s choices created tangible harm. ${intro} They press the bench to recognise ${accuserName}'s complaint and deliver a culpability ruling.`;
+      .map((sentence) => sentence.trim())
+      .filter(Boolean);
+  }
+
+  function selectSentence(sentences, keywords) {
+    if (!Array.isArray(sentences) || !sentences.length) {
+      return '';
     }
-    return `${defenseCounselName} defends ${defendantName}${defendantTitle ? ` (${defendantTitle})` : ''} and highlights the context and intent behind the decision. ${intro} They insist the court credit the mitigating factors and return a defense-favoured outcome.`;
+    const lowerKeywords = (keywords || []).map((keyword) => keyword.toLowerCase());
+    return (
+      sentences.find((sentence) => {
+        const lowerSentence = sentence.toLowerCase();
+        return lowerKeywords.some((keyword) => lowerSentence.includes(keyword));
+      }) || sentences[0]
+    );
+  }
+
+  function sentenceToClause(sentence) {
+    if (!sentence) return '';
+    return sentence.replace(/[.?!]+$/, '').trim();
+  }
+
+  function ensureSentence(text) {
+    const trimmed = (text || '').trim();
+    if (!trimmed) return '';
+    return /[.?!]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+  }
+
+  function describeCharge(charges = []) {
+    if (!Array.isArray(charges) || !charges.length) {
+      return 'the filed allegation';
+    }
+    const lead = charges[0].replace(/^Count\s*\d+[:\-]?\s*/i, '').trim();
+    if (!lead) {
+      return 'the filed allegation';
+    }
+    if (charges.length === 1) {
+      return lead;
+    }
+    return `${lead}${charges.length > 1 ? ' and related counts' : ''}`;
+  }
+
+  function describeEvidence(evidence = []) {
+    if (!Array.isArray(evidence) || !evidence.length) {
+      return '';
+    }
+    const first = evidence[0];
+    const label = (first?.label || '').trim();
+    const detail = (first?.detail || '').trim();
+    if (label && detail) {
+      return `${label.toLowerCase().includes('the') ? label : `the ${label.toLowerCase()}`} showing ${detail}`;
+    }
+    if (detail) {
+      return detail;
+    }
+    return label;
+  }
+
+  function describeTimeline(timeline = []) {
+    if (!Array.isArray(timeline) || !timeline.length) {
+      return '';
+    }
+    const pivotal = timeline[Math.max(0, timeline.length - 1)];
+    if (!pivotal || (!pivotal.time && !pivotal.event)) {
+      return '';
+    }
+    const time = pivotal.time ? `${pivotal.time}, ` : '';
+    return `${time}${pivotal.event}`;
+  }
+
+  function generateArgument(role, caseItem = {}) {
+    const story = caseItem.story || '';
+    const parties = caseItem.parties || {};
+    const sentences = splitSentences(story);
+    const prosecutionSentence = sentenceToClause(
+      selectSentence(sentences, ['prosecutor', 'accuser', 'allege', 'report', 'charge', 'complaint'])
+    );
+    const defenseSentence = sentenceToClause(
+      selectSentence(sentences, ['defense', 'defence', 'defendant', 'insist', 'explain', 'justify', 'counter'])
+    );
+
+    const caseTitle = (caseItem.title || 'this case').replace(/[.]+$/, '');
+    const accuserName = parties.accuser?.name || caseItem.filedBy || 'the accuser';
+    const defendantName = parties.defendant?.name || 'the defendant';
+    const defendantTitle = parties.defendant?.title ? ` (${parties.defendant.title})` : '';
+    const prosecutorName = parties.prosecutor?.name || 'the prosecutor';
+    const defenseCounselName = parties.defense?.name || 'defense counsel';
+    const chargeSummary = describeCharge(caseItem.charges);
+    const evidenceSummary = describeEvidence(caseItem.evidence);
+    const timelineSummary = describeTimeline(caseItem.timeline);
+
+    if (role === 'prosecution') {
+      const harmLine = prosecutionSentence
+        ? ensureSentence(`${accuserName} recounts ${prosecutionSentence}`)
+        : ensureSentence(`${accuserName} details how ${defendantName} triggered the complaint.`);
+      const evidenceLine = evidenceSummary ? ensureSentence(`They lean on ${evidenceSummary}.`) : '';
+      const timelineLine = timelineSummary
+        ? ensureSentence(`The incident escalated at ${timelineSummary}.`)
+        : '';
+      const defenseLine = defenseSentence
+        ? ensureSentence(
+            `${defendantName} maintains ${defenseSentence}, yet ${prosecutorName} argues the harm still stands.`
+          )
+        : ensureSentence(`${prosecutorName} recognises the stated intent but presses for accountability.`);
+      return [
+        ensureSentence(
+          `${prosecutorName} presents ${caseTitle} on behalf of ${accuserName}, focusing on ${chargeSummary}.`
+        ),
+        harmLine,
+        evidenceLine,
+        timelineLine,
+        defenseLine
+      ]
+        .filter(Boolean)
+        .join(' ');
+    }
+
+    const prosecutionLine = prosecutionSentence
+      ? ensureSentence(`The prosecution says ${prosecutionSentence}`)
+      : ensureSentence(`The prosecution claims ${defendantName} crossed a clear boundary.`);
+    const contextLine = defenseSentence
+      ? ensureSentence(`${defendantName}${defendantTitle} explains ${defenseSentence}.`)
+      : ensureSentence(`${defendantName}${defendantTitle} explains the decision came from urgent context.`);
+    const supportLine = evidenceSummary
+      ? ensureSentence(`Counsel cites ${evidenceSummary} to show their perspective.`)
+      : '';
+    const timelineLine = timelineSummary
+      ? ensureSentence(`They highlight that by ${timelineSummary}, their response reduced harm.`)
+      : '';
+    return [
+      ensureSentence(
+        `${defenseCounselName} defends ${defendantName}${defendantTitle}, arguing the context undercuts the charge.`
+      ),
+      prosecutionLine,
+      contextLine,
+      supportLine,
+      timelineLine
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 
   function summariseComments(comments = []) {
@@ -451,16 +579,72 @@
     };
   }
 
-  function processCaseForVerdict(caseItem) {
+  function applyPartyContext(base, siding) {
+    const accuserName = base.parties.accuser?.name || base.filedBy || 'the accuser';
+    const defendantName = base.parties.defendant?.name || 'the defendant';
+    if (base.parties.accuser) {
+      base.parties.accuser.role = 'accuser';
+      base.parties.accuser.side = 'Prosecution';
+      if (!base.parties.accuser.roleNote) {
+        base.parties.accuser.roleNote = `${accuserName} initiated the complaint and continues to press the tribunal.`;
+      }
+    }
+    if (base.parties.prosecutor) {
+      base.parties.prosecutor.role = 'prosecutor';
+      base.parties.prosecutor.side = 'Prosecution';
+      if (siding) {
+        base.parties.prosecutor.roleNote =
+          siding === 'Prosecution'
+            ? `${base.parties.prosecutor.name} now pursues remedies for ${accuserName}.`
+            : `${base.parties.prosecutor.name} notes the bench favoured mitigation.`;
+      } else if (!base.parties.prosecutor.roleNote) {
+        base.parties.prosecutor.roleNote = `${base.parties.prosecutor.name} prepares the state's reading of the evidence.`;
+      }
+    }
+    if (base.parties.defense) {
+      base.parties.defense.role = 'defense';
+      base.parties.defense.side = 'Defense';
+      if (siding) {
+        base.parties.defense.roleNote =
+          siding === 'Defense'
+            ? `${base.parties.defense.name} successfully centered the mitigating context.`
+            : `${base.parties.defense.name} records the ruling while planning next steps.`;
+      } else if (!base.parties.defense.roleNote) {
+        base.parties.defense.roleNote = `${base.parties.defense.name} builds the counter-narrative for ${defendantName}.`;
+      }
+    }
+    if (base.parties.defendant) {
+      base.parties.defendant.role = 'defendant';
+      base.parties.defendant.side = 'Defense';
+      if (siding) {
+        base.parties.defendant.roleNote =
+          siding === 'Defense'
+            ? `${defendantName} hears the ruling as validation of their choices.`
+            : `${defendantName} must now satisfy the remedies ordered by the bench.`;
+      } else if (!base.parties.defendant.roleNote) {
+        base.parties.defendant.roleNote = `${defendantName} prepares testimony explaining their decision.`;
+      }
+    }
+  }
+
+  function prepareCaseForDebate(caseItem) {
     const base = normaliseCase(caseItem);
     const summary = summariseComments(base.comments);
-    const prosecution = generateArgument('prosecution', base.story, base.parties);
-    const defense = generateArgument('defense', base.story, base.parties);
-    const verdict = judgeVerdict(base, prosecution, defense, summary);
-    base.prosecution = prosecution;
-    base.defense = defense;
+    base.prosecution = generateArgument('prosecution', base);
+    base.defense = generateArgument('defense', base);
     base.ai_summary = summary.lines.join('\n');
     base.publicSentiment = summary.average;
+    base.status = base.status === 'judged' ? 'judged' : 'pending';
+    base.judgeProfile = normaliseJudgeProfile(base.judgeProfile, base.verdict?.judge);
+    applyPartyContext(base, base.verdict?.siding);
+    return base;
+  }
+
+  function processCaseForVerdict(caseItem) {
+    const prepared = prepareCaseForDebate(caseItem);
+    const summary = summariseComments(prepared.comments);
+    const verdict = judgeVerdict(prepared, prepared.prosecution, prepared.defense, summary);
+    const base = { ...prepared };
     base.status = 'judged';
     const verdictPayload = {
       decision: verdict.decision,
@@ -474,37 +658,7 @@
     base.verdict = normaliseVerdict(verdictPayload);
     base.finalScore = verdict.finalScore;
     base.judgeProfile = normaliseJudgeProfile(verdict.judgeProfile, verdict.judge);
-
-    const accuserName = base.parties.accuser?.name || base.filedBy || 'the accuser';
-    const defendantName = base.parties.defendant?.name || 'the defendant';
-    if (base.parties.accuser) {
-      base.parties.accuser.role = 'accuser';
-      base.parties.accuser.side = 'Prosecution';
-      if (!base.parties.accuser.roleNote) {
-        base.parties.accuser.roleNote = `${accuserName} initiated the complaint and keeps pressing for accountability.`;
-      }
-    }
-    if (base.parties.prosecutor) {
-      base.parties.prosecutor.role = 'prosecutor';
-      base.parties.prosecutor.side = 'Prosecution';
-      base.parties.prosecutor.roleNote = verdict.siding === 'Prosecution'
-        ? `${base.parties.prosecutor.name} secured a ruling for ${accuserName}.`
-        : `${base.parties.prosecutor.name} concedes as the defense claim prevailed.`;
-    }
-    if (base.parties.defense) {
-      base.parties.defense.role = 'defense';
-      base.parties.defense.side = 'Defense';
-      base.parties.defense.roleNote = verdict.siding === 'Defense'
-        ? `${base.parties.defense.name} successfully defended ${defendantName}.`
-        : `${base.parties.defense.name} could not overturn the accusations from ${accuserName}.`;
-    }
-    if (base.parties.defendant) {
-      base.parties.defendant.role = 'defendant';
-      base.parties.defendant.side = 'Defense';
-      base.parties.defendant.roleNote = verdict.siding === 'Defense'
-        ? `${defendantName} leaves court vindicated by the verdict.`
-        : `${defendantName} now faces the remedies ordered by the bench.`;
-    }
+    applyPartyContext(base, verdict.siding);
     return base;
   }
 
@@ -520,6 +674,7 @@
     generateArgument,
     summariseComments,
     judgeVerdict,
-    processCaseForVerdict
+    processCaseForVerdict,
+    prepareCaseForDebate
   };
 })();

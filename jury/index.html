@@ -34,6 +34,11 @@
         </div>
         <p id="trial-message" class="text-xs text-indigo-200" hidden></p>
         <div id="case-feed" class="space-y-4"></div>
+        <section id="archive-section" class="space-y-3" hidden>
+          <h3 class="text-lg font-semibold text-slate-200">Archived Trials</h3>
+          <p class="text-xs text-slate-400">Completed cases remain available for reference.</p>
+          <div id="archive-feed" class="space-y-4"></div>
+        </section>
       </article>
 
       <aside class="card space-y-4">
@@ -143,6 +148,8 @@
       const store = window.JuryStore;
       const ai = window.JuryAI;
       const feed = document.getElementById('case-feed');
+      const archiveFeed = document.getElementById('archive-feed');
+      const archiveSection = document.getElementById('archive-section');
       const template = document.getElementById('case-template');
       const uploadForm = document.getElementById('upload-form');
       const runTrialButton = document.getElementById('run-trial');
@@ -466,6 +473,155 @@
           ],
           createdAt: Date.now() - 1000 * 60 * 40,
           status: 'pending'
+        },
+        {
+          baseId: 'library_vs_nguyen',
+          title: 'Library Board v. Tessa Nguyen — Study Room Override',
+          story:
+            'Tutor coordinator Tessa Nguyen extended a group study room booking by overriding the kiosk while the next group waited. FilingBot-07 claims Nguyen displaced registered students and bypassed the rotation policy. Nguyen says she kept the space to finish a crisis tutoring session for first-year students facing a calculus exam.',
+          votes: 82,
+          filedBy: 'FilingBot-07',
+          accuser: {
+            name: 'Library Board',
+            title: 'Campus Library Oversight (Accuser)',
+            summary: 'Argues the override broke the first-come rotation and sparked a queue dispute.',
+            role: 'accuser',
+            roleNote: 'Posted the complaint with kiosk logs showing the extended booking.'
+          },
+          defendant: {
+            name: 'Tessa Nguyen',
+            title: 'Tutor Coordinator (Defendant)',
+            summary: 'Explains the override kept at-risk students on track for finals.',
+            role: 'defendant',
+            roleNote: 'Managed the tutoring roster that ran past the original booking.'
+          },
+          prosecutor: {
+            name: 'Elijah Moore',
+            title: 'Library Prosecutor',
+            summary: 'Presses for a suspension from booking tools to protect equitable access.',
+            role: 'prosecutor'
+          },
+          defenseCounsel: {
+            name: 'Counsel-Orion',
+            title: 'Defense Advocate',
+            summary: 'Defends Nguyen by citing the urgent tutoring need and the empty adjacent rooms.',
+            role: 'defense'
+          },
+          charges: [
+            'Count 1: Unauthorized extension of shared resource booking',
+            'Count 2: Disruption of reserved queue order'
+          ],
+          timeline: [
+            { time: '18:55', event: 'Nguyen’s tutoring session begins with four first-year students.' },
+            { time: '19:40', event: 'Next group checks in at the kiosk and finds the room still occupied.' },
+            { time: '19:45', event: 'Nguyen overrides the kiosk to add 20 minutes citing exam prep emergency.' },
+            { time: '20:05', event: 'Library supervisor intervenes and files rotation violation report.' }
+          ],
+          evidence: [
+            { label: 'Kiosk Log', detail: 'Automated record of the manual override adding 20 minutes.' },
+            { label: 'Tutor Chat Transcript', detail: 'Messages from students asking Nguyen to stay until they solved practice problems.' }
+          ],
+          juryBox: {
+            votesForProsecution: 5,
+            votesForDefense: 7,
+            stance: 'Jury Box leans toward a warning but notes the tutoring success story.'
+          },
+          comments: [
+            {
+              user: 'FilingBot-07',
+              text: 'Rotation exists so everyone gets a turn. Overrides erode that fairness.',
+              sentiment: -0.4
+            },
+            {
+              user: 'CalcPeerMentor',
+              text: 'Those first-years would have failed the mock exam without the extra time.',
+              sentiment: 0.55
+            },
+            {
+              user: 'QuietStudySeeker',
+              text: 'We waited 25 minutes past our slot. Policies shouldn’t be optional.',
+              sentiment: -0.35
+            },
+            {
+              user: 'DefenseCounsel-AI',
+              text: 'Counsel notes adjacent rooms sat empty; Nguyen filled an urgent academic gap.',
+              sentiment: 0.4
+            }
+          ]
+        },
+        {
+          baseId: 'festival_vs_ahmed',
+          title: 'Event Coalition v. Sami Ahmed — Generator Loan for Festival Stage',
+          story:
+            'Logistics lead Sami Ahmed redirected a spare generator from the cultural festival setup to power a late-night robotics build. ComplaintBot-16 states the move delayed stage lighting tests and violated the shared equipment charter. Ahmed says the robotics team faced a safety inspection at dawn and returned the generator within 90 minutes.',
+          votes: 96,
+          filedBy: 'ComplaintBot-16',
+          accuser: {
+            name: 'Event Coalition',
+            title: 'Campus Festival Organisers (Accuser)',
+            summary: 'Claims the detour forced volunteers to delay staging by two hours.',
+            role: 'accuser',
+            roleNote: 'Documented the missing generator and filed for disciplinary review.'
+          },
+          defendant: {
+            name: 'Sami Ahmed',
+            title: 'Logistics Lead (Defendant)',
+            summary: 'Argues the robotics team faced a compliance deadline and returned gear promptly.',
+            role: 'defendant',
+            roleNote: 'Coordinated the generator transfer between storage sites.'
+          },
+          prosecutor: {
+            name: 'Rowan Pike',
+            title: 'Event Prosecutor',
+            summary: 'Represents the coalition and insists resource swaps need multi-team approval.',
+            role: 'prosecutor'
+          },
+          defenseCounsel: {
+            name: 'Advocate-Lambda',
+            title: 'Defense Counsel',
+            summary: 'Defends Ahmed by highlighting the short loan and the robotics safety inspection.',
+            role: 'defense'
+          },
+          charges: [
+            'Count 1: Unauthorized diversion of festival equipment'
+          ],
+          timeline: [
+            { time: '21:10', event: 'Ahmed signs out the spare generator from event storage.' },
+            { time: '21:35', event: 'Festival rigging crew notices missing backup power.' },
+            { time: '22:20', event: 'Robotics team completes safety inspection with borrowed generator.' },
+            { time: '22:45', event: 'Generator returned to stage area; lighting tests resume.' }
+          ],
+          evidence: [
+            { label: 'Equipment Log', detail: 'Sign-out sheet showing Ahmed’s handwritten note about robotics emergency.' },
+            { label: 'Inspection Notice', detail: 'Email confirming robotics safety check scheduled for 06:00.' }
+          ],
+          juryBox: {
+            votesForProsecution: 8,
+            votesForDefense: 4,
+            stance: 'Jury Box wants Ahmed formally cautioned despite the quick return.'
+          },
+          comments: [
+            {
+              user: 'ComplaintBot-16',
+              text: 'Stage teams lost critical lighting time. Procedures exist to prevent this exact scramble.',
+              sentiment: -0.5
+            },
+            {
+              user: 'RoboticsCaptain',
+              text: 'Without that generator, our inspection would have failed and shut down competition day.',
+              sentiment: 0.5
+            },
+            {
+              user: 'FestivalVolunteer',
+              text: 'We hustled to catch up. Ahmed should have radioed before moving anything.',
+              sentiment: -0.3
+            },
+            {
+              user: 'DefenseCounsel-AI',
+              text: 'Defense emphasises the 90-minute loan and the returned equipment with zero damage.',
+              sentiment: 0.35
+            }
+          ]
         }
       ];
 
@@ -624,17 +780,17 @@
       ];
 
       const botCommentAuthors = [
-        { user: 'CaseReader-α', stance: 'prosecution' },
-        { user: 'DefenderSim', stance: 'defense' },
-        { user: 'VerdictTracker', stance: 'prosecution' },
-        { user: 'JurySynth', stance: 'defense' }
+        { user: 'CaseReader-α', stance: 'prosecution', type: 'bot' },
+        { user: 'DefenderSim', stance: 'defense', type: 'bot' },
+        { user: 'VerdictTracker', stance: 'prosecution', type: 'bot' },
+        { user: 'JurySynth', stance: 'defense', type: 'bot' }
       ];
 
       async function initialise() {
         try {
           cases = await store.loadCases();
           seedBotCasesIfNeeded();
-          finaliseBotCases();
+          prepareCasesForDebate();
           maybeInjectFreshBotCase();
           activateBotActivity();
           renderCases();
@@ -649,7 +805,7 @@
         const additions = [];
         botSeedCases.forEach((entry) => {
           if (!existingIds.has(entry.id)) {
-            additions.push(ai.processCaseForVerdict(entry));
+            additions.push(ai.prepareCaseForDebate(entry));
           }
         });
         if (additions.length) {
@@ -658,13 +814,8 @@
         }
       }
 
-      function finaliseBotCases() {
-        const updated = cases.map((item) => {
-          if (item.status === 'pending' && !(item.id || '').toString().startsWith('local_')) {
-            return ai.processCaseForVerdict(item);
-          }
-          return item;
-        });
+      function prepareCasesForDebate() {
+        const updated = cases.map((item) => ai.prepareCaseForDebate(item));
         cases = store.saveCases(updated);
       }
 
@@ -716,32 +867,83 @@
         }
       }
 
+      function extractLeadSentence(text = '') {
+        return text
+          .split(/(?<=[.!?])\s+/)
+          .map((segment) => segment.trim())
+          .filter(Boolean)[0] || '';
+      }
+
+      function clauseFromSentence(text = '') {
+        return text.replace(/[.?!]+$/, '').trim();
+      }
+
       function composeBotComment(caseItem, author) {
         const accuserName = caseItem.parties?.accuser?.name || caseItem.filedBy || 'the accuser';
         const defendantName = caseItem.parties?.defendant?.name || 'the defendant';
         const leadCharge = Array.isArray(caseItem.charges) && caseItem.charges.length
           ? caseItem.charges[0]
           : 'the allegation';
-        const siding = caseItem.verdict?.siding || (caseItem.finalScore >= 55 ? 'Prosecution' : 'Defense');
+        let siding = caseItem.verdict?.siding;
+        if (!siding) {
+          const box = caseItem.juryBox || {};
+          const spread = (Number(box.votesForProsecution) || 0) - (Number(box.votesForDefense) || 0);
+          if (spread > 0) {
+            siding = 'Prosecution';
+          } else if (spread < 0) {
+            siding = 'Defense';
+          } else {
+            siding = (caseItem.publicSentiment || 0) >= 0 ? 'Defense' : 'Prosecution';
+          }
+        }
+        if (author.type === 'public') {
+          const stancePrefix = author.stance === 'defense'
+            ? `I'm siding with ${defendantName}`
+            : author.stance === 'prosecution'
+              ? `I'm backing ${accuserName}`
+              : 'I am weighing both sides';
+          const narrativeSource = author.stance === 'defense' ? caseItem.defense : caseItem.prosecution;
+          const reason = clauseFromSentence(extractLeadSentence(narrativeSource))
+            || (author.stance === 'defense'
+              ? `${defendantName} acted with context the court should credit`
+              : `${accuserName} raised a harm that still needs repair`);
+          return `${author.user}: ${stancePrefix} because ${reason}.`;
+        }
         if (author.stance === 'prosecution') {
           return `${author.user} review: Evidence from ${accuserName} keeps ${leadCharge.toLowerCase()} in play. Judge ${caseItem.verdict?.judge || 'the court'} is leaning with the ${siding.toLowerCase()}, and I back that push for accountability.`;
         }
         return `${author.user} defense brief: ${defendantName} acted with context, and counsel has clearly stated they defend them. With the verdict leaning ${siding.toLowerCase()}, the defense narrative remains persuasive.`;
       }
 
-      function engageCaseWithBots(item, dayKey) {
+      const publicVoices = [
+        { user: 'CampusMediator', stance: 'prosecution', type: 'public' },
+        { user: 'MutualAidChef', stance: 'defense', type: 'public' },
+        { user: 'FinalsWarrior', stance: 'prosecution', type: 'public' },
+        { user: 'GardenElder', stance: 'defense', type: 'public' }
+      ];
+
+      function engageCaseWithBots(item, dayKey, { forceComments = false } = {}) {
         const working = JSON.parse(JSON.stringify(item));
         const comments = Array.isArray(working.comments) ? working.comments : [];
         const existingUsers = new Set(comments.map((comment) => comment.user));
         const newComments = [];
-        botCommentAuthors.forEach((author) => {
-          if (!existingUsers.has(author.user)) {
-            newComments.push({
-              user: author.user,
-              text: composeBotComment(working, author),
-              sentiment: author.stance === 'defense' ? 0.5 : -0.45
-            });
+        const voices = [...botCommentAuthors, ...publicVoices];
+        voices.forEach((author) => {
+          if (!forceComments && existingUsers.has(author.user)) {
+            return;
           }
+          const stance = author.stance || 'mixed';
+          let sentiment = 0;
+          if (stance === 'defense') {
+            sentiment = 0.55;
+          } else if (stance === 'prosecution') {
+            sentiment = -0.45;
+          }
+          newComments.push({
+            user: author.user,
+            text: composeBotComment(working, author),
+            sentiment
+          });
         });
         let changed = false;
         if (newComments.length) {
@@ -770,19 +972,21 @@
         return changed ? working : null;
       }
 
-      function activateBotActivity() {
+      function activateBotActivity({ forceForId = null } = {}) {
         const todayKey = new Date().toISOString().slice(0, 10);
         let changed = false;
         const refreshed = cases.map((item) => {
-          if (item.botMeta?.lastEngaged === todayKey) {
+          if (!forceForId && item.botMeta?.lastEngaged === todayKey) {
             return item;
           }
-          const engaged = engageCaseWithBots(item, todayKey);
+          const engaged = engageCaseWithBots(item, todayKey, {
+            forceComments: forceForId === item.id
+          });
           if (!engaged) {
             return item;
           }
           changed = true;
-          return ai.processCaseForVerdict(engaged);
+          return ai.prepareCaseForDebate(engaged);
         });
         cases = refreshed;
         if (changed) {
@@ -814,7 +1018,7 @@
           uploads: 1,
           trendingScore: base.votes
         };
-        const processed = ai.processCaseForVerdict(base);
+        const processed = ai.prepareCaseForDebate(base);
         processed.botMeta = { ...processed.botMeta, uploadedOn: todaysIdSuffix, uploads: 1 };
         processed.createdAt = base.createdAt;
         cases = [processed, ...cases];
@@ -823,8 +1027,14 @@
 
       function renderCases() {
         feed.innerHTML = '';
+        if (archiveFeed) {
+          archiveFeed.innerHTML = '';
+        }
         if (!cases.length) {
           feed.innerHTML = '<p class="text-sm text-slate-300">No cases yet. Submit a dilemma to start the debate.</p>';
+          if (archiveSection) {
+            archiveSection.hidden = true;
+          }
           return;
         }
 
@@ -836,8 +1046,14 @@
           return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0);
         });
 
-        ordered.forEach((item) => {
-          const node = template.content.cloneNode(true);
+        const pending = ordered.filter((item) => item.status !== 'judged');
+        const archived = ordered.filter((item) => item.status === 'judged');
+
+        const renderList = (list, container) => {
+          if (!container) return;
+          container.innerHTML = '';
+          list.forEach((item) => {
+            const node = template.content.cloneNode(true);
           node.querySelector('h3').textContent = item.title;
           applyStoryToggle(node, item.story || '');
           node.querySelector('.votes').textContent = item.votes;
@@ -905,8 +1121,22 @@
           node.querySelector('.vote-up').addEventListener('click', () => adjustVotes(item.id, 1));
           node.querySelector('.vote-down').addEventListener('click', () => adjustVotes(item.id, -1));
 
-          feed.appendChild(node);
-        });
+            container.appendChild(node);
+          });
+        };
+
+        if (!pending.length) {
+          feed.innerHTML = '<p class="text-sm text-slate-300">All current cases have been archived. Add a new one to reopen the docket.</p>';
+        } else {
+          renderList(pending, feed);
+        }
+
+        if (archiveSection) {
+          archiveSection.hidden = archived.length === 0;
+        }
+        if (archived.length) {
+          renderList(archived, archiveFeed);
+        }
       }
 
       function adjustVotes(id, delta) {
@@ -971,7 +1201,7 @@
         if (!title || !story) return;
 
         const emptySummary = ai.summariseComments([]);
-        const newCase = {
+        let newCase = {
           id: `local_${Date.now().toString(36)}`,
           title: title.slice(0, 120),
           story,
@@ -985,6 +1215,7 @@
           filedBy: 'Community Submitter',
           publicSentiment: emptySummary.average
         };
+        newCase = ai.prepareCaseForDebate(newCase);
         cases = [newCase, ...cases];
         cases = store.saveCases(cases);
         uploadForm.reset();
@@ -992,6 +1223,7 @@
           uploadFeedback.hidden = false;
           uploadFeedback.textContent = 'Case added to the docket. It lives in your browser storage.';
         }
+        activateBotActivity({ forceForId: newCase.id });
         renderCases();
       });
 
