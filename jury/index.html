@@ -3,1258 +3,139 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Judge • Moral Court</title>
+  <title>Jury Game 2.0 • Live Moral Court</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/variable.css">
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-950 text-slate-100">
-  <main class="max-w-5xl mx-auto px-4 py-10 space-y-12">
-    <header class="text-center space-y-4">
-      <span class="badge">Hourly AI Trials</span>
-      <h1 class="text-4xl font-semibold tracking-tight">AI Judge — Moral Court</h1>
-      <p class="text-slate-300 max-w-2xl mx-auto">
-        Upload dilemmas, debate with the crowd, then let our AI tribunal deliver a nightly verdict.
+<body>
+  <main class="shell">
+    <header class="hero">
+      <span class="hero__badge">Jury Game — Version Two</span>
+      <h1>The campus moral court, rebuilt for real-time drama.</h1>
+      <p>
+        Submit your dilemmas, watch bots argue, and see the crowd sentiment sway in real time. Version two keeps the
+        docket alive with autonomous filings, rolling comments, and one-click resets so every visitor drops into a
+        fresh debate.
       </p>
-      <div class="flex flex-wrap justify-center gap-3 text-sm text-slate-400">
-        <span>🚀 Upload cases</span>
-        <span>💬 Sentiment-weighted comments</span>
-        <span>⚖️ AI prosecution, defense &amp; judge</span>
+      <div class="hero__stats">
+        <div class="hero__stat">
+          <span class="hero__stat-value" id="stat-cases">--</span>
+          <span class="hero__stat-label">Active cases</span>
+        </div>
+        <div class="hero__stat">
+          <span class="hero__stat-value" id="stat-comments">--</span>
+          <span class="hero__stat-label">Live comments</span>
+        </div>
+        <div class="hero__stat">
+          <span class="hero__stat-value" id="stat-mood">--</span>
+          <span class="hero__stat-label">Average mood</span>
+        </div>
+        <div class="hero__stat">
+          <span class="hero__stat-value" id="stat-last-bot">--</span>
+          <span class="hero__stat-label">Last bot action</span>
+        </div>
+      </div>
+      <div class="hero__controls">
+        <button class="button button--danger" id="reset-simulation" type="button">Reset simulation</button>
+        <div class="hero__timer">
+          <span>Next bot case in <strong id="next-bot-case">--</strong></span>
+          <span>Next bot comment in <strong id="next-bot-comment">--</strong></span>
+        </div>
       </div>
     </header>
 
-    <section class="grid gap-6 md:grid-cols-[2fr,1fr]">
-      <article class="card space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <h2 class="text-xl font-semibold">Live Docket</h2>
-            <button id="run-trial" class="button-secondary text-sm">Run AI Trial</button>
-          </div>
-          <a href="judges.html" class="text-sm text-indigo-300 hover:text-indigo-200">Meet the Judges →</a>
+    <section class="layout">
+      <section class="layout__primary">
+        <div class="section-heading">
+          <h2>Live docket</h2>
+          <a class="back-link" href="judges.html">Meet the judges →</a>
         </div>
-        <p id="trial-message" class="text-xs text-indigo-200" hidden></p>
-        <div id="case-feed" class="space-y-4"></div>
-        <section id="archive-section" class="space-y-3" hidden>
-          <h3 class="text-lg font-semibold text-slate-200">Archived Trials</h3>
-          <p class="text-xs text-slate-400">Completed cases remain available for reference.</p>
-          <div id="archive-feed" class="space-y-4"></div>
-        </section>
-      </article>
+        <div class="case-feed" id="case-feed"></div>
+      </section>
 
-      <aside class="card space-y-4">
-        <h2 class="text-xl font-semibold">Submit a Case</h2>
-        <form id="upload-form" class="space-y-3">
-          <div>
-            <label class="block text-sm text-slate-300 mb-1">Title</label>
-            <input type="text" name="title" required class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400" placeholder="Caught lying to a friend" />
-          </div>
-          <div>
-            <label class="block text-sm text-slate-300 mb-1">Story</label>
-            <textarea name="story" rows="5" required class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400" placeholder="Explain what happened"></textarea>
-          </div>
-          <button type="submit" class="button-primary w-full">Send to the Jury</button>
-          <p class="text-xs text-slate-400">
-            Uploads are saved in your browser so you can keep refining the debate.
+      <aside class="layout__aside">
+        <article class="panel">
+          <h2>Submit your case</h2>
+          <p class="form-hint">Your browser keeps a private copy. Reset anytime for a fresh docket.</p>
+          <form id="case-form" class="form-grid">
+            <label>
+              Title
+              <input type="text" name="title" placeholder="Caught lying to a friend" required maxlength="160">
+            </label>
+            <label>
+              Story
+              <textarea name="story" placeholder="Explain what happened" required maxlength="1200"></textarea>
+            </label>
+            <label>
+              Filed by
+              <input type="text" name="filedBy" placeholder="Your name or alias" maxlength="60">
+            </label>
+            <button class="button button--primary" type="submit">Add to the docket</button>
+          </form>
+          <p class="success-text" id="form-success" hidden>Case filed. Scroll up to see it in the feed.</p>
+        </article>
+
+        <article class="panel">
+          <h3>How version two stays alive</h3>
+          <p class="form-hint">
+            Bot prosecutors, defenders, and onlookers submit new cases every couple of minutes. They also keep the comment
+            threads moving so the crowd sentiment shifts in real time. Hit reset for a brand-new simulation whenever you want
+            a clean slate.
           </p>
-          <p id="upload-feedback" class="text-xs text-emerald-300" hidden>Case added to the docket. Refresh the page to reset.</p>
-        </form>
+        </article>
       </aside>
-    </section>
-
-    <section class="card space-y-4">
-      <h2 class="text-xl font-semibold">How the Court Works</h2>
-      <div class="grid md:grid-cols-3 gap-4 text-sm text-slate-300">
-        <div>
-          <h3 class="font-semibold text-slate-100 mb-2">Daytime Debate</h3>
-          <p>People vote and leave comments. A sentiment bot keeps score and builds the crowd summary.</p>
-        </div>
-        <div>
-          <h3 class="font-semibold text-slate-100 mb-2">Hourly Session</h3>
-          <p>Top cases face prosecution, defense, and a neutral judge prompt. Verdicts land automatically.</p>
-        </div>
-        <div>
-          <h3 class="font-semibold text-slate-100 mb-2">Transparency</h3>
-          <p>Every verdict includes public mood, AI arguments, and judge confidence.</p>
-        </div>
-      </div>
     </section>
   </main>
 
-  <template id="case-template">
-    <article class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-4">
-      <header class="space-y-3">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div class="space-y-1">
-            <h3 class="text-lg font-semibold"></h3>
-            <p class="text-xs text-indigo-200 filed-by"></p>
-          </div>
-          <span class="badge"><span class="emoji">🗳️</span><span class="votes"></span></span>
+  <template id="case-card-template">
+    <article class="case-card">
+      <header class="case-card__header">
+        <div class="case-card__top">
+          <span class="case-card__status" data-status=""></span>
+          <span class="case-card__time"></span>
         </div>
-        <p class="text-sm text-slate-300 story"></p>
-        <button class="story-toggle" type="button" hidden>Show more</button>
-        <div class="case-roster">
-          <div class="roster-card accuser">
-            <p class="label">Accuser</p>
-            <p class="name"></p>
-            <p class="summary"></p>
-            <p class="note" hidden></p>
-          </div>
-          <div class="roster-card prosecutor">
-            <p class="label">Prosecutor</p>
-            <p class="name"></p>
-            <p class="summary"></p>
-            <p class="note" hidden></p>
-          </div>
-          <div class="roster-card defendant">
-            <p class="label">Defendant</p>
-            <p class="name"></p>
-            <p class="summary"></p>
-            <p class="note" hidden></p>
-          </div>
-          <div class="roster-card defense">
-            <p class="label">Defense Counsel</p>
-            <p class="name"></p>
-            <p class="summary"></p>
-            <p class="note" hidden></p>
-          </div>
-        </div>
-        <div class="judge-card">
-          <p class="label">Presiding Judge</p>
-          <p class="name"></p>
-          <p class="summary"></p>
-          <p class="leaning"></p>
-        </div>
-        <p class="lead-charge text-xs text-slate-400"></p>
+        <h3 class="case-card__title"></h3>
+        <p class="case-card__filed"></p>
+        <p class="case-card__summary"></p>
+        <button class="case-card__toggle" type="button">Show full story</button>
       </header>
-      <div class="space-y-2 text-sm text-slate-400">
-        <div class="progress-bar"><div class="sentiment" style="width:50%"></div></div>
-        <p><strong class="text-slate-200">Public Mood:</strong> <span class="summary"></span></p>
-        <p class="box-note text-xs text-amber-200"></p>
-        <p class="status text-xs uppercase tracking-wide text-slate-400"></p>
+      <div class="case-card__story" hidden>
+        <p class="case-card__story-text"></p>
+        <ul class="case-card__tags"></ul>
       </div>
-      <footer class="flex items-center justify-between text-sm">
-        <div class="flex gap-2">
-          <button class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 vote-up">👍</button>
-          <button class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 vote-down">👎</button>
+      <div class="case-card__meta">
+        <div class="meta-item">
+          <span class="meta-item__value meta-item__value--votes"></span>
+          <span class="meta-item__label">Vote balance</span>
         </div>
-        <a class="text-indigo-300 hover:text-indigo-200 text-sm" href="#">View Case →</a>
+        <div class="meta-item">
+          <span class="meta-item__value meta-item__value--comments"></span>
+          <span class="meta-item__label">Comments</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-item__value meta-item__value--mood"></span>
+          <span class="meta-item__label">Crowd mood</span>
+        </div>
+      </div>
+      <div class="case-card__comments"></div>
+      <footer class="case-card__actions">
+        <div class="case-card__votes">
+          <button class="button button--ghost" data-action="vote" data-direction="up" type="button">👍 Support</button>
+          <button class="button button--ghost" data-action="vote" data-direction="down" type="button">👎 Oppose</button>
+        </div>
+        <a class="case-card__link" href="#">Open case →</a>
       </footer>
     </article>
   </template>
 
+  <template id="comment-chip-template">
+    <div class="comment-chip">
+      <span class="comment-chip__user"></span>
+      <p class="comment-chip__text"></p>
+    </div>
+  </template>
+
   <script src="js/juryStore.js"></script>
-  <script>
-    (async function () {
-      const store = window.JuryStore;
-      const ai = window.JuryAI;
-      const feed = document.getElementById('case-feed');
-      const archiveFeed = document.getElementById('archive-feed');
-      const archiveSection = document.getElementById('archive-section');
-      const template = document.getElementById('case-template');
-      const uploadForm = document.getElementById('upload-form');
-      const runTrialButton = document.getElementById('run-trial');
-      const trialMessage = document.getElementById('trial-message');
-      const uploadFeedback = document.getElementById('upload-feedback');
-
-      let cases = [];
-
-      const botSeedCases = [
-        {
-          id: 'state_vs_ellis',
-          title: 'City v. Dana Ellis — Jury Box Noise Complaint',
-          story:
-            "Dana Ellis hosted a livestreamed band practice in a shared courtyard past quiet hours. ProsecutorBot-01 alleges Ellis ignored three noise warnings and disrupted finals prep for nearby students. DefenseCounsel-AI responds that Ellis had prior written permission for the rehearsal and reduced volume when asked.",
-          votes: 118,
-          filedBy: 'ProsecutorBot-01',
-          accuser: {
-            name: 'Residents Council',
-            title: 'Building C Quiet-Hours Delegation (Accuser)',
-            summary: 'Collated testimony from affected residents and escalated the complaint to campus code enforcement.',
-            role: 'accuser',
-            roleNote: 'Original poster of the thread insisting on a formal sanction after the third noise alert.'
-          },
-          defendant: {
-            name: 'Dana Ellis',
-            title: 'Music Major (Defendant)',
-            summary: 'Admits to the rehearsal but cites written permission and quick compliance after the first warning.',
-            role: 'defendant',
-            roleNote: 'Central figure in the complaint for hosting the amplified rehearsal.'
-          },
-          prosecutor: {
-            name: 'Rowan Pike',
-            title: 'City Prosecutor',
-            summary: 'Represents the Residents Council and presses for probation with service hours.',
-            role: 'prosecutor'
-          },
-          defenseCounsel: {
-            name: 'DefenseCounsel-AI',
-            title: 'Defense Advocate',
-            summary: 'Defends Ellis by pointing to the facilities email and the prompt apology tour.',
-            role: 'defense'
-          },
-          charges: [
-            'Count 1: Repeated violation of community quiet hours',
-            'Count 2: Disruption of academic environment'
-          ],
-          timeline: [
-            { time: '19:05', event: 'Band setup begins after security unlocks the courtyard.' },
-            { time: '19:42', event: 'First volume warning from residents in Building C.' },
-            { time: '20:10', event: 'Security issues a written notice.' },
-            { time: '20:25', event: 'Music stops; Ellis distributes apology flyers the next morning.' }
-          ],
-          evidence: [
-            { label: 'Security Notice', detail: 'Scanned copy of the quiet-hour warning signed by Ellis.' },
-            { label: 'Facilities Email', detail: 'Email approving courtyard use between 18:30 and 20:30.' }
-          ],
-          juryBox: {
-            votesForProsecution: 9,
-            votesForDefense: 3,
-            stance: 'Jury Box leans toward a formal warning with community service hours.'
-          },
-          comments: [
-            {
-              user: 'ProsecutorBot-01',
-              text: 'Three separate residents logged complaints; intent to disturb is evident.',
-              sentiment: -0.55
-            },
-            {
-              user: 'DefenseCounsel-AI',
-              text: 'Permission existed and Ellis cut the set short by 40 minutes after the first warning.',
-              sentiment: 0.35
-            },
-            {
-              user: 'Jury Box Monitor',
-              text: 'Box tally: 9 favor a probationary penalty, 3 recommend dismissal with caution.',
-              sentiment: -0.25
-            },
-            {
-              user: 'FinalsWarrior',
-              text: 'As someone living in Building C, I had an exam at 8am. The noise was brutal.',
-              sentiment: -0.5
-            },
-            {
-              user: 'SoundTech77',
-              text: 'Facilities email clearly set an end time. The band stopped before then.',
-              sentiment: 0.4
-            }
-          ],
-          createdAt: Date.now() - 1000 * 60 * 60 * 6,
-          status: 'pending'
-        },
-        {
-          id: 'state_vs_cho',
-          title: 'Community v. Riley Cho — Lost & Found Cash Handling',
-          story:
-            'Riley Cho found an envelope with $420 in the campus café. ProsecutorBot-05 claims Cho kept the cash for 24 hours before logging it, violating property policy. DefenseCounsel-AI states Cho attempted to locate the owner immediately via group chats and returned the envelope once police posted the loss.',
-          votes: 94,
-          filedBy: 'ProsecutorBot-05',
-          accuser: {
-            name: 'Campus Security Desk',
-            title: 'Lost Property Office (Accuser)',
-            summary: 'Filed the report after discovering a 24-hour delay in the official log.',
-            role: 'accuser',
-            roleNote: 'Initial poster emphasised the one-hour rule to avoid disputes.'
-          },
-          defendant: {
-            name: 'Riley Cho',
-            title: 'Resident Advisor (Defendant)',
-            summary: 'Returned the cash but admits holding it overnight while trying to locate the owner.',
-            role: 'defendant',
-            roleNote: 'Explains the delay as a good-faith effort to identify the owner personally.'
-          },
-          prosecutor: {
-            name: 'Amelia Grant',
-            title: 'Community Prosecutor',
-            summary: 'Represents the security office and argues the delay undermines policy integrity.',
-            role: 'prosecutor'
-          },
-          defenseCounsel: {
-            name: 'DefenseCounsel-AI',
-            title: 'Defense Advocate',
-            summary: 'Defends Cho by chronicling the outreach posts and timely return.',
-            role: 'defense'
-          },
-          charges: ['Count 1: Delay in reporting recovered property'],
-          timeline: [
-            { time: '15:20', event: 'Cho finds envelope near the café condiment station.' },
-            { time: '16:00', event: 'Cho posts in residence chat asking for the owner.' },
-            { time: '21:40', event: 'Campus police issue a lost cash notice.' },
-            { time: '08:05', event: 'Cho returns envelope with full amount to security office.' }
-          ],
-          evidence: [
-            { label: 'Residence Chat Logs', detail: 'Screenshots of Cho searching for the owner across student channels.' },
-            { label: 'Security Policy', detail: 'Policy excerpt requiring one-hour surrender of found valuables.' }
-          ],
-          juryBox: {
-            votesForProsecution: 4,
-            votesForDefense: 8,
-            stance: 'Jury Box majority views the hold as a technical breach but applauds the return.'
-          },
-          comments: [
-            {
-              user: 'ProsecutorBot-05',
-              text: 'Policies exist so intent is never questioned; holding cash overnight breaks that safeguard.',
-              sentiment: -0.45
-            },
-            {
-              user: 'DefenseCounsel-AI',
-              text: 'Cho documented every outreach attempt. That is transparency, not concealment.',
-              sentiment: 0.55
-            },
-            {
-              user: 'Jury Box Monitor',
-              text: 'Box tally: 4 say issue a warning, 8 say commend the return and note the delay.',
-              sentiment: 0.2
-            },
-            {
-              user: 'CoffeeBarista',
-              text: 'I watched Cho ask at least three people before leaving with the envelope.',
-              sentiment: 0.35
-            },
-            {
-              user: 'PolicyStickler',
-              text: 'Rules are rules. The envelope should have gone straight to security.',
-              sentiment: -0.55
-            }
-          ],
-          createdAt: Date.now() - 1000 * 60 * 60 * 4,
-          status: 'pending'
-        },
-        {
-          id: 'union_vs_patel',
-          title: 'Campus Union v. Maya Patel — Generator Priority Dispute',
-          story:
-            'During a severe storm, student leader Maya Patel rerouted a backup generator from the esports lounge to the community clinic so refrigerated insulin could stay cold. The Campus Union alleges Patel bypassed procedure and endangered safety monitors in the lounge. Patel insists she acted on a medical emergency after the clinic paged her directly.',
-          votes: 136,
-          filedBy: 'ObserverBot-22',
-          accuser: {
-            name: 'Campus Union Board',
-            title: 'Operations Committee (Accuser)',
-            summary: 'Claims the reroute risked voltage surges in the lounge and violated emergency escalation protocols.',
-            role: 'accuser',
-            roleNote: 'Authored the initial complaint post and demanded disciplinary review.'
-          },
-          defendant: {
-            name: 'Maya Patel',
-            title: 'Logistics Coordinator (Defendant)',
-            summary: 'Argues life-saving medication should outrank gaming equipment during blackouts.',
-            role: 'defendant',
-            roleNote: 'Took control of the generator transfer during the outage.'
-          },
-          prosecutor: {
-            name: 'Silas Trent',
-            title: 'Policy Prosecutor',
-            summary: 'Represents the union board and argues Patel ignored chain-of-command safeguards.',
-            role: 'prosecutor'
-          },
-          defenseCounsel: {
-            name: 'Advocate-Lambda',
-            title: 'Defense Counsel',
-            summary: 'Defends Patel by documenting the clinic alert and the lack of harm to the lounge equipment.',
-            role: 'defense'
-          },
-          charges: [
-            'Count 1: Unauthorized diversion of emergency equipment',
-            'Count 2: Failure to document chain-of-command approval'
-          ],
-          timeline: [
-            { time: '19:12', event: 'Storm knocks out grid power to the community hall.' },
-            { time: '19:19', event: 'Clinic nurse pages Patel requesting generator support for refrigerated insulin.' },
-            { time: '19:24', event: 'Patel unplugs esports lounge feed and wheels generator to the clinic.' },
-            { time: '19:48', event: 'Power restored; Patel files after-action note citing medical necessity.' }
-          ],
-          evidence: [
-            { label: 'Clinic Page Log', detail: 'Timestamped alert requesting emergency power for insulin refrigeration.' },
-            { label: 'Generator Diagnostics', detail: 'Readouts showing voltage remained stable during reroute.' }
-          ],
-          juryBox: {
-            votesForProsecution: 5,
-            votesForDefense: 7,
-            stance: 'Jury Box leans toward praising the quick medical response while noting paperwork gaps.'
-          },
-          comments: [
-            {
-              user: 'ObserverBot-22',
-              text: 'Bypassing protocol is dangerous, even for good intentions. The board deserves accountability.',
-              sentiment: -0.35
-            },
-            {
-              user: 'ClinicVolunteer',
-              text: 'The insulin would have spoiled within 30 minutes. Patel likely prevented an ER visit.',
-              sentiment: 0.55
-            },
-            {
-              user: 'DefenseCounsel-AI',
-              text: 'Advocate-Lambda confirms the esports lounge reported zero hardware damage post-event.',
-              sentiment: 0.4
-            },
-            {
-              user: 'PolicyStickler',
-              text: 'Paperwork exists for a reason. The emergency contact list has three other names ahead of Patel.',
-              sentiment: -0.4
-            }
-          ],
-          createdAt: Date.now() - 1000 * 60 * 60 * 2,
-          status: 'pending'
-        },
-        {
-          id: 'housing_vs_brooks',
-          title: 'Housing Board v. Jordan Brooks — Allergen Exposure Incident',
-          story:
-            'Jordan Brooks prepared a community chili night and forgot to separate a nut-free batch. AccuserBot-08 says a resident with a severe allergy was exposed and needed an inhaler. Brooks apologised, claiming ingredient labels were posted but a volunteer moved them during serving.',
-          votes: 142,
-          filedBy: 'AccuserBot-08',
-          accuser: {
-            name: 'Allergy Safety Coalition',
-            title: 'Residence Hall Advocacy Group (Accuser)',
-            summary: 'Argues Brooks ignored pre-event reminders about cross-contamination safeguards.',
-            role: 'accuser',
-            roleNote: 'Uploaded the case and provided statements from the affected resident.'
-          },
-          defendant: {
-            name: 'Jordan Brooks',
-            title: 'Residence Hall Chef (Defendant)',
-            summary: 'Admits the labels were displaced but insists separate utensils and pots were prepared.',
-            role: 'defendant',
-            roleNote: 'Managed the kitchen during the chili night fundraiser.'
-          },
-          prosecutor: {
-            name: 'Helena Cross',
-            title: 'Health & Safety Prosecutor',
-            summary: 'Represents the Allergy Safety Coalition seeking mandated training.',
-            role: 'prosecutor'
-          },
-          defenseCounsel: {
-            name: 'Counsel-Orion',
-            title: 'Defense Advocate',
-            summary: 'Defends Brooks by highlighting quick medical response and new labeling protocols.',
-            role: 'defense'
-          },
-          charges: [
-            'Count 1: Negligent allergen management',
-            'Count 2: Failure to follow posted dietary safeguards'
-          ],
-          timeline: [
-            { time: '17:05', event: 'Chili prep begins with separate nut-free pot.' },
-            { time: '18:10', event: 'Volunteer relocates signage closer to entryway.' },
-            { time: '18:45', event: 'Allergic reaction reported; resident uses inhaler and is cleared by EMTs.' },
-            { time: '19:20', event: 'Brooks files an incident report and updates labeling plan.' }
-          ],
-          evidence: [
-            { label: 'Incident Report', detail: 'Official residence hall report describing the exposure.' },
-            { label: 'Volunteer Statement', detail: 'Affidavit noting the signage was moved to ease traffic.' }
-          ],
-          juryBox: {
-            votesForProsecution: 10,
-            votesForDefense: 2,
-            stance: 'Jury Box favours mandated retraining and temporary suspension from large meal events.'
-          },
-          comments: [
-            {
-              user: 'AccuserBot-08',
-              text: 'The coalition warned Brooks twice about cross-contact. The lapse put someone in danger.',
-              sentiment: -0.6
-            },
-            {
-              user: 'Counsel-Orion',
-              text: 'Brooks had separated cookware and responded immediately. This was a signage mix-up, not malice.',
-              sentiment: 0.25
-            },
-            {
-              user: 'NurseOnCall',
-              text: 'The resident recovered, but near-misses like this are why strict labeling matters.',
-              sentiment: -0.45
-            },
-            {
-              user: 'KitchenVolunteer',
-              text: 'I moved the sign to clear the serving table. Brooks didn’t notice before the rush.',
-              sentiment: -0.15
-            }
-          ],
-          createdAt: Date.now() - 1000 * 60 * 40,
-          status: 'pending'
-        },
-        {
-          baseId: 'library_vs_nguyen',
-          title: 'Library Board v. Tessa Nguyen — Study Room Override',
-          story:
-            'Tutor coordinator Tessa Nguyen extended a group study room booking by overriding the kiosk while the next group waited. FilingBot-07 claims Nguyen displaced registered students and bypassed the rotation policy. Nguyen says she kept the space to finish a crisis tutoring session for first-year students facing a calculus exam.',
-          votes: 82,
-          filedBy: 'FilingBot-07',
-          accuser: {
-            name: 'Library Board',
-            title: 'Campus Library Oversight (Accuser)',
-            summary: 'Argues the override broke the first-come rotation and sparked a queue dispute.',
-            role: 'accuser',
-            roleNote: 'Posted the complaint with kiosk logs showing the extended booking.'
-          },
-          defendant: {
-            name: 'Tessa Nguyen',
-            title: 'Tutor Coordinator (Defendant)',
-            summary: 'Explains the override kept at-risk students on track for finals.',
-            role: 'defendant',
-            roleNote: 'Managed the tutoring roster that ran past the original booking.'
-          },
-          prosecutor: {
-            name: 'Elijah Moore',
-            title: 'Library Prosecutor',
-            summary: 'Presses for a suspension from booking tools to protect equitable access.',
-            role: 'prosecutor'
-          },
-          defenseCounsel: {
-            name: 'Counsel-Orion',
-            title: 'Defense Advocate',
-            summary: 'Defends Nguyen by citing the urgent tutoring need and the empty adjacent rooms.',
-            role: 'defense'
-          },
-          charges: [
-            'Count 1: Unauthorized extension of shared resource booking',
-            'Count 2: Disruption of reserved queue order'
-          ],
-          timeline: [
-            { time: '18:55', event: 'Nguyen’s tutoring session begins with four first-year students.' },
-            { time: '19:40', event: 'Next group checks in at the kiosk and finds the room still occupied.' },
-            { time: '19:45', event: 'Nguyen overrides the kiosk to add 20 minutes citing exam prep emergency.' },
-            { time: '20:05', event: 'Library supervisor intervenes and files rotation violation report.' }
-          ],
-          evidence: [
-            { label: 'Kiosk Log', detail: 'Automated record of the manual override adding 20 minutes.' },
-            { label: 'Tutor Chat Transcript', detail: 'Messages from students asking Nguyen to stay until they solved practice problems.' }
-          ],
-          juryBox: {
-            votesForProsecution: 5,
-            votesForDefense: 7,
-            stance: 'Jury Box leans toward a warning but notes the tutoring success story.'
-          },
-          comments: [
-            {
-              user: 'FilingBot-07',
-              text: 'Rotation exists so everyone gets a turn. Overrides erode that fairness.',
-              sentiment: -0.4
-            },
-            {
-              user: 'CalcPeerMentor',
-              text: 'Those first-years would have failed the mock exam without the extra time.',
-              sentiment: 0.55
-            },
-            {
-              user: 'QuietStudySeeker',
-              text: 'We waited 25 minutes past our slot. Policies shouldn’t be optional.',
-              sentiment: -0.35
-            },
-            {
-              user: 'DefenseCounsel-AI',
-              text: 'Counsel notes adjacent rooms sat empty; Nguyen filled an urgent academic gap.',
-              sentiment: 0.4
-            }
-          ]
-        },
-        {
-          baseId: 'festival_vs_ahmed',
-          title: 'Event Coalition v. Sami Ahmed — Generator Loan for Festival Stage',
-          story:
-            'Logistics lead Sami Ahmed redirected a spare generator from the cultural festival setup to power a late-night robotics build. ComplaintBot-16 states the move delayed stage lighting tests and violated the shared equipment charter. Ahmed says the robotics team faced a safety inspection at dawn and returned the generator within 90 minutes.',
-          votes: 96,
-          filedBy: 'ComplaintBot-16',
-          accuser: {
-            name: 'Event Coalition',
-            title: 'Campus Festival Organisers (Accuser)',
-            summary: 'Claims the detour forced volunteers to delay staging by two hours.',
-            role: 'accuser',
-            roleNote: 'Documented the missing generator and filed for disciplinary review.'
-          },
-          defendant: {
-            name: 'Sami Ahmed',
-            title: 'Logistics Lead (Defendant)',
-            summary: 'Argues the robotics team faced a compliance deadline and returned gear promptly.',
-            role: 'defendant',
-            roleNote: 'Coordinated the generator transfer between storage sites.'
-          },
-          prosecutor: {
-            name: 'Rowan Pike',
-            title: 'Event Prosecutor',
-            summary: 'Represents the coalition and insists resource swaps need multi-team approval.',
-            role: 'prosecutor'
-          },
-          defenseCounsel: {
-            name: 'Advocate-Lambda',
-            title: 'Defense Counsel',
-            summary: 'Defends Ahmed by highlighting the short loan and the robotics safety inspection.',
-            role: 'defense'
-          },
-          charges: [
-            'Count 1: Unauthorized diversion of festival equipment'
-          ],
-          timeline: [
-            { time: '21:10', event: 'Ahmed signs out the spare generator from event storage.' },
-            { time: '21:35', event: 'Festival rigging crew notices missing backup power.' },
-            { time: '22:20', event: 'Robotics team completes safety inspection with borrowed generator.' },
-            { time: '22:45', event: 'Generator returned to stage area; lighting tests resume.' }
-          ],
-          evidence: [
-            { label: 'Equipment Log', detail: 'Sign-out sheet showing Ahmed’s handwritten note about robotics emergency.' },
-            { label: 'Inspection Notice', detail: 'Email confirming robotics safety check scheduled for 06:00.' }
-          ],
-          juryBox: {
-            votesForProsecution: 8,
-            votesForDefense: 4,
-            stance: 'Jury Box wants Ahmed formally cautioned despite the quick return.'
-          },
-          comments: [
-            {
-              user: 'ComplaintBot-16',
-              text: 'Stage teams lost critical lighting time. Procedures exist to prevent this exact scramble.',
-              sentiment: -0.5
-            },
-            {
-              user: 'RoboticsCaptain',
-              text: 'Without that generator, our inspection would have failed and shut down competition day.',
-              sentiment: 0.5
-            },
-            {
-              user: 'FestivalVolunteer',
-              text: 'We hustled to catch up. Ahmed should have radioed before moving anything.',
-              sentiment: -0.3
-            },
-            {
-              user: 'DefenseCounsel-AI',
-              text: 'Defense emphasises the 90-minute loan and the returned equipment with zero damage.',
-              sentiment: 0.35
-            }
-          ]
-        }
-      ];
-
-      const STORY_CHAR_LIMIT = 260;
-
-      const botUploadDeck = [
-        {
-          baseId: 'faculty_vs_diaz',
-          title: 'Faculty Board v. Lila Diaz — Robotics Lab After Hours',
-          story:
-            'Graduate assistant Lila Diaz entered the robotics lab after midnight using an expired badge override to finish a thesis test. ReportBot-19 claims Diaz triggered the fire suppression system and violated the lab safety charter. Diaz says her advisor texted permission and that no damage occurred beyond a false alarm.',
-          votes: 88,
-          filedBy: 'ReportBot-19',
-          accuser: {
-            name: 'Robotics Faculty Board',
-            title: 'Safety Committee (Accuser)',
-            summary: 'Argues Diaz bypassed the mandatory escort rule for late-night experiments.',
-            role: 'accuser',
-            roleNote: 'Uploaded the complaint citing repeated after-hours entries.'
-          },
-          defendant: {
-            name: 'Lila Diaz',
-            title: 'Graduate Assistant (Defendant)',
-            summary: 'Claims advisor approval and emphasises that equipment was left unharmed.',
-            role: 'defendant',
-            roleNote: 'Leads the autonomous rover project implicated in the after-hours session.'
-          },
-          prosecutor: {
-            name: 'Marcus Lin',
-            title: 'Faculty Prosecutor',
-            summary: 'Represents the board, insisting that badge overrides require written sign-off.',
-            role: 'prosecutor'
-          },
-          defenseCounsel: {
-            name: 'Guardian-AI',
-            title: 'Defense Counsel',
-            summary: 'Defends Diaz and notes the advisor’s text plus the absence of lab damage.',
-            role: 'defense'
-          },
-          charges: [
-            'Count 1: Unauthorized lab access after hours',
-            'Count 2: Triggering safety systems without clearance'
-          ],
-          timeline: [
-            { time: '00:14', event: 'Diaz arrives and uses override code on the lab door.' },
-            { time: '00:28', event: 'Motion sensor activates fire suppression standby mode.' },
-            { time: '00:36', event: 'Diaz texts advisor a status update and continues rover diagnostics.' },
-            { time: '01:05', event: 'Campus safety responds to alarm; no damage is reported.' }
-          ],
-          evidence: [
-            { label: 'Security Log', detail: 'Door override record showing Diaz’s credentials after midnight.' },
-            { label: 'Advisor Text', detail: 'Screenshot of advisor authorising continued work due to thesis deadline.' }
-          ],
-          juryBox: {
-            votesForProsecution: 6,
-            votesForDefense: 6,
-            stance: 'Split jury: half want a sanction, half commend Diaz for academic dedication.'
-          },
-          comments: [
-            {
-              user: 'ReportBot-19',
-              text: 'Protocols failed once already this semester; Diaz ignoring them risks another incident.',
-              sentiment: -0.35
-            },
-            {
-              user: 'LabPartner42',
-              text: 'She literally texted the advisor mid-test. No harm, no foul.',
-              sentiment: 0.4
-            },
-            {
-              user: 'Guardian-AI',
-              text: 'Defense asserts Diaz complied with the advisor’s real-time instructions.',
-              sentiment: 0.3
-            },
-            {
-              user: 'SafetyMarshal',
-              text: 'False alarm still wastes resources. There are processes for emergency access.',
-              sentiment: -0.45
-            }
-          ]
-        },
-        {
-          baseId: 'council_vs_ortiz',
-          title: 'Neighborhood Council v. Leo Ortiz — Community Garden Dispute',
-          story:
-            'Leo Ortiz harvested the community garden’s weekend crop on Thursday to supply a mutual-aid dinner. AccuserBot-11 argues Ortiz ignored the reservation calendar and took produce meant for seniors. Ortiz counters that the seniors’ coordinator texted saying the Saturday meal was cancelled and asked him to redirect the greens.',
-          votes: 101,
-          filedBy: 'AccuserBot-11',
-          accuser: {
-            name: 'Neighborhood Council',
-            title: 'Garden Stewards (Accuser)',
-            summary: 'Claims Ortiz acted unilaterally and disrupted planned programming for elder residents.',
-            role: 'accuser',
-            roleNote: 'Authored the post calling for an accountability hearing.'
-          },
-          defendant: {
-            name: 'Leo Ortiz',
-            title: 'Volunteer Coordinator (Defendant)',
-            summary: 'Says he followed the seniors coordinator’s request and documented the donation.',
-            role: 'defendant',
-            roleNote: 'Organised the mutual-aid dinner that used the garden produce.'
-          },
-          prosecutor: {
-            name: 'Nadia Rue',
-            title: 'Civic Prosecutor',
-            summary: 'Represents the council and argues Ortiz bypassed sign-out protocols.',
-            role: 'prosecutor'
-          },
-          defenseCounsel: {
-            name: 'Advocate-Lambda',
-            title: 'Defense Counsel',
-            summary: 'Defends Ortiz, pointing to the cancellation text from the seniors program.',
-            role: 'defense'
-          },
-          charges: [
-            'Count 1: Unauthorized use of shared community resources'
-          ],
-          timeline: [
-            { time: '07:45', event: 'Ortiz unlocks garden storage with coordinator key.' },
-            { time: '08:10', event: 'Volunteers harvest tomatoes, kale, and peppers for the dinner.' },
-            { time: '09:20', event: 'Council member discovers plots cleared before scheduled seniors visit.' },
-            { time: '11:05', event: 'Ortiz submits donation log with photo of the mutual-aid prep.' }
-          ],
-          evidence: [
-            { label: 'Cancellation Text', detail: 'Message from seniors’ coordinator requesting donation redirection.' },
-            { label: 'Donation Log', detail: 'Signed record of produce delivered to the mutual-aid dinner.' }
-          ],
-          juryBox: {
-            votesForProsecution: 3,
-            votesForDefense: 9,
-            stance: 'Jury Box applauds the dinner but wants clearer communication protocols.'
-          },
-          comments: [
-            {
-              user: 'AccuserBot-11',
-              text: 'The council wasn’t told. Seniors lost their weekly basket. Ortiz needs oversight.',
-              sentiment: -0.4
-            },
-            {
-              user: 'GardenElder',
-              text: 'We cancelled the Saturday meal due to illness. I asked Leo to redirect the vegetables.',
-              sentiment: 0.55
-            },
-            {
-              user: 'MutualAidChef',
-              text: 'The dinner fed 80 people. Ortiz documented everything.',
-              sentiment: 0.45
-            },
-            {
-              user: 'CivicWatcher',
-              text: 'Great outcome, but the sign-out board exists to avoid confusion like this.',
-              sentiment: -0.15
-            }
-          ]
-        }
-      ];
-
-      const botCommentAuthors = [
-        { user: 'CaseReader-α', stance: 'prosecution', type: 'bot' },
-        { user: 'DefenderSim', stance: 'defense', type: 'bot' },
-        { user: 'VerdictTracker', stance: 'prosecution', type: 'bot' },
-        { user: 'JurySynth', stance: 'defense', type: 'bot' }
-      ];
-
-      async function initialise() {
-        try {
-          cases = await store.loadCases();
-          seedBotCasesIfNeeded();
-          prepareCasesForDebate();
-          maybeInjectFreshBotCase();
-          activateBotActivity();
-          renderCases();
-        } catch (error) {
-          console.error('Failed to load cases', error);
-          feed.innerHTML = '<p class="text-sm text-rose-300">Unable to load the docket right now. Try again shortly.</p>';
-        }
-      }
-
-      function seedBotCasesIfNeeded() {
-        const existingIds = new Set(cases.map((item) => item.id));
-        const additions = [];
-        botSeedCases.forEach((entry) => {
-          if (!existingIds.has(entry.id)) {
-            additions.push(ai.prepareCaseForDebate(entry));
-          }
-        });
-        if (additions.length) {
-          cases = [...additions, ...cases];
-          cases = store.saveCases(cases);
-        }
-      }
-
-      function prepareCasesForDebate() {
-        const updated = cases.map((item) => ai.prepareCaseForDebate(item));
-        cases = store.saveCases(updated);
-      }
-
-      function applyStoryToggle(node, storyText) {
-        const story = node.querySelector('.story');
-        const toggle = node.querySelector('.story-toggle');
-        if (!story) return;
-        const full = (storyText || '').toString().trim();
-        if (!toggle) {
-          story.textContent = full;
-          return;
-        }
-        if (!full || full.length <= STORY_CHAR_LIMIT) {
-          story.textContent = full;
-          toggle.hidden = true;
-          return;
-        }
-        const short = full.slice(0, STORY_CHAR_LIMIT).trim().replace(/[.,;:!?]?$/, '…');
-        let expanded = false;
-        story.textContent = short;
-        toggle.hidden = false;
-        toggle.textContent = 'Show more';
-        toggle.addEventListener('click', () => {
-          expanded = !expanded;
-          story.textContent = expanded ? full : short;
-          toggle.textContent = expanded ? 'Show less' : 'Show more';
-        });
-      }
-
-      function fillRosterCard(card, party, fallbackName) {
-        if (!card) return;
-        const name = card.querySelector('.name');
-        const summary = card.querySelector('.summary');
-        const note = card.querySelector('.note');
-        if (name) {
-          name.textContent = party?.name || fallbackName;
-        }
-        if (summary) {
-          summary.textContent = party?.summary || party?.title || '';
-        }
-        if (note) {
-          const text = party?.roleNote || party?.profile || '';
-          if (text) {
-            note.textContent = text;
-            note.hidden = false;
-          } else {
-            note.hidden = true;
-          }
-        }
-      }
-
-      function extractLeadSentence(text = '') {
-        return text
-          .split(/(?<=[.!?])\s+/)
-          .map((segment) => segment.trim())
-          .filter(Boolean)[0] || '';
-      }
-
-      function clauseFromSentence(text = '') {
-        return text.replace(/[.?!]+$/, '').trim();
-      }
-
-      function composeBotComment(caseItem, author) {
-        const accuserName = caseItem.parties?.accuser?.name || caseItem.filedBy || 'the accuser';
-        const defendantName = caseItem.parties?.defendant?.name || 'the defendant';
-        const leadCharge = Array.isArray(caseItem.charges) && caseItem.charges.length
-          ? caseItem.charges[0]
-          : 'the allegation';
-        let siding = caseItem.verdict?.siding;
-        if (!siding) {
-          const box = caseItem.juryBox || {};
-          const spread = (Number(box.votesForProsecution) || 0) - (Number(box.votesForDefense) || 0);
-          if (spread > 0) {
-            siding = 'Prosecution';
-          } else if (spread < 0) {
-            siding = 'Defense';
-          } else {
-            siding = (caseItem.publicSentiment || 0) >= 0 ? 'Defense' : 'Prosecution';
-          }
-        }
-        if (author.type === 'public') {
-          const stancePrefix = author.stance === 'defense'
-            ? `I'm siding with ${defendantName}`
-            : author.stance === 'prosecution'
-              ? `I'm backing ${accuserName}`
-              : 'I am weighing both sides';
-          const narrativeSource = author.stance === 'defense' ? caseItem.defense : caseItem.prosecution;
-          const reason = clauseFromSentence(extractLeadSentence(narrativeSource))
-            || (author.stance === 'defense'
-              ? `${defendantName} acted with context the court should credit`
-              : `${accuserName} raised a harm that still needs repair`);
-          return `${author.user}: ${stancePrefix} because ${reason}.`;
-        }
-        if (author.stance === 'prosecution') {
-          return `${author.user} review: Evidence from ${accuserName} keeps ${leadCharge.toLowerCase()} in play. Judge ${caseItem.verdict?.judge || 'the court'} is leaning with the ${siding.toLowerCase()}, and I back that push for accountability.`;
-        }
-        return `${author.user} defense brief: ${defendantName} acted with context, and counsel has clearly stated they defend them. With the verdict leaning ${siding.toLowerCase()}, the defense narrative remains persuasive.`;
-      }
-
-      const publicVoices = [
-        { user: 'CampusMediator', stance: 'prosecution', type: 'public' },
-        { user: 'MutualAidChef', stance: 'defense', type: 'public' },
-        { user: 'FinalsWarrior', stance: 'prosecution', type: 'public' },
-        { user: 'GardenElder', stance: 'defense', type: 'public' }
-      ];
-
-      function engageCaseWithBots(item, dayKey, { forceComments = false } = {}) {
-        const working = JSON.parse(JSON.stringify(item));
-        const comments = Array.isArray(working.comments) ? working.comments : [];
-        const existingUsers = new Set(comments.map((comment) => comment.user));
-        const newComments = [];
-        const previousVoiceLog =
-          working.botMeta && typeof working.botMeta.voiceLog === 'object' && !Array.isArray(working.botMeta.voiceLog)
-            ? working.botMeta.voiceLog
-            : {};
-        const voiceLog = { ...previousVoiceLog };
-        let voiceLogChanged = false;
-        const voices = [...botCommentAuthors, ...publicVoices];
-        voices.forEach((author) => {
-          const user = author.user;
-          const lastVoiceDay = voiceLog[user];
-          const hasSpokenBefore = existingUsers.has(user);
-          const alreadyLoggedToday = lastVoiceDay === dayKey;
-          if (!forceComments && hasSpokenBefore && alreadyLoggedToday) {
-            return;
-          }
-          const canSpeak = forceComments || !hasSpokenBefore || lastVoiceDay !== dayKey;
-          if (!canSpeak) {
-            return;
-          }
-          const stance = author.stance || 'mixed';
-          let sentiment = 0;
-          if (stance === 'defense') {
-            sentiment = 0.55;
-          } else if (stance === 'prosecution') {
-            sentiment = -0.45;
-          }
-          newComments.push({
-            user,
-            text: composeBotComment(working, author),
-            sentiment
-          });
-          existingUsers.add(user);
-          if (voiceLog[user] !== dayKey) {
-            voiceLog[user] = dayKey;
-            voiceLogChanged = true;
-          }
-        });
-        let changed = false;
-        if (newComments.length) {
-          working.comments = [...comments, ...newComments];
-          changed = true;
-        }
-        const hashSeed = (working.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const baselineVotes = 80 + (hashSeed % 45);
-        const commentWeight = (working.comments?.length || 0) * 3;
-        const targetVotes = Math.max(Number(working.votes) || 0, baselineVotes + commentWeight);
-        if (targetVotes !== working.votes) {
-          working.votes = targetVotes;
-          changed = true;
-        }
-        const trendingScore = targetVotes + commentWeight;
-        const botMeta = {
-          ...(working.botMeta || {}),
-          lastEngaged: dayKey,
-          trendingScore,
-          uploads: Number(working.botMeta?.uploads) || (working.botMeta?.uploadedOn ? 1 : 0)
-        };
-        if (voiceLogChanged || Object.keys(voiceLog).length) {
-          botMeta.voiceLog = voiceLog;
-        }
-        if (JSON.stringify(botMeta) !== JSON.stringify(working.botMeta || {})) {
-          working.botMeta = botMeta;
-          changed = true;
-        }
-        return changed ? working : null;
-      }
-
-      function activateBotActivity({ forceForId = null } = {}) {
-        const todayKey = new Date().toISOString().slice(0, 10);
-        let changed = false;
-        const refreshed = cases.map((item) => {
-          if (!forceForId && item.botMeta?.lastEngaged === todayKey) {
-            return item;
-          }
-          const engaged = engageCaseWithBots(item, todayKey, {
-            forceComments: forceForId === item.id
-          });
-          if (!engaged) {
-            return item;
-          }
-          changed = true;
-          return ai.prepareCaseForDebate(engaged);
-        });
-        cases = refreshed;
-        if (changed) {
-          cases = store.saveCases(cases);
-        }
-      }
-
-      function maybeInjectFreshBotCase() {
-        if (!botUploadDeck.length) return;
-        const dayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const todaysIdSuffix = `${dayKey}`;
-        if (cases.some((entry) => (entry.botMeta?.uploadedOn || '').toString() === todaysIdSuffix)) {
-          return;
-        }
-        const selectionIndex = parseInt(dayKey.slice(-2), 10) % botUploadDeck.length;
-        const base = JSON.parse(JSON.stringify(botUploadDeck[selectionIndex]));
-        const newId = `${base.baseId}_${todaysIdSuffix}`;
-        if (cases.some((entry) => entry.id === newId)) {
-          return;
-        }
-        delete base.baseId;
-        base.id = newId;
-        base.createdAt = Date.now();
-        base.status = 'pending';
-        const extraVotes = (parseInt(dayKey.slice(-3), 10) || 0) % 20;
-        base.votes = (Number(base.votes) || 0) + extraVotes;
-        base.botMeta = {
-          uploadedOn: todaysIdSuffix,
-          uploads: 1,
-          trendingScore: base.votes
-        };
-        const processed = ai.prepareCaseForDebate(base);
-        processed.botMeta = { ...processed.botMeta, uploadedOn: todaysIdSuffix, uploads: 1 };
-        processed.createdAt = base.createdAt;
-        cases = [processed, ...cases];
-        cases = store.saveCases(cases);
-      }
-
-      function renderCases() {
-        feed.innerHTML = '';
-        if (archiveFeed) {
-          archiveFeed.innerHTML = '';
-        }
-        if (!cases.length) {
-          feed.innerHTML = '<p class="text-sm text-slate-300">No cases yet. Submit a dilemma to start the debate.</p>';
-          if (archiveSection) {
-            archiveSection.hidden = true;
-          }
-          return;
-        }
-
-        const ordered = [...cases].sort((a, b) => {
-          const voteDiff = (Number(b.votes) || 0) - (Number(a.votes) || 0);
-          if (voteDiff !== 0) return voteDiff;
-          const trendDiff = (Number(b.botMeta?.trendingScore) || 0) - (Number(a.botMeta?.trendingScore) || 0);
-          if (trendDiff !== 0) return trendDiff;
-          return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0);
-        });
-
-        const pending = ordered.filter((item) => item.status !== 'judged');
-        const archived = ordered.filter((item) => item.status === 'judged');
-
-        const renderList = (list, container) => {
-          if (!container) return;
-          container.innerHTML = '';
-          list.forEach((item) => {
-            const node = template.content.cloneNode(true);
-          node.querySelector('h3').textContent = item.title;
-          applyStoryToggle(node, item.story || '');
-          node.querySelector('.votes').textContent = item.votes;
-          node.querySelector('.filed-by').textContent = `Filed by ${item.filedBy}`;
-
-          const parties = item.parties || {};
-          fillRosterCard(node.querySelector('.roster-card.accuser'), parties.accuser, 'Accuser');
-          fillRosterCard(node.querySelector('.roster-card.prosecutor'), parties.prosecutor, 'Prosecutor');
-          fillRosterCard(node.querySelector('.roster-card.defendant'), parties.defendant, 'Defendant');
-          fillRosterCard(node.querySelector('.roster-card.defense'), parties.defense, 'Defense Counsel');
-
-          const judgeCard = node.querySelector('.judge-card');
-          if (judgeCard) {
-            const judgeProfile = item.judgeProfile || {};
-            const judgeName = judgeProfile.name || item.verdict?.judge || 'Assigned Judge';
-            judgeCard.querySelector('.name').textContent = judgeName;
-            const judgeSummary = judgeProfile.summary || judgeProfile.title || 'Awaiting profile upload.';
-            judgeCard.querySelector('.summary').textContent = judgeSummary;
-            const leaningText = item.verdict?.siding
-              ? `Leaning with the ${item.verdict.siding.toUpperCase()} — ${item.verdict.decision || 'Deliberating'}`
-              : judgeProfile.leaning
-                ? `Usual leaning: ${judgeProfile.leaning}`
-                : 'Neutral stance reported.';
-            judgeCard.querySelector('.leaning').textContent = leaningText;
-          }
-
-          const chargeLine = Array.isArray(item.charges) && item.charges.length
-            ? `Lead charge: ${item.charges[0]}`
-            : 'No formal charges filed yet.';
-          node.querySelector('.lead-charge').textContent = chargeLine;
-
-          const summaryText = item.ai_summary
-            ? item.ai_summary.split('\n')[0].replace(/^•\s*/, '')
-            : ai.summariseComments(item.comments || []).lines[0].replace(/^•\s*/, '');
-          node.querySelector('.summary').textContent = summaryText;
-
-          const status = node.querySelector('.status');
-          if (item.status === 'judged') {
-            const details = [item.verdict?.decision, item.verdict?.judge ? `Judge ${item.verdict.judge}` : null];
-            if (item.verdict?.siding) {
-              details.push(`Sides with ${item.verdict.siding}`);
-            }
-            if (Number.isFinite(item.finalScore)) {
-              details.push(`Score ${Math.round(item.finalScore)}`);
-            }
-            status.textContent = details.filter(Boolean).join(' • ') || 'Verdict published';
-          } else {
-            status.textContent = 'Awaiting trial';
-          }
-
-          const sentimentInfo = ai.summariseComments(item.comments || []);
-          const sentimentWidth = Math.max(0, Math.min(100, Math.round((sentimentInfo.average + 1) * 50)));
-          node.querySelector('.sentiment').style.width = sentimentWidth + '%';
-
-          const juryBox = item.juryBox || { votesForProsecution: 0, votesForDefense: 0 };
-          const boxNote = node.querySelector('.box-note');
-          const boxSummary = juryBox.stance
-            ? `${juryBox.stance}`
-            : `Jury Box tally — Prosecution ${juryBox.votesForProsecution} vs Defense ${juryBox.votesForDefense}.`;
-          boxNote.textContent = boxSummary;
-
-          const link = node.querySelector('a');
-          link.href = `case.html?id=${encodeURIComponent(item.id)}`;
-
-          node.querySelector('.vote-up').addEventListener('click', () => adjustVotes(item.id, 1));
-          node.querySelector('.vote-down').addEventListener('click', () => adjustVotes(item.id, -1));
-
-            container.appendChild(node);
-          });
-        };
-
-        if (!pending.length) {
-          feed.innerHTML = '<p class="text-sm text-slate-300">All current cases have been archived. Add a new one to reopen the docket.</p>';
-        } else {
-          renderList(pending, feed);
-        }
-
-        if (archiveSection) {
-          archiveSection.hidden = archived.length === 0;
-        }
-        if (archived.length) {
-          renderList(archived, archiveFeed);
-        }
-      }
-
-      function adjustVotes(id, delta) {
-        cases = cases.map((item) => {
-          if (item.id !== id) return item;
-          const nextVotes = Math.max(0, (Number(item.votes) || 0) + delta);
-          const commentCount = Array.isArray(item.comments) ? item.comments.length : 0;
-          const trendingScore = nextVotes + commentCount * 3;
-          return {
-            ...item,
-            votes: nextVotes,
-            botMeta: { ...(item.botMeta || {}), trendingScore }
-          };
-        });
-        cases = store.saveCases(cases);
-        renderCases();
-      }
-
-      async function runTrial() {
-        if (!runTrialButton) return;
-        runTrialButton.disabled = true;
-        runTrialButton.textContent = 'Running…';
-        if (trialMessage) {
-          trialMessage.hidden = true;
-        }
-        try {
-          const pending = cases.filter((item) => item.status !== 'judged');
-          const toProcess = pending.slice(0, 3);
-          if (!toProcess.length) {
-            if (trialMessage) {
-              trialMessage.textContent = 'No pending cases were ready for trial yet.';
-              trialMessage.hidden = false;
-            }
-            return;
-          }
-          const ids = new Set(toProcess.map((item) => item.id));
-          cases = cases.map((item) => (ids.has(item.id) ? ai.processCaseForVerdict(item) : item));
-          cases = store.saveCases(cases);
-          if (trialMessage) {
-            const processed = Array.from(ids);
-            trialMessage.textContent = `Processed ${processed.length} case${processed.length > 1 ? 's' : ''}: ${processed.join(', ')}`;
-            trialMessage.hidden = false;
-          }
-          renderCases();
-        } catch (error) {
-          console.error('Trial run failed', error);
-          if (trialMessage) {
-            trialMessage.textContent = 'Could not run the AI trial. Please try again.';
-            trialMessage.hidden = false;
-          }
-        } finally {
-          runTrialButton.disabled = false;
-          runTrialButton.textContent = 'Run AI Trial';
-        }
-      }
-
-      uploadForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const formData = new FormData(uploadForm);
-        const title = (formData.get('title') || '').toString().trim();
-        const story = (formData.get('story') || '').toString().trim();
-        if (!title || !story) return;
-
-        const emptySummary = ai.summariseComments([]);
-        let newCase = {
-          id: `local_${Date.now().toString(36)}`,
-          title: title.slice(0, 120),
-          story,
-          votes: 0,
-          comments: [],
-          ai_summary: emptySummary.lines.join('\n'),
-          status: 'pending',
-          prosecution: '',
-          defense: '',
-          verdict: null,
-          filedBy: 'Community Submitter',
-          publicSentiment: emptySummary.average
-        };
-        newCase = ai.prepareCaseForDebate(newCase);
-        cases = [newCase, ...cases];
-        cases = store.saveCases(cases);
-        uploadForm.reset();
-        if (uploadFeedback) {
-          uploadFeedback.hidden = false;
-          uploadFeedback.textContent = 'Case added to the docket. It lives in your browser storage.';
-        }
-        activateBotActivity({ forceForId: newCase.id });
-        renderCases();
-      });
-
-      if (runTrialButton) {
-        runTrialButton.addEventListener('click', runTrial);
-      }
-
-      initialise();
-    })();
-  </script>
+  <script src="js/page-index.js"></script>
 </body>
 </html>

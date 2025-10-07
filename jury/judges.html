@@ -3,36 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meet the Judges • AI Judge</title>
+  <title>Meet the Bench • Jury Game 2.0</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/variable.css">
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-950 text-slate-100">
-  <main class="max-w-4xl mx-auto px-4 py-10 space-y-8">
-    <header class="text-center space-y-3">
-      <a href="index.html" class="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-200">← Back to docket</a>
-      <h1 class="text-3xl font-semibold tracking-tight">Meet the Bench</h1>
-      <p class="text-slate-300 max-w-2xl mx-auto">
-        Each AI judge brings a distinct philosophy. We rotate them through hourly court sessions to balance compassion and order.
+<body>
+  <main class="shell">
+    <a class="back-link" href="index.html">← Back to docket</a>
+    <section class="panel">
+      <span class="hero__badge">Jury Game</span>
+      <h1 style="margin: 1rem 0 0.5rem;">Meet the Bench</h1>
+      <p class="note-text" style="max-width: 42rem;">
+        Every nightly trial pairs a unique AI judge with the prosecution and defense bots. Their philosophies influence how
+        verdicts land, so study their styles before you plead your case.
       </p>
-    </header>
+    </section>
 
-    <section id="judge-grid" class="grid gap-6 md:grid-cols-2"></section>
+    <section id="judge-grid" class="case-feed"></section>
   </main>
 
   <template id="judge-card">
-    <article class="card space-y-3">
+    <article class="panel" style="gap: 1rem;">
       <header>
-        <h2 class="text-xl font-semibold"></h2>
-        <p class="text-sm text-slate-400 philosophy"></p>
+        <h2 style="margin: 0; font-size: 1.3rem;"></h2>
+        <p class="note-text philosophy" style="margin-top: 0.3rem;"></p>
       </header>
-      <p class="text-slate-300 bio"></p>
-      <div class="text-xs text-slate-500 uppercase tracking-wide">Style</div>
-      <p class="text-sm text-indigo-300 style"></p>
-      <div class="flex items-center justify-between text-sm text-slate-400">
-        <span class="cases"></span>
-        <span class="agree"></span>
+      <p class="note-text bio"></p>
+      <div class="detail-card__label" style="margin-top: 0.5rem;">Style</div>
+      <p class="note-text style"></p>
+      <div class="case-card__top" style="justify-content: space-between;">
+        <span class="note-text cases"></span>
+        <span class="note-text agree"></span>
       </div>
     </article>
   </template>
@@ -43,8 +44,9 @@
       const judges = await response.json();
       const grid = document.getElementById('judge-grid');
       const template = document.getElementById('judge-card');
+      const fragment = document.createDocumentFragment();
       judges.forEach((judge) => {
-        const node = template.content.cloneNode(true);
+        const node = template.content.firstElementChild.cloneNode(true);
         node.querySelector('h2').textContent = judge.name;
         node.querySelector('.philosophy').textContent = judge.philosophy;
         node.querySelector('.bio').textContent = judge.bio;
@@ -53,8 +55,9 @@
           node.querySelector('.cases').textContent = `${judge.stats.cases} cases heard`;
           node.querySelector('.agree').textContent = `${Math.round(judge.stats.agreeRate * 100)}% public agreement`;
         }
-        grid.appendChild(node);
+        fragment.appendChild(node);
       });
+      grid.appendChild(fragment);
     }
     loadJudges();
   </script>

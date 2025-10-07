@@ -1,757 +1,794 @@
 (function () {
   const globalObject = typeof window !== 'undefined' ? window : globalThis;
-  const config = (globalObject && globalObject.JuryConfig) || {};
-  if (globalObject && globalObject.JuryConfig) {
-    try {
-      delete globalObject.JuryConfig;
-    } catch (error) {
-      globalObject.JuryConfig = undefined;
-    }
-  }
-  const STORAGE_KEY = typeof config.storageKey === 'string' && config.storageKey.trim().length
-    ? config.storageKey.trim()
-    : 'jury_cases_v2';
-  const CASES_PATH = typeof config.casesPath === 'string' && config.casesPath.trim().length
-    ? config.casesPath.trim()
-    : 'data/cases.json';
-  const memoryFallback = (() => {
-    const data = {};
-    return {
-      getItem(key) {
-        return Object.prototype.hasOwnProperty.call(data, key) ? data[key] : null;
+  const STORAGE_KEY = 'jury_v2_state';
+  const CASES_URL = 'data/cases.json';
+  const STATE_VERSION = 2;
+  const RESET_AFTER_HOURS = 8;
+  const DEFAULT_CASE_STATUS = 'debate';
+  const CASE_BOT_INTERVAL = [90000, 140000];
+  const COMMENT_BOT_INTERVAL = [35000, 65000];
+
+  const botCaseDeck = [
+    {
+      id: 'bot-campus-hackathon',
+      title: 'Housing Council v. Priya Tal — Hackathon Noise Curfew',
+      summary: 'Overnight coding sprint keeps an entire tower awake despite quiet hours.',
+      story:
+        'Resident mentor Priya Tal approved an impromptu hackathon in the residence innovation lab. Neighbours reported nonstop clacking keyboards and cheering until 3 a.m., even after reminders about the midnight quiet rule. Tal says the event prevented students from commuting off-campus in a storm and she distributed earplugs. The housing council disagrees and filed for a misconduct review.',
+      filedBy: 'HousingCouncilBot',
+      status: 'debate',
+      tags: ['housing', 'noise'],
+      votes: { up: 64, down: 22 },
+      roles: {
+        accuser: {
+          name: 'Housing Council',
+          title: 'Residence Oversight Board',
+          summary: 'Filed the complaint after midnight logs showed repeated noise alerts.'
+        },
+        defendant: {
+          name: 'Priya Tal',
+          title: 'Resident Mentor',
+          summary: 'Authorised the hackathon and claims earplugs and schedule notices were provided.'
+        },
+        prosecutor: {
+          name: 'Silas Roe',
+          title: 'Community Prosecutor',
+          summary: 'Argues Tal ignored quiet-hour protocol and set a bad precedent.'
+        },
+        defense: {
+          name: 'Counsel-Orion',
+          title: 'Defense Advocate',
+          summary: 'Points to the extreme weather keeping participants indoors.'
+        },
+        judge: {
+          name: 'Judge Mercy',
+          leaning: 'defense',
+          summary: 'Watches for intent and restorative outcomes.'
+        }
       },
-      setItem(key, value) {
-        data[key] = value;
+      leadCharge: 'Quiet-hour violation and negligence in noise mitigation',
+      charges: [
+        'Count 1: Failure to enforce quiet-hour policy',
+        'Count 2: Negligent supervision of approved events'
+      ],
+      timeline: [
+        { time: '19:45', event: 'Hackathon setup begins in the innovation lab.' },
+        { time: '23:50', event: 'First quiet-hour alert is issued to Tal.' },
+        { time: '01:10', event: 'Second noise complaint recorded in guard log.' },
+        { time: '03:05', event: 'Housing council escalates to misconduct review.' }
+      ],
+      evidence: [
+        { label: 'Quiet Log', detail: 'Three entries in the quiet-hour incident report within one night.' },
+        { label: 'Event Flyer', detail: 'Promotional flyer stating the event would wrap by midnight.' }
+      ],
+      initialComments: [
+        {
+          user: 'HousingCouncilBot',
+          text: 'Three separate warnings were ignored. A storm does not cancel policy.',
+          sentiment: -0.55
+        },
+        {
+          user: 'HackathonDev',
+          text: 'We distributed earplugs and kept doors shut. The storm stranded us.',
+          sentiment: 0.35
+        }
+      ]
+    },
+    {
+      id: 'bot-festival-generator',
+      title: 'Festival Board v. Sami Ahmed — Generator Reassignment',
+      summary: 'Equipment swap for a robotics inspection leaves stage crew powerless.',
+      story:
+        'Logistics lead Sami Ahmed moved a spare generator from the cultural festival prep area to a robotics lab that faced an emergency safety inspection. The festival board says stage lights sat dark for ninety minutes and volunteers lost rehearsal time. Ahmed states the swap was coordinated, lasted an hour, and prevented the robotics event from being cancelled by inspectors.',
+      filedBy: 'ComplaintBot-16',
+      status: 'debate',
+      tags: ['resources', 'operations'],
+      votes: { up: 58, down: 18 },
+      roles: {
+        accuser: {
+          name: 'Festival Board',
+          title: 'Campus Festival Organisers',
+          summary: 'Argues the equipment charter was ignored and performers were left waiting.'
+        },
+        defendant: {
+          name: 'Sami Ahmed',
+          title: 'Logistics Lead',
+          summary: 'Coordinated the generator loan and says the lab returned it undamaged.'
+        },
+        prosecutor: {
+          name: 'Rowan Pike',
+          title: 'Event Prosecutor',
+          summary: 'Pushes for a formal reprimand for bypassing approval.'
+        },
+        defense: {
+          name: 'Advocate-Lambda',
+          title: 'Defense Counsel',
+          summary: 'Highlights the emergency inspection and short duration of the swap.'
+        },
+        judge: {
+          name: 'Judge Iron',
+          leaning: 'prosecution',
+          summary: 'Values procedure and consistency above improvisation.'
+        }
       },
-      removeItem(key) {
-        delete data[key];
-      }
-    };
-  })();
-
-  const judgeDirectory = {
-    'Judge Iron': {
-      id: 'iron',
-      leaning: 'prosecution',
-      summary: 'Prefers strict adherence to codes and measurable restitution.',
-      philosophy: 'Rule of law above emotion.',
-      title: 'Presiding Judge'
+      leadCharge: 'Unauthorized diversion of shared equipment',
+      charges: ['Count 1: Reallocation without approval', 'Count 2: Delay to scheduled festival operations'],
+      timeline: [
+        { time: '21:05', event: 'Ahmed signs out the spare generator from festival storage.' },
+        { time: '21:40', event: 'Stage crew reports lighting delay.' },
+        { time: '22:15', event: 'Robotics inspection completes with borrowed generator.' },
+        { time: '22:35', event: 'Generator returned; festival crew restarts testing.' }
+      ],
+      evidence: [
+        { label: 'Equipment Log', detail: 'Sign-out sheet showing handwritten note about robotics emergency.' },
+        { label: 'Inspection Notice', detail: 'Email citing the 06:00 inspection deadline.' }
+      ],
+      initialComments: [
+        {
+          user: 'ComplaintBot-16',
+          text: 'Volunteers sat in the dark for ninety minutes. Policies exist to prevent this.',
+          sentiment: -0.5
+        },
+        {
+          user: 'RoboticsCaptain',
+          text: 'Inspection would have failed without backup power. Ahmed kept the season alive.',
+          sentiment: 0.45
+        }
+      ]
     },
-    'Judge Mercy': {
-      id: 'mercy',
-      leaning: 'defense',
-      summary: 'Centers intent, harm reduction, and restorative practices.',
-      philosophy: 'Compassion before consequence.',
-      title: 'Presiding Judge'
+    {
+      id: 'bot-lab-badge',
+      title: 'Safety Committee v. Lila Diaz — Badge Override Incident',
+      summary: 'Expired clearance triggers a false alarm during a late-night lab visit.',
+      story:
+        'Graduate assistant Lila Diaz used an expired badge override to enter the robotics lab after midnight and run a final thesis test. The security system triggered a gas suppression alarm. Safety Committee bots claim Diaz ignored the after-hours policy. Diaz says her advisor texted urgent permission and no damage occurred beyond a false alarm reset.',
+      filedBy: 'ReportBot-19',
+      status: 'hearing',
+      tags: ['safety', 'access'],
+      votes: { up: 41, down: 27 },
+      roles: {
+        accuser: {
+          name: 'Safety Committee',
+          title: 'Robotics Faculty Board',
+          summary: 'Wants stricter controls on expired badge overrides.'
+        },
+        defendant: {
+          name: 'Lila Diaz',
+          title: 'Graduate Assistant',
+          summary: 'Completed a thesis test and triggered the false alarm.'
+        },
+        prosecutor: {
+          name: 'Ada Knox',
+          title: 'Policy Prosecutor',
+          summary: 'Argues the override endangers emergency responders.'
+        },
+        defense: {
+          name: 'DefenseCounsel-AI',
+          title: 'Defense Advocate',
+          summary: 'Says Diaz secured advisor permission and prevented research loss.'
+        },
+        judge: {
+          name: 'Judge Vega',
+          leaning: 'balanced',
+          summary: 'Evaluates data and harm before consequences.'
+        }
+      },
+      leadCharge: 'After-hours access without authorization',
+      charges: ['Count 1: Unauthorized entry', 'Count 2: Triggering false suppression alarm'],
+      timeline: [
+        { time: '00:18', event: 'Diaz enters lab using the expired override code.' },
+        { time: '00:22', event: 'False suppression alarm activates.' },
+        { time: '00:30', event: 'Diaz contacts security to cancel the alarm.' },
+        { time: '00:45', event: 'Systems reset; Diaz completes diagnostics.' }
+      ],
+      evidence: [
+        { label: 'Advisor Text', detail: 'Screenshot showing approval minutes before entry.' },
+        { label: 'Security Log', detail: 'Alarm triggered and cancelled within 12 minutes.' }
+      ],
+      initialComments: [
+        {
+          user: 'ReportBot-19',
+          text: 'Expired overrides are suspended for a reason. The alarm wasted responder time.',
+          sentiment: -0.45
+        },
+        {
+          user: 'LabPartner42',
+          text: 'Advisor permission and quick cancellation show responsibility, not malice.',
+          sentiment: 0.4
+        }
+      ]
     },
-    'Judge Vega': {
-      id: 'vega',
-      leaning: 'balanced',
-      summary: 'Balances policy with community outcomes and data-driven fairness.',
-      philosophy: 'Equity through context.',
-      title: 'Presiding Judge'
-    },
-    'Judge Marlowe': {
-      id: 'marlowe',
-      leaning: 'prosecution',
-      summary: 'Believes accountability deters repeat negligence in shared spaces.',
-      philosophy: 'Discipline builds trust.',
-      title: 'Presiding Judge'
+    {
+      id: 'bot-catering-allergen',
+      title: 'Dining Board v. Jordan Brooks — Allergen Mix-up',
+      summary: 'Nut-free table mislabeled during community dinner sends resident to clinic.',
+      story:
+        'Chef Jordan Brooks prepped a community chili buffet with a dedicated nut-free station. During the rush, a volunteer moved the labels and a resident with a nut allergy had a mild reaction that required an inhaler. Dining Board bots accuse Brooks of negligent prep. Brooks apologised and implemented new color-coded ladles after the incident.',
+      filedBy: 'AccuserBot-08',
+      status: 'trial',
+      tags: ['food safety'],
+      votes: { up: 77, down: 16 },
+      roles: {
+        accuser: {
+          name: 'Dining Board',
+          title: 'Allergy Safety Coalition',
+          summary: 'Requested mandatory retraining for Brooks.'
+        },
+        defendant: {
+          name: 'Jordan Brooks',
+          title: 'Community Chef',
+          summary: 'Admits signage moved but says ingredients were separated.'
+        },
+        prosecutor: {
+          name: 'Helena Cross',
+          title: 'Health & Safety Prosecutor',
+          summary: 'Presses for suspension until retraining completes.'
+        },
+        defense: {
+          name: 'Counsel-Orion',
+          title: 'Defense Advocate',
+          summary: 'Points to the swift medical response and corrective steps.'
+        },
+        judge: {
+          name: 'Judge Marlowe',
+          leaning: 'prosecution',
+          summary: 'Focuses on deterrence for repeated negligence.'
+        }
+      },
+      leadCharge: 'Negligent allergen management',
+      charges: ['Count 1: Improper allergen labeling', 'Count 2: Failure to brief volunteers on protocol'],
+      timeline: [
+        { time: '17:10', event: 'Buffet setup with separate nut-free station.' },
+        { time: '18:05', event: 'Volunteer repositions signage while restocking.' },
+        { time: '18:22', event: 'Resident experiences mild reaction and uses inhaler.' },
+        { time: '18:30', event: 'Labels corrected and new ladles issued.' }
+      ],
+      evidence: [
+        { label: 'Allergy Briefing', detail: 'Document showing volunteers were emailed the protocol.' },
+        { label: 'Clinic Report', detail: 'Resident treated on-site with inhaler, no hospitalization.' }
+      ],
+      initialComments: [
+        {
+          user: 'AccuserBot-08',
+          text: 'Labels are critical. Without discipline, we repeat the same mistakes.',
+          sentiment: -0.5
+        },
+        {
+          user: 'AllergyAdvocate',
+          text: 'Color-coded ladles are a good fix, but training should have been mandatory already.',
+          sentiment: -0.3
+        },
+        {
+          user: 'CommunityVolunteer',
+          text: 'The rush was intense. A volunteer moved the sign trying to help.',
+          sentiment: 0.25
+        }
+      ]
     }
-  };
+  ];
 
-  function safeStorage() {
-    try {
-      if (typeof window === 'undefined' || !window.localStorage) {
-        return memoryFallback;
-      }
-      const testKey = '__jury_test__';
-      window.localStorage.setItem(testKey, '1');
-      window.localStorage.removeItem(testKey);
-      return window.localStorage;
-    } catch (error) {
-      console.warn('Local storage unavailable, using in-memory fallback.', error);
-      return memoryFallback;
+  const botCommentDeck = [
+    {
+      user: 'SentimentBot',
+      sentiment: 0.45,
+      text: 'Crowd mood is shifting positive after reviewing the follow-up steps.'
+    },
+    {
+      user: 'PolicyStickler',
+      sentiment: -0.4,
+      text: 'Rules prevent chaos. Deviations should stay rare and well documented.'
+    },
+    {
+      user: 'CampusMediator',
+      sentiment: 0.2,
+      text: 'Compromise exists: issue a warning but log the mitigating factors for records.'
+    },
+    {
+      user: 'FinalsWarrior',
+      sentiment: -0.55,
+      text: 'Try studying next to that situation. The disruption was intense.'
+    },
+    {
+      user: 'RestorativeCoach',
+      sentiment: 0.5,
+      text: 'Repair plans beat punishment when intent is good and harm is reversible.'
+    },
+    {
+      user: 'SafetyMarshal',
+      sentiment: -0.35,
+      text: 'Safety policies exist because real emergencies happen. Follow them to the letter.'
+    },
+    {
+      user: 'LogisticsNerd',
+      sentiment: 0.3,
+      text: 'We need flexible playbooks so responsible improvisation gets rewarded.'
     }
+  ];
+
+  function randomBetween([min, max]) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
-
-  const storage = safeStorage();
-  let cache = null;
-  let baseLoadPromise = null;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }
 
-  async function fetchBaseCases() {
-    if (!baseLoadPromise) {
-      baseLoadPromise = fetch(CASES_PATH)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Failed to load base cases');
-          }
-          return response.json();
-        })
-        .catch((error) => {
-          console.warn('Could not fetch base cases', error);
-          return [];
-        });
-    }
-    const result = await baseLoadPromise;
-    return Array.isArray(result) ? clone(result) : [];
-  }
-
-  function normaliseComment(comment) {
-    return {
-      user: (comment?.user || 'anon').toString().slice(0, 40),
-      text: (comment?.text || '').toString().slice(0, 500),
-      sentiment: Number.isFinite(Number(comment?.sentiment)) ? Number(comment.sentiment) : 0
-    };
-  }
-
-  function normaliseParty(party, fallbackName, fallbackTitle) {
-    if (!party) {
-      return {
-        name: fallbackName,
-        title: fallbackTitle,
-        summary: '',
-        role: fallbackTitle.toLowerCase(),
-        roleNote: '',
-        side: '',
-        profile: ''
-      };
-    }
-    if (typeof party === 'string') {
-      return {
-        name: party.slice(0, 80) || fallbackName,
-        title: fallbackTitle,
-        summary: '',
-        role: fallbackTitle.toLowerCase(),
-        roleNote: '',
-        side: '',
-        profile: ''
-      };
-    }
-    return {
-      name: (party?.name || fallbackName).toString().slice(0, 80),
-      title: (party?.title || fallbackTitle).toString().slice(0, 120),
-      summary: (party?.summary || '').toString().slice(0, 240),
-      role: (party?.role || fallbackTitle.toLowerCase()).toString().slice(0, 40),
-      roleNote: (party?.roleNote || '').toString().slice(0, 280),
-      side: (party?.side || '').toString().slice(0, 40),
-      profile: (party?.profile || '').toString().slice(0, 320)
-    };
-  }
-
-  function normaliseCharge(entry) {
-    return (entry || '').toString().slice(0, 160);
-  }
-
-  function normaliseTimelineEntry(entry) {
-    return {
-      time: (entry?.time || '').toString().slice(0, 40),
-      event: (entry?.event || '').toString().slice(0, 200)
-    };
-  }
-
-  function normaliseEvidenceItem(entry) {
-    return {
-      label: (entry?.label || 'Evidence').toString().slice(0, 80),
-      detail: (entry?.detail || '').toString().slice(0, 240)
-    };
-  }
-
-  function normaliseJuryBox(entry) {
-    if (!entry || typeof entry !== 'object') {
-      return {
-        votesForProsecution: 0,
-        votesForDefense: 0,
-        stance: ''
-      };
-    }
-    return {
-      votesForProsecution: Number.isFinite(Number(entry.votesForProsecution))
-        ? Number(entry.votesForProsecution)
-        : 0,
-      votesForDefense: Number.isFinite(Number(entry.votesForDefense)) ? Number(entry.votesForDefense) : 0,
-      stance: (entry?.stance || '').toString().slice(0, 200)
-    };
-  }
-
-  function normaliseVerdict(verdict) {
-    if (!verdict || typeof verdict !== 'object') {
+  function safeStorage() {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) {
+        return null;
+      }
+      const testKey = '__jury_v2_test__';
+      window.localStorage.setItem(testKey, '1');
+      window.localStorage.removeItem(testKey);
+      return window.localStorage;
+    } catch (error) {
+      console.warn('Local storage unavailable, using volatile memory.', error);
       return null;
     }
-    const result = {
-      decision: (verdict.decision || '').toString().slice(0, 200),
-      reasoning: (verdict.reasoning || '').toString().slice(0, 900),
-      judge: (verdict.judge || '').toString().slice(0, 80)
-    };
-    if (Number.isFinite(Number(verdict.confidence))) {
-      result.confidence = Number(verdict.confidence);
-    }
-    if (Number.isFinite(Number(verdict.finalScore))) {
-      result.finalScore = Number(verdict.finalScore);
-    }
-    if (verdict.siding) {
-      result.siding = verdict.siding.toString().slice(0, 40);
-    }
-    if (verdict.leaning) {
-      result.leaning = verdict.leaning.toString().slice(0, 40);
-    }
-    return result;
   }
 
-  function normaliseJudgeProfile(profile, fallbackName) {
-    const name = (profile?.name || fallbackName || 'Presiding Judge').toString().slice(0, 80);
-    const directory = judgeDirectory[name] || {};
-    return {
-      name,
-      title: (profile?.title || directory.title || 'Presiding Judge').toString().slice(0, 120),
-      summary: (profile?.summary || directory.summary || '').toString().slice(0, 320),
-      leaning: (profile?.leaning || directory.leaning || 'balanced').toString().slice(0, 40),
-      philosophy: (profile?.philosophy || directory.philosophy || '').toString().slice(0, 240)
-    };
-  }
-
-  function normaliseBotMeta(meta) {
-    if (!meta || typeof meta !== 'object') {
-      return {};
+  const storage = safeStorage();
+  const listeners = new Set();
+  let state = {
+    version: STATE_VERSION,
+    seededAt: Date.now(),
+    cases: [],
+    bots: {
+      caseIndex: 0,
+      commentIndex: 0,
+      lastCaseAt: null,
+      lastCommentAt: null,
+      nextCaseAt: null,
+      nextCommentAt: null
     }
-    const result = {};
-    if (meta.voiceLog && typeof meta.voiceLog === 'object' && !Array.isArray(meta.voiceLog)) {
-      const entries = Object.entries(meta.voiceLog).reduce((acc, [user, day]) => {
-        if (typeof user !== 'string' && typeof user !== 'number') {
-          return acc;
-        }
-        const key = user.toString().slice(0, 80);
-        if (!key) {
-          return acc;
-        }
-        if (day === null || day === undefined) {
-          return acc;
-        }
-        const value = day.toString().slice(0, 24);
-        acc[key] = value;
-        return acc;
-      }, {});
-      if (Object.keys(entries).length) {
-        result.voiceLog = entries;
-      }
-    }
-    if (meta.uploadedOn) {
-      result.uploadedOn = meta.uploadedOn.toString().slice(0, 24);
-    }
-    if (meta.lastEngaged) {
-      result.lastEngaged = meta.lastEngaged.toString().slice(0, 24);
-    }
-    if (Number.isFinite(Number(meta.trendingScore))) {
-      result.trendingScore = Number(meta.trendingScore);
-    }
-    if (Number.isFinite(Number(meta.uploads))) {
-      result.uploads = Number(meta.uploads);
-    }
-    return result;
-  }
-
-  function pickJudgeName(caseItem) {
-    const names = Object.keys(judgeDirectory);
-    if (!names.length) {
-      return 'Judge Iron';
-    }
-    const spread = ((caseItem?.juryBox?.votesForProsecution || 0) - (caseItem?.juryBox?.votesForDefense || 0));
-    if (spread >= 2) {
-      const tough = names.filter((name) => judgeDirectory[name].leaning === 'prosecution');
-      if (tough.length) {
-        return tough[spread % tough.length];
-      }
-    }
-    if (spread <= -2) {
-      const lenient = names.filter((name) => judgeDirectory[name].leaning === 'defense');
-      if (lenient.length) {
-        return lenient[Math.abs(spread) % lenient.length];
-      }
-    }
-    const id = (caseItem?.id || '').toString();
-    const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return names[hash % names.length];
-  }
-
-  function computeAverageSentiment(comments = []) {
-    if (!comments.length) return 0;
-    const total = comments.reduce((acc, item) => acc + (Number(item.sentiment) || 0), 0);
-    return total / comments.length;
-  }
-
-  function normaliseCase(item) {
-    const comments = Array.isArray(item?.comments) ? item.comments.map(normaliseComment) : [];
-    const base = {
-      id: item?.id || `case_${Date.now().toString(36)}`,
-      title: (item?.title || 'Untitled case').toString(),
-      story: (item?.story || '').toString(),
-      votes: Number.isFinite(Number(item?.votes)) ? Number(item.votes) : 0,
-      comments,
-      ai_summary: typeof item?.ai_summary === 'string' ? item.ai_summary : '',
-      status: item?.status === 'judged' ? 'judged' : 'pending',
-      prosecution: typeof item?.prosecution === 'string' ? item.prosecution : '',
-      defense: typeof item?.defense === 'string' ? item.defense : '',
-      verdict: normaliseVerdict(item?.verdict)
-    };
-    base.createdAt = Number.isFinite(Number(item?.createdAt)) ? Number(item.createdAt) : Date.now();
-    base.botMeta = normaliseBotMeta(item?.botMeta);
-    if (Number.isFinite(Number(item?.finalScore))) {
-      base.finalScore = Number(item.finalScore);
-    }
-    const sentiment = Number.isFinite(Number(item?.publicSentiment))
-      ? Number(item.publicSentiment)
-      : computeAverageSentiment(comments);
-    base.publicSentiment = sentiment;
-    const filedByName = (item?.filedBy || '').toString().slice(0, 80) || 'Court Clerk';
-    base.filedBy = filedByName;
-    base.parties = {
-      accuser: normaliseParty(item?.accuser || item?.parties?.accuser, filedByName, 'Accuser'),
-      prosecutor: normaliseParty(item?.prosecutor || item?.prosecutorProfile, 'Prosecutor', 'State Attorney'),
-      defendant: normaliseParty(item?.defendant || item?.defendantProfile, 'Defendant', 'Accused'),
-      defense: normaliseParty(item?.defenseCounsel || item?.defenseProfile || item?.defenceCounsel, 'Defense Counsel', 'Court-Appointed')
-    };
-    base.charges = Array.isArray(item?.charges) ? item.charges.map(normaliseCharge) : [];
-    base.timeline = Array.isArray(item?.timeline) ? item.timeline.map(normaliseTimelineEntry) : [];
-    base.evidence = Array.isArray(item?.evidence) ? item.evidence.map(normaliseEvidenceItem) : [];
-    base.juryBox = normaliseJuryBox(item?.juryBox);
-    base.judgeProfile = normaliseJudgeProfile(item?.judgeProfile, base.verdict?.judge);
-    return base;
-  }
-
-  async function loadCases() {
-    if (cache) {
-      return clone(cache);
-    }
-    let stored;
-    try {
-      stored = storage.getItem(STORAGE_KEY);
-    } catch (error) {
-      console.warn('Failed to read stored cases', error);
-    }
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          cache = parsed.map(normaliseCase);
-          return clone(cache);
-        }
-      } catch (error) {
-        console.warn('Unable to parse stored cases', error);
-      }
-    }
-    const baseCases = (await fetchBaseCases()).map(normaliseCase);
-    cache = baseCases;
-    persist();
-    return clone(cache);
-  }
+  };
+  let readyPromise = null;
+  let caseTimer = null;
+  let commentTimer = null;
 
   function persist() {
+    if (!storage) {
+      return;
+    }
     try {
-      storage.setItem(STORAGE_KEY, JSON.stringify(cache));
+      storage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (error) {
-      console.warn('Failed to persist cases', error);
+      console.warn('Failed to persist jury state', error);
     }
   }
 
-  function saveCases(list) {
-    cache = Array.isArray(list) ? list.map(normaliseCase) : [];
-    persist();
-    return clone(cache);
+  function loadFromStorage() {
+    if (!storage) {
+      return null;
+    }
+    const raw = storage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      console.warn('Failed to parse stored jury state', error);
+      return null;
+    }
   }
 
-  function addCase(newCase) {
-    if (!cache) {
-      throw new Error('Cases not loaded yet');
-    }
-    const list = [normaliseCase(newCase), ...cache];
-    return saveCases(list);
-  }
-
-  function updateCase(id, updater) {
-    if (!cache) {
-      throw new Error('Cases not loaded yet');
-    }
-    const list = cache.map((item) => {
-      if (item.id !== id) {
-        return item;
+  function normaliseTimestamp(entry, fallbackMs) {
+    if (entry === null || entry === undefined) {
+      if (Number.isFinite(fallbackMs)) {
+        return Number(fallbackMs);
       }
-      const next = typeof updater === 'function' ? updater(clone(item)) : item;
-      return normaliseCase(next);
-    });
-    const updatedList = saveCases(list);
-    return updatedList.find((item) => item.id === id) || null;
+      return Date.now();
+    }
+    if (typeof entry === 'object' && entry) {
+      if (Number.isFinite(entry.createdAt)) {
+        return Number(entry.createdAt);
+      }
+      if (typeof entry.createdAt === 'string') {
+        const parsedCreated = Date.parse(entry.createdAt);
+        if (!Number.isNaN(parsedCreated)) {
+          return parsedCreated;
+        }
+      }
+      if (Number.isFinite(entry.seedMinutesAgo)) {
+        return Date.now() - Number(entry.seedMinutesAgo) * 60 * 1000;
+      }
+      if (Number.isFinite(entry.seedHoursAgo)) {
+        return Date.now() - Number(entry.seedHoursAgo) * 60 * 60 * 1000;
+      }
+    }
+    if (Number.isFinite(entry)) {
+      return Number(entry);
+    }
+    if (typeof entry === 'string') {
+      const parsed = Date.parse(entry);
+      if (!Number.isNaN(parsed)) {
+        return parsed;
+      }
+    }
+    if (Number.isFinite(fallbackMs)) {
+      return Number(fallbackMs);
+    }
+    return Date.now();
   }
 
-  function getCase(id) {
-    if (!cache) {
-      throw new Error('Cases not loaded yet');
-    }
-    return clone(cache.find((item) => item.id === id) || null);
+  function normaliseVotes(votes) {
+    const up = Number.isFinite(votes?.up) ? Number(votes.up) : 0;
+    const down = Number.isFinite(votes?.down) ? Number(votes.down) : 0;
+    return { up, down };
   }
 
-  function splitSentences(text) {
-    return (text || '')
-      .split(/(?<=[.!?])\s+/)
-      .map((sentence) => sentence.trim())
-      .filter(Boolean);
-  }
-
-  function selectSentence(sentences, keywords) {
-    if (!Array.isArray(sentences) || !sentences.length) {
-      return '';
-    }
-    const lowerKeywords = (keywords || []).map((keyword) => keyword.toLowerCase());
-    return (
-      sentences.find((sentence) => {
-        const lowerSentence = sentence.toLowerCase();
-        return lowerKeywords.some((keyword) => lowerSentence.includes(keyword));
-      }) || sentences[0]
-    );
-  }
-
-  function sentenceToClause(sentence) {
-    if (!sentence) return '';
-    return sentence.replace(/[.?!]+$/, '').trim();
-  }
-
-  function ensureSentence(text) {
-    const trimmed = (text || '').trim();
-    if (!trimmed) return '';
-    return /[.?!]$/.test(trimmed) ? trimmed : `${trimmed}.`;
-  }
-
-  function describeCharge(charges = []) {
-    if (!Array.isArray(charges) || !charges.length) {
-      return 'the filed allegation';
-    }
-    const lead = charges[0].replace(/^Count\s*\d+[:\-]?\s*/i, '').trim();
-    if (!lead) {
-      return 'the filed allegation';
-    }
-    if (charges.length === 1) {
-      return lead;
-    }
-    return `${lead}${charges.length > 1 ? ' and related counts' : ''}`;
-  }
-
-  function describeEvidence(evidence = []) {
-    if (!Array.isArray(evidence) || !evidence.length) {
-      return '';
-    }
-    const first = evidence[0];
-    const label = (first?.label || '').trim();
-    const detail = (first?.detail || '').trim();
-    if (label && detail) {
-      return `${label.toLowerCase().includes('the') ? label : `the ${label.toLowerCase()}`} showing ${detail}`;
-    }
-    if (detail) {
-      return detail;
-    }
-    return label;
-  }
-
-  function describeTimeline(timeline = []) {
-    if (!Array.isArray(timeline) || !timeline.length) {
-      return '';
-    }
-    const pivotal = timeline[Math.max(0, timeline.length - 1)];
-    if (!pivotal || (!pivotal.time && !pivotal.event)) {
-      return '';
-    }
-    const time = pivotal.time ? `${pivotal.time}, ` : '';
-    return `${time}${pivotal.event}`;
-  }
-
-  function describePublicSentimentForRole(score, role) {
-    if (score === null || score === undefined) {
-      return '';
-    }
-    const numeric = Number(score);
-    if (!Number.isFinite(numeric)) {
-      return '';
-    }
-    const leaning = numeric > 0.3 ? 'defense' : numeric < -0.3 ? 'prosecution' : 'split';
-    if (leaning === 'split') {
-      return role === 'prosecution'
-        ? 'Crowd sentiment is split, so the prosecution emphasises clear policy language.'
-        : 'Crowd sentiment is split, so the defense leans on context and proportionality.';
-    }
-    if (leaning === 'defense') {
-      return role === 'prosecution'
-        ? 'Public mood softens toward the defense, forcing the prosecution to highlight lingering harm.'
-        : 'Public mood is trending toward the defense, reinforcing mitigation arguments.';
-    }
-    return role === 'prosecution'
-      ? 'Public mood backs the accuser, reinforcing the call for accountability.'
-      : 'Public mood leans toward the accuser, so the defense focuses on restorative outcomes.';
-  }
-
-  function describeJuryLeanForRole(juryBox = {}, role) {
-    const pro = Number.isFinite(Number(juryBox.votesForProsecution)) ? Number(juryBox.votesForProsecution) : 0;
-    const def = Number.isFinite(Number(juryBox.votesForDefense)) ? Number(juryBox.votesForDefense) : 0;
-    if (pro === 0 && def === 0) {
-      return '';
-    }
-    const spread = pro - def;
-    const base = `Jury Box tally sits at ${pro} for the prosecution versus ${def} for the defense.`;
-    if (spread >= 2) {
-      return role === 'prosecution'
-        ? `${base} The state leans into that majority to urge a firm sanction.`
-        : `${base} Defense counsel acknowledges the headwind and underscores proportional remedies.`;
-    }
-    if (spread <= -2) {
-      return role === 'prosecution'
-        ? `${base} The prosecution works to overcome that sympathy by re-centering policy duties.`
-        : `${base} Defense counsel notes the majority favours mitigation.`;
-    }
-    return role === 'prosecution'
-      ? `${base} With the split so narrow, the prosecution argues every procedure lapse matters.`
-      : `${base} With the split so narrow, the defense stresses intent and collaboration.`;
-  }
-
-  function generateArgument(role, caseItem = {}) {
-    const story = caseItem.story || '';
-    const parties = caseItem.parties || {};
-    const sentences = splitSentences(story);
-    const prosecutionSentence = sentenceToClause(
-      selectSentence(sentences, ['prosecutor', 'accuser', 'allege', 'report', 'charge', 'complaint'])
-    );
-    const defenseSentence = sentenceToClause(
-      selectSentence(sentences, ['defense', 'defence', 'defendant', 'insist', 'explain', 'justify', 'counter'])
-    );
-
-    const caseTitle = (caseItem.title || 'this case').replace(/[.]+$/, '');
-    const accuserName = parties.accuser?.name || caseItem.filedBy || 'the accuser';
-    const defendantName = parties.defendant?.name || 'the defendant';
-    const defendantTitle = parties.defendant?.title ? ` (${parties.defendant.title})` : '';
-    const prosecutorName = parties.prosecutor?.name || 'the prosecutor';
-    const defenseCounselName = parties.defense?.name || 'defense counsel';
-    const chargeSummary = describeCharge(caseItem.charges);
-    const evidenceSummary = describeEvidence(caseItem.evidence);
-    const timelineSummary = describeTimeline(caseItem.timeline);
-    const juryLine = describeJuryLeanForRole(caseItem.juryBox, role);
-    const sentimentValue = Number(caseItem.publicSentiment);
-    const sentimentLine = describePublicSentimentForRole(
-      Number.isFinite(sentimentValue) ? sentimentValue : null,
-      role
-    );
-
-    if (role === 'prosecution') {
-      const harmLine = prosecutionSentence
-        ? ensureSentence(`${accuserName} recounts ${prosecutionSentence}`)
-        : ensureSentence(`${accuserName} details how ${defendantName} triggered the complaint.`);
-      const evidenceLine = evidenceSummary ? ensureSentence(`They lean on ${evidenceSummary}.`) : '';
-      const timelineLine = timelineSummary
-        ? ensureSentence(`The incident escalated at ${timelineSummary}.`)
-        : '';
-      const defenseLine = defenseSentence
-        ? ensureSentence(
-            `${defendantName} maintains ${defenseSentence}, yet ${prosecutorName} argues the harm still stands.`
-          )
-        : ensureSentence(`${prosecutorName} recognises the stated intent but presses for accountability.`);
-      return [
-        ensureSentence(
-          `${prosecutorName} presents ${caseTitle} on behalf of ${accuserName}, focusing on ${chargeSummary}.`
-        ),
-        harmLine,
-        evidenceLine,
-        timelineLine,
-        defenseLine,
-        sentimentLine ? ensureSentence(sentimentLine) : '',
-        juryLine ? ensureSentence(juryLine) : ''
-      ]
-        .filter(Boolean)
-        .join(' ');
-    }
-
-    const prosecutionLine = prosecutionSentence
-      ? ensureSentence(`The prosecution says ${prosecutionSentence}`)
-      : ensureSentence(`The prosecution claims ${defendantName} crossed a clear boundary.`);
-    const contextLine = defenseSentence
-      ? ensureSentence(`${defendantName}${defendantTitle} explains ${defenseSentence}.`)
-      : ensureSentence(`${defendantName}${defendantTitle} explains the decision came from urgent context.`);
-    const supportLine = evidenceSummary
-      ? ensureSentence(`Counsel cites ${evidenceSummary} to show their perspective.`)
-      : '';
-    const timelineLine = timelineSummary
-      ? ensureSentence(`They highlight that by ${timelineSummary}, their response reduced harm.`)
-      : '';
-    return [
-      ensureSentence(
-        `${defenseCounselName} defends ${defendantName}${defendantTitle}, arguing the context undercuts the charge.`
-      ),
-      prosecutionLine,
-      contextLine,
-      supportLine,
-      timelineLine,
-      sentimentLine ? ensureSentence(sentimentLine) : '',
-      juryLine ? ensureSentence(juryLine) : ''
-    ]
-      .filter(Boolean)
-      .join(' ');
-  }
-
-  function summariseComments(comments = []) {
-    if (!comments.length) {
+  function normaliseRole(role) {
+    if (!role || typeof role !== 'object') {
       return {
-        average: 0,
-        lines: ['• No public comments yet.', '• Jury sentiment pending.']
+        name: 'Unknown',
+        title: '',
+        summary: ''
       };
     }
-    const average = computeAverageSentiment(comments);
-    const tone = average > 0.25 ? 'supportive' : average < -0.25 ? 'critical' : 'mixed';
-    const reasons = comments.slice(-3).map((comment) => `• ${comment.text.slice(0, 90)}`);
     return {
-      average,
-      lines: [`• Crowd tone: ${tone}.`, ...reasons]
+      name: (role.name || 'Unknown').toString().slice(0, 80),
+      title: (role.title || '').toString().slice(0, 120),
+      summary: (role.summary || '').toString().slice(0, 240)
     };
   }
 
-  function judgeVerdict(caseItem, prosecution, defense, summary) {
-    const judgeName = pickJudgeName(caseItem);
-    const judgeInfo = judgeDirectory[judgeName] || {};
-    const severity = Math.max(0, prosecution.length - defense.length);
-    let judgeScore = severity > 0 ? 62 : 38;
-    if (judgeInfo.leaning === 'prosecution') {
-      judgeScore += 6;
-    } else if (judgeInfo.leaning === 'defense') {
-      judgeScore -= 6;
-    }
-    const toneLine = summary.lines.find((line) => line.toLowerCase().includes('crowd tone')) || '';
-    const publicScore = toneLine.includes('supportive') ? 35 : toneLine.includes('critical') ? 65 : 50;
-    const juryScore = Math.round((summary.average + 1) * 50);
-    const box = caseItem?.juryBox || { votesForProsecution: 0, votesForDefense: 0 };
-    const boxSpread = (Number(box.votesForProsecution) || 0) - (Number(box.votesForDefense) || 0);
-    const spreadWeight = Math.max(-12, Math.min(12, boxSpread * 2));
-    const weightedScore = Math.round(0.45 * judgeScore + 0.3 * publicScore + 0.25 * juryScore + spreadWeight);
-    const finalScore = Math.max(0, Math.min(100, weightedScore));
+  function normaliseComment(comment, fallbackTime) {
+    const createdAt = normaliseTimestamp(comment, fallbackTime);
+    return {
+      id: comment?.id || `cm-${createdAt}-${Math.random().toString(36).slice(2, 8)}`,
+      user: (comment?.user || 'anon').toString().slice(0, 48),
+      text: (comment?.text || '').toString().slice(0, 600),
+      sentiment: Number.isFinite(Number(comment?.sentiment)) ? Number(comment.sentiment) : 0,
+      createdAt,
+      isBot: Boolean(comment?.isBot)
+    };
+  }
 
-    let decision;
-    let siding;
-    if (finalScore >= 65) {
-      decision = 'GUILTY — Policy Breach Confirmed';
-      siding = 'Prosecution';
-    } else if (finalScore >= 50) {
-      decision = 'RESPONSIBLE WITH MITIGATION';
-      siding = 'Prosecution';
+  function normaliseArray(list, normaliser) {
+    if (!Array.isArray(list)) {
+      return [];
+    }
+    return list.map((item) => normaliser(item)).filter(Boolean);
+  }
+
+  function normaliseCase(entry) {
+    const createdAt = normaliseTimestamp(entry, Date.now());
+    const roles = entry?.roles || {};
+    const comments = normaliseArray(entry?.comments, (comment) => normaliseComment(comment, createdAt));
+    const lastCommentAt = comments.reduce((latest, current) => Math.max(latest, current.createdAt || 0), createdAt);
+    return {
+      id: (entry?.id || `case-${Math.random().toString(36).slice(2, 8)}`).toString(),
+      title: (entry?.title || 'Untitled Case').toString().slice(0, 160),
+      summary: (entry?.summary || '').toString().slice(0, 280),
+      story: (entry?.story || '').toString().slice(0, 4000),
+      filedBy: (entry?.filedBy || 'anon').toString().slice(0, 80),
+      status: (entry?.status || DEFAULT_CASE_STATUS).toString().slice(0, 32),
+      tags: Array.isArray(entry?.tags) ? entry.tags.map((tag) => tag.toString().slice(0, 32)) : [],
+      votes: normaliseVotes(entry?.votes),
+      roles: {
+        accuser: normaliseRole(roles.accuser),
+        defendant: normaliseRole(roles.defendant),
+        prosecutor: normaliseRole(roles.prosecutor),
+        defense: normaliseRole(roles.defense),
+        judge: normaliseRole(roles.judge)
+      },
+      leadCharge: (entry?.leadCharge || '').toString().slice(0, 240),
+      charges: normaliseArray(entry?.charges, (charge) => charge?.toString().slice(0, 160)),
+      timeline: normaliseArray(entry?.timeline, (item) => ({
+        time: (item?.time || '').toString().slice(0, 40),
+        event: (item?.event || '').toString().slice(0, 200)
+      })),
+      evidence: normaliseArray(entry?.evidence, (item) => ({
+        label: (item?.label || 'Evidence').toString().slice(0, 120),
+        detail: (item?.detail || '').toString().slice(0, 240)
+      })),
+      verdict: entry?.verdict
+        ? {
+            decision: (entry.verdict.decision || '').toString().slice(0, 200),
+            reasoning: (entry.verdict.reasoning || '').toString().slice(0, 1000),
+            judge: (entry.verdict.judge || '').toString().slice(0, 80),
+            confidence: Number.isFinite(Number(entry.verdict.confidence))
+              ? Number(entry.verdict.confidence)
+              : undefined
+          }
+        : null,
+      aiSummary: (entry?.aiSummary || '').toString().slice(0, 400),
+      createdAt,
+      lastActivity: lastCommentAt,
+      comments,
+      isBot: Boolean(entry?.isBot)
+    };
+  }
+
+  function normaliseState(rawState) {
+    if (!rawState || typeof rawState !== 'object') {
+      return clone(state);
+    }
+    const seededAt = normaliseTimestamp(rawState.seededAt, Date.now());
+    const cases = normaliseArray(rawState.cases, normaliseCase);
+    return {
+      version: STATE_VERSION,
+      seededAt,
+      cases,
+      bots: {
+        caseIndex: Number.isFinite(rawState?.bots?.caseIndex) ? Number(rawState.bots.caseIndex) % botCaseDeck.length : 0,
+        commentIndex: Number.isFinite(rawState?.bots?.commentIndex)
+          ? Number(rawState.bots.commentIndex) % botCommentDeck.length
+          : 0,
+        lastCaseAt: normaliseTimestamp(rawState?.bots?.lastCaseAt, null),
+        lastCommentAt: normaliseTimestamp(rawState?.bots?.lastCommentAt, null),
+        nextCaseAt: normaliseTimestamp(rawState?.bots?.nextCaseAt, null),
+        nextCommentAt: normaliseTimestamp(rawState?.bots?.nextCommentAt, null)
+      }
+    };
+  }
+
+  async function fetchBaseCases() {
+    try {
+      const response = await fetch(CASES_URL, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch cases: ${response.status}`);
+      }
+      const payload = await response.json();
+      return normaliseArray(payload, normaliseCase);
+    } catch (error) {
+      console.warn('Unable to fetch base cases, defaulting to empty list', error);
+      return [];
+    }
+  }
+
+  function getSnapshot() {
+    return {
+      version: state.version,
+      seededAt: state.seededAt,
+      cases: clone(state.cases),
+      bots: clone(state.bots)
+    };
+  }
+
+  function emit() {
+    const snapshot = getSnapshot();
+    listeners.forEach((callback) => {
+      try {
+        callback(snapshot);
+      } catch (error) {
+        console.error('JuryStore listener error', error);
+      }
+    });
+  }
+
+  function scheduleBots() {
+    if (caseTimer) {
+      clearTimeout(caseTimer);
+    }
+    if (commentTimer) {
+      clearTimeout(commentTimer);
+    }
+    const caseDelay = randomBetween(CASE_BOT_INTERVAL);
+    const commentDelay = randomBetween(COMMENT_BOT_INTERVAL);
+    state.bots.nextCaseAt = Date.now() + caseDelay;
+    state.bots.nextCommentAt = Date.now() + commentDelay;
+    persist();
+    emit();
+
+    caseTimer = setTimeout(() => {
+      spawnBotCase();
+      scheduleBots();
+    }, caseDelay);
+
+    commentTimer = setTimeout(() => {
+      spawnBotComment();
+      scheduleCommentLoop();
+    }, commentDelay);
+  }
+
+  function scheduleCommentLoop() {
+    if (commentTimer) {
+      clearTimeout(commentTimer);
+    }
+    const delay = randomBetween(COMMENT_BOT_INTERVAL);
+    state.bots.nextCommentAt = Date.now() + delay;
+    persist();
+    emit();
+    commentTimer = setTimeout(() => {
+      spawnBotComment();
+      scheduleCommentLoop();
+    }, delay);
+  }
+
+  function spawnBotCase() {
+    if (!botCaseDeck.length) {
+      return;
+    }
+    const index = state.bots.caseIndex % botCaseDeck.length;
+    state.bots.caseIndex = (state.bots.caseIndex + 1) % botCaseDeck.length;
+    state.bots.lastCaseAt = Date.now();
+    const template = botCaseDeck[index];
+    const baseCase = normaliseCase({ ...template, isBot: true, createdAt: Date.now() });
+    addCase(baseCase, { skipNormalise: true, suppressEmit: true });
+    if (Array.isArray(template.initialComments)) {
+      template.initialComments.forEach((comment, offset) => {
+        setTimeout(() => {
+          addComment(baseCase.id, { ...comment, isBot: true });
+        }, offset * 800);
+      });
+    }
+    persist();
+    emit();
+  }
+
+  function spawnBotComment() {
+    if (!botCommentDeck.length || !state.cases.length) {
+      return;
+    }
+    const index = state.bots.commentIndex % botCommentDeck.length;
+    state.bots.commentIndex = (state.bots.commentIndex + 1) % botCommentDeck.length;
+    state.bots.lastCommentAt = Date.now();
+    const caseTarget = state.cases.sort((a, b) => b.lastActivity - a.lastActivity)[0];
+    if (!caseTarget) {
+      return;
+    }
+    const template = botCommentDeck[index];
+    addComment(caseTarget.id, { ...template, createdAt: Date.now(), isBot: true });
+    persist();
+    emit();
+  }
+
+  async function initialise() {
+    const stored = loadFromStorage();
+    const staleHours = (Date.now() - (stored?.seededAt || 0)) / (1000 * 60 * 60);
+    if (stored && stored.version === STATE_VERSION && staleHours < RESET_AFTER_HOURS) {
+      state = normaliseState(stored);
     } else {
-      decision = 'NOT GUILTY — Emergency Defense Accepted';
-      siding = 'Defense';
+      const baseCases = await fetchBaseCases();
+      state = {
+        version: STATE_VERSION,
+        seededAt: Date.now(),
+        cases: baseCases,
+        bots: {
+          caseIndex: 0,
+          commentIndex: 0,
+          lastCaseAt: null,
+          lastCommentAt: null,
+          nextCaseAt: null,
+          nextCommentAt: null
+        }
+      };
+      persist();
     }
+    scheduleBots();
+    emit();
+  }
 
-    const commentCount = Array.isArray(caseItem?.comments) ? caseItem.comments.length : 0;
-    const reasoning = `Judge ${judgeName} weighs ${commentCount} public submissions, the Jury Box split (${box.votesForProsecution || 0} for prosecution vs ${box.votesForDefense || 0} for defense), and ${toneLine || 'crowd sentiment'}, ultimately siding with the ${siding.toLowerCase()}.`;
-    return {
-      decision,
-      reasoning,
-      confidence: 72,
-      judge: judgeName,
-      finalScore,
-      siding,
-      judgeProfile: { ...judgeInfo, name: judgeName }
+  function ready() {
+    if (!readyPromise) {
+      readyPromise = initialise();
+    }
+    return readyPromise;
+  }
+
+  function addCase(caseInput, options = {}) {
+    const { skipNormalise = false, suppressEmit = false } = options;
+    const prepared = skipNormalise ? caseInput : normaliseCase({ ...caseInput, createdAt: Date.now() });
+    if (!prepared.id) {
+      prepared.id = `case-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    }
+    prepared.lastActivity = prepared.lastActivity || prepared.createdAt;
+    state.cases = [prepared, ...state.cases];
+    persist();
+    if (!suppressEmit) {
+      emit();
+    }
+    return clone(prepared);
+  }
+
+  function updateCase(caseId, updater) {
+    const index = state.cases.findIndex((item) => item.id === caseId);
+    if (index === -1) {
+      return null;
+    }
+    const current = state.cases[index];
+    const updated = typeof updater === 'function' ? updater(clone(current)) : { ...current, ...updater };
+    const normalised = normaliseCase({ ...current, ...updated, id: current.id });
+    state.cases.splice(index, 1, normalised);
+    persist();
+    emit();
+    return clone(normalised);
+  }
+
+  function addComment(caseId, commentInput) {
+    const index = state.cases.findIndex((item) => item.id === caseId);
+    if (index === -1) {
+      return null;
+    }
+    const comment = normaliseComment({ ...commentInput, createdAt: commentInput?.createdAt || Date.now() });
+    state.cases[index].comments.push(comment);
+    state.cases[index].lastActivity = Math.max(state.cases[index].lastActivity, comment.createdAt);
+    persist();
+    emit();
+    return clone(comment);
+  }
+
+  function vote(caseId, direction) {
+    const index = state.cases.findIndex((item) => item.id === caseId);
+    if (index === -1) {
+      return null;
+    }
+    if (direction === 'up') {
+      state.cases[index].votes.up += 1;
+    } else if (direction === 'down') {
+      state.cases[index].votes.down += 1;
+    }
+    state.cases[index].lastActivity = Date.now();
+    persist();
+    emit();
+    return clone(state.cases[index].votes);
+  }
+
+  function getCases() {
+    return clone(state.cases);
+  }
+
+  function getCase(caseId) {
+    return clone(state.cases.find((item) => item.id === caseId) || null);
+  }
+
+  function getState() {
+    return getSnapshot();
+  }
+
+  function reset() {
+    state = {
+      version: STATE_VERSION,
+      seededAt: Date.now(),
+      cases: [],
+      bots: {
+        caseIndex: 0,
+        commentIndex: 0,
+        lastCaseAt: null,
+        lastCommentAt: null,
+        nextCaseAt: null,
+        nextCommentAt: null
+      }
+    };
+    if (storage) {
+      storage.removeItem(STORAGE_KEY);
+    }
+    persist();
+    readyPromise = null;
+    if (caseTimer) {
+      clearTimeout(caseTimer);
+      caseTimer = null;
+    }
+    if (commentTimer) {
+      clearTimeout(commentTimer);
+      commentTimer = null;
+    }
+    return ready();
+  }
+
+  function subscribe(callback) {
+    if (typeof callback !== 'function') {
+      return () => {};
+    }
+    listeners.add(callback);
+    return () => {
+      listeners.delete(callback);
     };
   }
 
-  function applyPartyContext(base, siding) {
-    const accuserName = base.parties.accuser?.name || base.filedBy || 'the accuser';
-    const defendantName = base.parties.defendant?.name || 'the defendant';
-    if (base.parties.accuser) {
-      base.parties.accuser.role = 'accuser';
-      base.parties.accuser.side = 'Prosecution';
-      if (!base.parties.accuser.roleNote) {
-        base.parties.accuser.roleNote = `${accuserName} initiated the complaint and continues to press the tribunal.`;
-      }
-    }
-    if (base.parties.prosecutor) {
-      base.parties.prosecutor.role = 'prosecutor';
-      base.parties.prosecutor.side = 'Prosecution';
-      if (siding) {
-        base.parties.prosecutor.roleNote =
-          siding === 'Prosecution'
-            ? `${base.parties.prosecutor.name} now pursues remedies for ${accuserName}.`
-            : `${base.parties.prosecutor.name} notes the bench favoured mitigation.`;
-      } else if (!base.parties.prosecutor.roleNote) {
-        base.parties.prosecutor.roleNote = `${base.parties.prosecutor.name} prepares the state's reading of the evidence.`;
-      }
-    }
-    if (base.parties.defense) {
-      base.parties.defense.role = 'defense';
-      base.parties.defense.side = 'Defense';
-      if (siding) {
-        base.parties.defense.roleNote =
-          siding === 'Defense'
-            ? `${base.parties.defense.name} successfully centered the mitigating context.`
-            : `${base.parties.defense.name} records the ruling while planning next steps.`;
-      } else if (!base.parties.defense.roleNote) {
-        base.parties.defense.roleNote = `${base.parties.defense.name} builds the counter-narrative for ${defendantName}.`;
-      }
-    }
-    if (base.parties.defendant) {
-      base.parties.defendant.role = 'defendant';
-      base.parties.defendant.side = 'Defense';
-      if (siding) {
-        base.parties.defendant.roleNote =
-          siding === 'Defense'
-            ? `${defendantName} hears the ruling as validation of their choices.`
-            : `${defendantName} must now satisfy the remedies ordered by the bench.`;
-      } else if (!base.parties.defendant.roleNote) {
-        base.parties.defendant.roleNote = `${defendantName} prepares testimony explaining their decision.`;
-      }
-    }
-  }
-
-  function prepareCaseForDebate(caseItem) {
-    const base = normaliseCase(caseItem);
-    const summary = summariseComments(base.comments);
-    base.prosecution = generateArgument('prosecution', base);
-    base.defense = generateArgument('defense', base);
-    base.ai_summary = summary.lines.join('\n');
-    base.publicSentiment = summary.average;
-    base.status = base.status === 'judged' ? 'judged' : 'pending';
-    base.judgeProfile = normaliseJudgeProfile(base.judgeProfile, base.verdict?.judge);
-    applyPartyContext(base, base.verdict?.siding);
-    return base;
-  }
-
-  function processCaseForVerdict(caseItem) {
-    const prepared = prepareCaseForDebate(caseItem);
-    const summary = summariseComments(prepared.comments);
-    const verdict = judgeVerdict(prepared, prepared.prosecution, prepared.defense, summary);
-    const base = { ...prepared };
-    base.status = 'judged';
-    const verdictPayload = {
-      decision: verdict.decision,
-      reasoning: verdict.reasoning,
-      confidence: verdict.confidence,
-      judge: verdict.judge,
-      finalScore: verdict.finalScore,
-      siding: verdict.siding,
-      leaning: verdict.judgeProfile?.leaning
-    };
-    base.verdict = normaliseVerdict(verdictPayload);
-    base.finalScore = verdict.finalScore;
-    base.judgeProfile = normaliseJudgeProfile(verdict.judgeProfile, verdict.judge);
-    applyPartyContext(base, verdict.siding);
-    return base;
-  }
-
-  window.JuryStore = {
-    loadCases,
-    saveCases,
+  globalObject.JuryStore = {
+    ready,
+    getCases,
+    getCase,
+    getState,
     addCase,
+    addComment,
     updateCase,
-    getCase
-  };
-
-  window.JuryAI = {
-    generateArgument,
-    summariseComments,
-    judgeVerdict,
-    processCaseForVerdict,
-    prepareCaseForDebate
+    vote,
+    reset,
+    subscribe
   };
 })();

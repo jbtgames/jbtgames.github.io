@@ -3,471 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Case Detail • AI Judge</title>
+  <title>Case Detail • Jury Game 2.0</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/variable.css">
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-950 text-slate-100">
-  <main class="max-w-3xl mx-auto px-4 py-10 space-y-8">
-    <a href="index.html" class="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-200">← Back to docket</a>
-    <article class="card space-y-6" id="case-card">
-      <header class="space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h1 class="text-2xl font-semibold" id="case-title"></h1>
-          <span class="badge"><span>🗳️</span><span id="case-votes"></span></span>
-        </div>
-        <p id="case-story" class="text-slate-300 leading-relaxed"></p>
-        <p id="case-filed-by" class="text-xs text-indigo-200"></p>
-        <div class="case-roster" id="case-roster">
-          <div class="roster-card accuser">
-            <p class="label">Accuser</p>
-            <p class="name" id="case-accuser-name"></p>
-            <p class="summary" id="case-accuser-summary"></p>
-            <p class="summary note" id="case-accuser-note"></p>
+<body>
+  <main class="shell" id="case-shell">
+    <a class="back-link" href="index.html">← Back to docket</a>
+    <section class="case-layout" id="case-content" hidden>
+      <article class="panel case-detail">
+        <header>
+          <div class="case-card__top">
+            <span class="case-card__status" id="case-status"></span>
+            <span class="case-card__time" id="case-updated"></span>
           </div>
-          <div class="roster-card prosecutor">
-            <p class="label">Prosecutor</p>
-            <p class="name" id="case-prosecutor-name"></p>
-            <p class="summary" id="case-prosecutor-summary"></p>
-            <p class="summary note" id="case-prosecutor-note"></p>
+          <h1 id="case-title"></h1>
+          <p class="case-card__filed" id="case-filed"></p>
+          <p class="case-card__summary" id="case-summary"></p>
+        </header>
+        <div class="case-detail__meta">
+          <span id="case-lead-charge"></span>
+        </div>
+        <section class="case-detail__stats">
+          <div class="detail-card">
+            <span class="detail-card__label">Vote balance</span>
+            <span class="detail-card__value" id="stat-votes"></span>
+            <span class="note-text" id="stat-vote-breakdown"></span>
           </div>
-          <div class="roster-card defendant">
-            <p class="label">Defendant</p>
-            <p class="name" id="case-defendant-name"></p>
-            <p class="summary" id="case-defendant-summary"></p>
-            <p class="summary note" id="case-defendant-note"></p>
+          <div class="detail-card">
+            <span class="detail-card__label">Crowd mood</span>
+            <span class="detail-card__value" id="stat-mood"></span>
+            <span class="note-text" id="stat-mood-note"></span>
           </div>
-          <div class="roster-card defense">
-            <p class="label">Defense Counsel</p>
-            <p class="name" id="case-defense-name"></p>
-            <p class="summary" id="case-defense-summary"></p>
-            <p class="summary note" id="case-defense-note"></p>
+          <div class="detail-card">
+            <span class="detail-card__label">Comments</span>
+            <span class="detail-card__value" id="stat-comments"></span>
+            <span class="note-text" id="stat-last-activity"></span>
           </div>
-        </div>
-        <div class="judge-card" id="case-judge-card">
-          <p class="label">Presiding Judge</p>
-          <p class="name" id="case-judge-name"></p>
-          <p class="summary" id="case-judge-summary"></p>
-          <p class="leaning" id="case-judge-leaning"></p>
-        </div>
-        <div class="text-xs uppercase tracking-wide text-slate-500" id="case-status"></div>
-      </header>
-      <section class="case-matrix">
-        <div class="case-panel">
-          <h2 class="panel-title">Charges</h2>
-          <ul id="case-charges" class="case-list"></ul>
-        </div>
-        <div class="case-panel">
-          <h2 class="panel-title">Key Evidence</h2>
-          <ul id="case-evidence" class="case-list"></ul>
-        </div>
-      </section>
-      <section class="case-matrix">
-        <div class="case-panel">
-          <h2 class="panel-title">Timeline of Events</h2>
-          <ol id="case-timeline" class="timeline-list"></ol>
-        </div>
-        <div class="case-panel" id="jury-box-card">
-          <h2 class="panel-title">Jury Box Tally</h2>
-          <p id="jury-box-tally" class="text-slate-200 font-semibold"></p>
-          <p id="jury-box-stance" class="text-sm text-slate-300"></p>
-        </div>
-      </section>
-      <section class="space-y-4" id="verdict-section" hidden>
-        <h2 class="text-lg font-semibold">Latest Verdict</h2>
-        <div class="grid gap-4 md:grid-cols-3 text-sm text-slate-200">
-          <div class="bg-slate-900/50 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-100 mb-1">Verdict</h3>
-            <p id="verdict-decision" class="verdict-headline"></p>
+        </section>
+        <section class="case-columns">
+          <div>
+            <h3>Story</h3>
+            <p class="note-text" id="case-story"></p>
           </div>
-          <div class="bg-slate-900/50 rounded-xl p-4 md:col-span-2">
-            <h3 class="font-semibold text-slate-100 mb-1">Judge Reasoning</h3>
-            <p id="verdict-reasoning" class="text-slate-300"></p>
-            <p class="text-xs text-slate-500 mt-2" id="verdict-meta"></p>
-            <div class="space-y-2 mt-3" id="score-wrap" hidden>
-              <div class="text-xs uppercase tracking-wide text-slate-500">Composite Score</div>
-              <div class="score-bar"><div id="score-fill" class="score-bar-fill"></div></div>
-              <p class="text-xs text-slate-400" id="score-note"></p>
-            </div>
+          <div>
+            <h3>Charges</h3>
+            <ul class="list-reset" id="case-charges"></ul>
           </div>
+          <div>
+            <h3>Key evidence</h3>
+            <ul class="list-reset" id="case-evidence"></ul>
+          </div>
+        </section>
+        <section>
+          <h3>Timeline</h3>
+          <ol class="timeline-list" id="case-timeline"></ol>
+        </section>
+        <section id="verdict-section" hidden>
+          <div class="verdict-card">
+            <span class="verdict-card__label">Verdict</span>
+            <div class="verdict-card__decision" id="verdict-decision"></div>
+            <p class="note-text" id="verdict-reasoning"></p>
+            <p class="note-text" id="verdict-meta"></p>
+          </div>
+        </section>
+        <div class="case-detail__actions">
+          <button class="button button--ghost" data-direction="up" id="vote-up">👍 Support</button>
+          <button class="button button--ghost" data-direction="down" id="vote-down">👎 Oppose</button>
         </div>
-      </section>
-    </article>
+      </article>
 
-    <section class="card space-y-3" id="arguments-section">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-semibold">AI Trial Briefs</h2>
-        <span id="arguments-status" class="text-xs text-slate-400"></span>
-      </div>
-      <details class="bg-slate-900/40 rounded-xl p-4" id="argument-prosecution">
-        <summary class="cursor-pointer text-sm font-semibold text-rose-300">Prosecution Case</summary>
-        <p class="mt-2 text-sm text-slate-300"></p>
-      </details>
-      <details class="bg-slate-900/40 rounded-xl p-4" id="argument-defense">
-        <summary class="cursor-pointer text-sm font-semibold text-emerald-300">Defense Case</summary>
-        <p class="mt-2 text-sm text-slate-300"></p>
-      </details>
+      <aside class="panel" id="roster-panel">
+        <h3>Hearing roster</h3>
+        <ul class="list-reset" id="roster-list"></ul>
+      </aside>
     </section>
 
-    <section class="card space-y-4">
-      <header class="flex items-center justify-between">
-        <h2 class="text-xl font-semibold">Community Reactions</h2>
-        <span id="sentiment-score" class="text-sm text-slate-400"></span>
+    <section class="panel" id="comment-section" hidden>
+      <header class="section-heading">
+        <h2>Community reactions</h2>
+        <span class="hero__badge" id="comment-mood"></span>
       </header>
-      <ul id="comment-list" class="space-y-3"></ul>
-      <form id="comment-form" class="space-y-3">
-        <div class="grid gap-3 md:grid-cols-2">
-          <input type="text" name="user" placeholder="Username" required class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400">
-          <select name="sentiment" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400">
-            <option value="0.6">Supportive</option>
-            <option value="0.2">Mixed</option>
-            <option value="-0.4">Critical</option>
+      <div class="comment-feed" id="comment-feed"></div>
+      <form id="comment-form" class="form-grid">
+        <label>
+          Display name
+          <input type="text" name="user" placeholder="CourtWatcher" maxlength="48" required>
+        </label>
+        <label>
+          Sentiment
+          <select name="sentiment">
+            <option value="0.5">Supportive</option>
+            <option value="0.15">Mixed</option>
+            <option value="-0.3">Critical</option>
+            <option value="-0.6">Strongly critical</option>
           </select>
-        </div>
-        <textarea name="text" rows="3" placeholder="Share your view" required class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 focus:border-indigo-400"></textarea>
-        <button type="submit" class="button-primary w-full">Add Comment</button>
+        </label>
+        <label>
+          Comment
+          <textarea name="text" placeholder="Share your perspective" maxlength="600" required></textarea>
+        </label>
+        <button class="button button--primary" type="submit">Post comment</button>
       </form>
-    </section>
-
-    <section class="card space-y-3" id="summary-section" hidden>
-      <h2 class="text-xl font-semibold">Community Summary</h2>
-      <ul id="summary-list" class="summary-list"></ul>
     </section>
   </main>
 
+  <template id="timeline-entry-template">
+    <li class="timeline-entry">
+      <span class="timeline-entry__time"></span>
+      <span class="timeline-entry__event"></span>
+    </li>
+  </template>
+
+  <template id="comment-card-template">
+    <article class="comment-card">
+      <div class="comment-card__meta">
+        <span class="comment-card__user"></span>
+        <span class="comment-card__time"></span>
+      </div>
+      <p class="comment-card__text"></p>
+    </article>
+  </template>
+
   <script src="js/juryStore.js"></script>
-  <script>
-    (async function () {
-      const params = new URLSearchParams(window.location.search);
-      const caseId = params.get('id');
-      if (!caseId) {
-        window.location.replace('index.html');
-        return;
-      }
-
-      const store = window.JuryStore;
-      const ai = window.JuryAI;
-      const commentForm = document.getElementById('comment-form');
-      const summarySection = document.getElementById('summary-section');
-      const summaryList = document.getElementById('summary-list');
-      const sentimentScore = document.getElementById('sentiment-score');
-      const commentList = document.getElementById('comment-list');
-      const verdictSection = document.getElementById('verdict-section');
-      const scoreWrap = document.getElementById('score-wrap');
-      const argumentsSection = document.getElementById('arguments-section');
-      const argumentsStatus = document.getElementById('arguments-status');
-      const argumentProsecution = document.querySelector('#argument-prosecution p');
-      const argumentDefense = document.querySelector('#argument-defense p');
-      const filedBy = document.getElementById('case-filed-by');
-      const accuserName = document.getElementById('case-accuser-name');
-      const accuserSummary = document.getElementById('case-accuser-summary');
-      const accuserNote = document.getElementById('case-accuser-note');
-      const prosecutorName = document.getElementById('case-prosecutor-name');
-      const prosecutorSummary = document.getElementById('case-prosecutor-summary');
-      const prosecutorNote = document.getElementById('case-prosecutor-note');
-      const defendantName = document.getElementById('case-defendant-name');
-      const defendantSummary = document.getElementById('case-defendant-summary');
-      const defendantNote = document.getElementById('case-defendant-note');
-      const defenseName = document.getElementById('case-defense-name');
-      const defenseSummary = document.getElementById('case-defense-summary');
-      const defenseNote = document.getElementById('case-defense-note');
-      const chargesList = document.getElementById('case-charges');
-      const evidenceList = document.getElementById('case-evidence');
-      const timelineList = document.getElementById('case-timeline');
-      const juryBoxCard = document.getElementById('jury-box-card');
-      const juryBoxTally = document.getElementById('jury-box-tally');
-      const juryBoxStance = document.getElementById('jury-box-stance');
-      const judgeCard = document.getElementById('case-judge-card');
-      const judgeNameEl = document.getElementById('case-judge-name');
-      const judgeSummaryEl = document.getElementById('case-judge-summary');
-      const judgeLeaningEl = document.getElementById('case-judge-leaning');
-
-      await store.loadCases();
-      let currentCase = store.getCase(caseId);
-      if (!currentCase) {
-        document.getElementById('case-card').innerHTML = '<p class="text-slate-300">Case not found.</p>';
-        commentForm.hidden = true;
-        summarySection.hidden = true;
-        return;
-      }
-
-      function renderSimpleList(target, list, emptyText) {
-        if (!target) return;
-        target.innerHTML = '';
-        if (!Array.isArray(list) || !list.length) {
-          const li = document.createElement('li');
-          li.className = 'text-sm text-slate-400';
-          li.textContent = emptyText;
-          target.appendChild(li);
-          return;
-        }
-        list.forEach((item) => {
-          const li = document.createElement('li');
-          li.textContent = item;
-          target.appendChild(li);
-        });
-      }
-
-      function setRosterDetails(nameEl, summaryEl, noteEl, party, fallback) {
-        if (nameEl) {
-          nameEl.textContent = party?.name || fallback;
-        }
-        if (summaryEl) {
-          summaryEl.textContent = party?.summary || party?.title || '';
-        }
-        if (noteEl) {
-          const noteText = party?.roleNote || party?.profile || '';
-          if (noteText) {
-            noteEl.textContent = noteText;
-            noteEl.hidden = false;
-          } else {
-            noteEl.hidden = true;
-          }
-        }
-      }
-
-      function renderTimeline(target, entries) {
-        if (!target) return;
-        target.innerHTML = '';
-        if (!Array.isArray(entries) || !entries.length) {
-          const li = document.createElement('li');
-          li.className = 'text-sm text-slate-400';
-          li.textContent = 'Timeline not submitted yet.';
-          target.appendChild(li);
-          return;
-        }
-        entries.forEach((entry) => {
-          const li = document.createElement('li');
-          li.className = 'timeline-entry';
-          const time = document.createElement('span');
-          time.className = 'timeline-time';
-          time.textContent = entry.time || '';
-          const event = document.createElement('span');
-          event.className = 'timeline-event';
-          event.textContent = entry.event || '';
-          li.appendChild(time);
-          li.appendChild(event);
-          target.appendChild(li);
-        });
-      }
-
-      function buildRoleBadge(user) {
-        if (!user) return null;
-        const lower = user.toLowerCase();
-        let roleClass = '';
-        let label = '';
-        if (lower.includes('prosecutor')) {
-          roleClass = 'role-prosecution';
-          label = 'PROSECUTION';
-        } else if (lower.includes('defense') || lower.includes('defence')) {
-          roleClass = 'role-defense';
-          label = 'DEFENSE';
-        } else if (lower.includes('jury box')) {
-          roleClass = 'role-jury';
-          label = 'JURY BOX';
-        } else if (lower.includes('judge')) {
-          roleClass = 'role-judge';
-          label = 'JUDGE';
-        }
-        if (!roleClass) return null;
-        const badge = document.createElement('span');
-        badge.className = `role-badge ${roleClass}`;
-        badge.textContent = label;
-        return badge;
-      }
-
-      function renderCase() {
-        document.getElementById('case-title').textContent = currentCase.title;
-        document.getElementById('case-story').textContent = currentCase.story;
-        document.getElementById('case-votes').textContent = currentCase.votes;
-        const statusText = currentCase.status === 'judged'
-          ? `VERDICT: ${currentCase.verdict?.decision || 'Published'}`
-          : 'AWAITING TRIAL';
-        document.getElementById('case-status').textContent = statusText;
-
-        if (filedBy) {
-          if (currentCase.filedBy) {
-            filedBy.hidden = false;
-            filedBy.textContent = `Filed by ${currentCase.filedBy}`;
-          } else {
-            filedBy.hidden = true;
-          }
-        }
-
-        const parties = currentCase.parties || {};
-        setRosterDetails(accuserName, accuserSummary, accuserNote, parties.accuser, 'Accuser');
-        setRosterDetails(prosecutorName, prosecutorSummary, prosecutorNote, parties.prosecutor, 'Prosecutor');
-        setRosterDetails(defendantName, defendantSummary, defendantNote, parties.defendant, 'Defendant');
-        setRosterDetails(defenseName, defenseSummary, defenseNote, parties.defense, 'Defense Counsel');
-
-        if (judgeCard) {
-          const profile = currentCase.judgeProfile || {};
-          const hasJudge = Boolean(profile.name || currentCase.verdict?.judge);
-          judgeCard.hidden = !hasJudge;
-          if (hasJudge) {
-            if (judgeNameEl) {
-              judgeNameEl.textContent = profile.name || currentCase.verdict?.judge || 'Assigned Judge';
-            }
-            if (judgeSummaryEl) {
-              const summaryText = [profile.summary, profile.philosophy].filter(Boolean).join(' ');
-              judgeSummaryEl.textContent = summaryText || profile.title || '';
-            }
-            if (judgeLeaningEl) {
-              const leaningText = currentCase.verdict?.siding
-                ? `Currently siding with the ${currentCase.verdict.siding.toUpperCase()} — ${currentCase.verdict.decision || 'Deliberating'}`
-                : profile.leaning
-                  ? `Usual leaning: ${profile.leaning}`
-                  : 'Neutral stance reported.';
-              judgeLeaningEl.textContent = leaningText;
-            }
-          }
-        }
-
-        renderSimpleList(chargesList, currentCase.charges, 'No charges submitted.');
-        const evidenceItems = (currentCase.evidence || []).map((item) => `${item.label}: ${item.detail}`);
-        renderSimpleList(evidenceList, evidenceItems, 'Evidence will be uploaded before trial.');
-        renderTimeline(timelineList, currentCase.timeline);
-
-        const box = currentCase.juryBox || null;
-        if (juryBoxCard) {
-          if (box) {
-            juryBoxCard.hidden = false;
-            if (juryBoxTally) {
-              juryBoxTally.textContent = `Prosecution ${box.votesForProsecution ?? 0} • Defense ${box.votesForDefense ?? 0}`;
-            }
-            if (juryBoxStance) {
-              juryBoxStance.textContent = box.stance || 'Jury Box has not provided commentary yet.';
-            }
-          } else {
-            juryBoxCard.hidden = true;
-          }
-        }
-
-        if (currentCase.verdict) {
-          verdictSection.hidden = false;
-          document.getElementById('verdict-decision').textContent = currentCase.verdict.decision;
-          document.getElementById('verdict-reasoning').textContent = currentCase.verdict.reasoning;
-          const judgeLabel = currentCase.verdict.judge || 'Unknown Judge';
-          const metaBits = [judgeLabel];
-          if (Number.isFinite(currentCase.verdict.confidence)) {
-            metaBits.push(`Confidence ${currentCase.verdict.confidence}%`);
-          }
-          if (currentCase.verdict.siding) {
-            metaBits.push(`Sides with ${currentCase.verdict.siding}`);
-          }
-          document.getElementById('verdict-meta').textContent = metaBits.join(' • ');
-          if (Number.isFinite(currentCase.finalScore)) {
-            scoreWrap.hidden = false;
-            const scoreFill = document.getElementById('score-fill');
-            const clamped = Math.max(0, Math.min(100, Math.round(currentCase.finalScore)));
-            scoreFill.style.width = clamped + '%';
-            document.getElementById('score-note').textContent = `Composite score ${clamped}/100 from judge and crowd weighting.`;
-          } else {
-            scoreWrap.hidden = true;
-          }
-        } else {
-          verdictSection.hidden = true;
-          scoreWrap.hidden = true;
-        }
-
-        if (argumentsSection) {
-          const prosecutionBrief = currentCase.prosecution || 'Awaiting trial.';
-          const defenseBrief = currentCase.defense || 'Awaiting trial.';
-          if (argumentProsecution) {
-            argumentProsecution.textContent = prosecutionBrief;
-          }
-          if (argumentDefense) {
-            argumentDefense.textContent = defenseBrief;
-          }
-          if (argumentsStatus) {
-            if (currentCase.status === 'judged' && currentCase.verdict?.judge) {
-              argumentsStatus.textContent = `Verdict issued by Judge ${currentCase.verdict.judge}.`;
-            } else {
-              argumentsStatus.textContent = 'Briefs prepared — awaiting trial.';
-            }
-          }
-          argumentsSection.hidden = !prosecutionBrief && !defenseBrief;
-        }
-
-        const summaryInfo = currentCase.ai_summary
-          ? { lines: currentCase.ai_summary.split('\n').filter(Boolean), average: currentCase.publicSentiment ?? ai.summariseComments(currentCase.comments || []).average }
-          : ai.summariseComments(currentCase.comments || []);
-        if (summaryInfo.lines.length) {
-          summarySection.hidden = false;
-          summaryList.innerHTML = '';
-          summaryInfo.lines.forEach((line) => {
-            const entry = document.createElement('li');
-            entry.textContent = line.replace(/^•\s*/, '');
-            summaryList.appendChild(entry);
-          });
-        } else {
-          summarySection.hidden = true;
-        }
-
-        commentList.innerHTML = '';
-        (currentCase.comments || []).forEach((comment) => {
-          const li = document.createElement('li');
-          li.className = 'bg-slate-900/40 rounded-xl p-3 text-sm flex flex-col gap-1';
-          const meta = document.createElement('div');
-          meta.className = 'flex items-center justify-between text-slate-400 gap-2 flex-wrap';
-          const userWrap = document.createElement('div');
-          userWrap.className = 'flex items-center gap-2';
-          const name = document.createElement('span');
-          name.textContent = comment.user;
-          userWrap.appendChild(name);
-          const badge = buildRoleBadge(comment.user || '');
-          if (badge) {
-            userWrap.appendChild(badge);
-          }
-          meta.appendChild(userWrap);
-          const sentimentLabel = document.createElement('span');
-          sentimentLabel.textContent = formatSentiment(comment.sentiment);
-          meta.appendChild(sentimentLabel);
-
-          const body = document.createElement('p');
-          body.className = 'text-slate-200';
-          body.textContent = comment.text;
-
-          li.appendChild(meta);
-          li.appendChild(body);
-          commentList.appendChild(li);
-        });
-        const average = ai.summariseComments(currentCase.comments || []).average;
-        sentimentScore.textContent = `Crowd Sentiment: ${(average * 100).toFixed(0)} / 100`;
-      }
-
-      function formatSentiment(score = 0) {
-        if (score > 0.25) return 'Supportive';
-        if (score < -0.25) return 'Critical';
-        return 'Mixed';
-      }
-
-      commentForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const comment = {
-          user: (formData.get('user') || '').toString().trim() || 'anon',
-          text: (formData.get('text') || '').toString().trim(),
-          sentiment: Number(formData.get('sentiment')) || 0
-        };
-        if (!comment.text) {
-          return;
-        }
-        currentCase = store.updateCase(caseId, (entry) => {
-          const next = { ...entry };
-          next.comments = [...(entry.comments || []), comment];
-          const summary = ai.summariseComments(next.comments);
-          next.ai_summary = summary.lines.join('\n');
-          next.publicSentiment = summary.average;
-          return next;
-        });
-        event.target.reset();
-        renderCase();
-      });
-
-      renderCase();
-    })();
-  </script>
+  <script src="js/page-case.js"></script>
 </body>
 </html>

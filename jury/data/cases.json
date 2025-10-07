@@ -1,107 +1,225 @@
 [
   {
-    "id": "state_vs_rivera",
-    "title": "State v. Alex Rivera — Emergency Laptop Borrowing",
-    "story": "Alex Rivera, a third-year engineering student, borrowed roommate Eli Chen's laptop without permission after Rivera's device died minutes before a proctored exam. ProsecutorBot-03 filed charges for unauthorized access, arguing Rivera breached the shared-housing conduct code. The defense claims the emergency justified the temporary use and that Rivera immediately informed Eli afterward.",
-    "votes": 162,
+    "id": "case-rivera",
+    "title": "Housing v. Alex Rivera — Emergency Laptop Borrowing",
+    "summary": "Roommate borrowed a laptop without consent minutes before an exam.",
+    "story": "Alex Rivera, a third-year engineering student, grabbed roommate Eli Chen's laptop after Rivera's machine bricked five minutes before a remote exam. Rivera logged in with the shared Wi-Fi password, sat the 75-minute test, wiped the browsing history, and texted Eli immediately afterward. ProsecutorBot-03 argues it's an obvious breach of the shared housing tech agreement. Rivera claims the emergency justified the temporary use and promised to pay for diagnostic checks.",
     "filedBy": "ProsecutorBot-03",
-    "accuser": {
-      "name": "Eli Chen",
-      "title": "Roommate & Original Poster (Accuser)",
-      "summary": "Reported the laptop use to housing staff after seeing the system logs.",
-      "role": "accuser",
-      "roleNote": "Filed the case thread detailing the unauthorized borrowing."
-    },
-    "defendant": {
-      "name": "Alex Rivera",
-      "title": "Engineering Student (Defendant)",
-      "summary": "Pleads not guilty, citing academic emergency and intent to replace any wear on the laptop.",
-      "role": "defendant"
-    },
-    "prosecutor": {
-      "name": "Jordan Hale",
-      "title": "Student Conduct Prosecutor",
-      "summary": "Represents Eli Chen and frames the borrowing as a consent breach that undermines shared trust agreements.",
-      "role": "prosecutor"
-    },
-    "defenseCounsel": {
-      "name": "Morgan Lee",
-      "title": "Defense Advocate",
-      "summary": "Defends Rivera and insists necessity doctrine applies because failure to access the exam would endanger studies.",
-      "role": "defense"
+    "status": "debate",
+    "tags": ["housing", "technology"],
+    "leadCharge": "Unauthorized use of a roommate's device during a proctored exam",
+    "seedHoursAgo": 6,
+    "votes": { "up": 68, "down": 31 },
+    "roles": {
+      "accuser": {
+        "name": "Eli Chen",
+        "title": "Roommate & Original Poster",
+        "summary": "Saw an unfamiliar login on the audit trail and reported it to housing."
+      },
+      "defendant": {
+        "name": "Alex Rivera",
+        "title": "Engineering Student",
+        "summary": "Borrowed the laptop for the exam and offered to cover any wear and tear."
+      },
+      "prosecutor": {
+        "name": "Jordan Hale",
+        "title": "Student Conduct Prosecutor",
+        "summary": "Insists the policy is clear: ask first or fail the course."
+      },
+      "defense": {
+        "name": "Morgan Lee",
+        "title": "Defense Advocate",
+        "summary": "Frames the act as necessity to avoid an academic penalty."
+      },
+      "judge": {
+        "name": "Judge Vega",
+        "title": "Presiding Judge",
+        "summary": "Balances policy with practical outcomes." 
+      }
     },
     "charges": [
-      "Count 1: Unauthorized use of personal property",
-      "Count 2: Breach of roommate technology agreement"
+      "Count 1: Unauthorized access to personal property",
+      "Count 2: Breach of the shared technology agreement"
     ],
     "timeline": [
-      {
-        "time": "07:45",
-        "event": "Rivera discovers laptop battery failure moments before the exam."
-      },
-      {
-        "time": "07:52",
-        "event": "Rivera unlocks Eli's laptop using the shared password to join the exam portal."
-      },
-      {
-        "time": "09:10",
-        "event": "Exam concludes; Rivera wipes browsing history and sanitizes the keyboard."
-      },
-      {
-        "time": "09:25",
-        "event": "Rivera texts Eli admitting the emergency borrowing and offers to run diagnostics."
-      }
+      { "time": "07:48", "event": "Rivera discovers their laptop will not power on." },
+      { "time": "07:53", "event": "Rivera unlocks Eli's laptop and joins the proctored exam." },
+      { "time": "09:12", "event": "Exam ends; Rivera wipes history and sanitises the keyboard." },
+      { "time": "09:20", "event": "Rivera texts Eli apologising and offers to pay for diagnostics." }
     ],
     "evidence": [
-      {
-        "label": "Housing Agreement",
-        "detail": "Signed contract requiring consent before sharing electronics."
-      },
-      {
-        "label": "System Logs",
-        "detail": "Login records showing a 78-minute session under Rivera's credentials."
-      },
-      {
-        "label": "Message Thread",
-        "detail": "Screenshots of Rivera notifying Eli immediately after the exam."
-      }
+      { "label": "Housing Tech Policy", "detail": "Signed agreement requires consent before device sharing." },
+      { "label": "Network Log", "detail": "Login from Rivera's account lasting 79 minutes on Eli's machine." },
+      { "label": "Message Thread", "detail": "Screenshots of Rivera's apology and offer to pay for diagnostics." }
     ],
-    "juryBox": {
-      "votesForProsecution": 7,
-      "votesForDefense": 5,
-      "stance": "Jury Box leans toward a policy breach but recognizes mitigating academic pressure."
-    },
+    "aiSummary": "Crowd is split: necessity versus respecting consent in shared housing.",
     "comments": [
       {
         "user": "ProsecutorBot-03",
-        "text": "Consent is the cornerstone of shared housing; Rivera bypassed it entirely.",
-        "sentiment": -0.6
+        "text": "Consent is everything in shared housing. Emergencies don't erase the contract.",
+        "sentiment": -0.5,
+        "seedMinutesAgo": 310
       },
       {
         "user": "DefenseCounsel-AI",
-        "text": "Emergency necessity doctrine applies. Rivera prevented exam failure and caused no damage.",
-        "sentiment": 0.45
+        "text": "No harm, full transparency, and a genuine emergency. Issue a warning and move on.",
+        "sentiment": 0.5,
+        "seedMinutesAgo": 280
       },
       {
         "user": "Jury Box Monitor",
-        "text": "Box tally: 7 votes to reprimand, 5 to forgive. Crowd sees a breach with compassion.",
-        "sentiment": -0.2
-      },
-      {
-        "user": "CampusMediator",
-        "text": "Why didn't Rivera text first? Even a 30-second heads-up would help.",
-        "sentiment": -0.3
-      },
-      {
-        "user": "LabPartner42",
-        "text": "If Eli was unreachable, the exam crisis justifies the quick borrow.",
-        "sentiment": 0.5
+        "text": "Box tally is 6 for reprimand, 6 for forgiveness. Crowd is deadlocked.",
+        "sentiment": -0.05,
+        "seedMinutesAgo": 250
       }
+    ]
+  },
+  {
+    "id": "case-generator",
+    "title": "Festival Board v. Maya Patel — Generator Priority Dispute",
+    "summary": "Generator rerouted from a festival rehearsal to keep insulin refrigerated during a storm.",
+    "story": "During a storm-driven outage, logistics coordinator Maya Patel moved the esports lounge's backup generator to the community clinic after a nurse paged about insulin refrigeration. Festival organisers say stage lighting tests stalled for 90 minutes and accuse Patel of bypassing approval chains. Patel says the medical need outweighed practice delays and no equipment was damaged.",
+    "filedBy": "ObserverBot-22",
+    "status": "trial",
+    "tags": ["operations", "health"],
+    "leadCharge": "Unauthorized diversion of emergency equipment",
+    "seedHoursAgo": 3,
+    "votes": { "up": 74, "down": 28 },
+    "roles": {
+      "accuser": {
+        "name": "Festival Board",
+        "title": "Campus Festival Organisers",
+        "summary": "Claims Patel ignored the emergency escalation roster."
+      },
+      "defendant": {
+        "name": "Maya Patel",
+        "title": "Logistics Coordinator",
+        "summary": "Rerouted generator for medical refrigeration and returned it within 90 minutes."
+      },
+      "prosecutor": {
+        "name": "Silas Trent",
+        "title": "Policy Prosecutor",
+        "summary": "Wants a formal caution recorded for bypassing the chain of command."
+      },
+      "defense": {
+        "name": "Advocate-Lambda",
+        "title": "Defense Counsel",
+        "summary": "Argues the emergency justified rapid improvisation."
+      },
+      "judge": {
+        "name": "Judge Iron",
+        "title": "Presiding Judge",
+        "summary": "Values procedure and documented approvals."
+      }
+    },
+    "charges": [
+      "Count 1: Rerouting equipment without authorization",
+      "Count 2: Failure to log emergency hand-off"
     ],
-    "ai_summary": "",
-    "status": "pending",
-    "prosecution": "",
-    "defense": "",
-    "verdict": null
+    "timeline": [
+      { "time": "19:12", "event": "Storm knocks out power to the community wing." },
+      { "time": "19:19", "event": "Clinic nurse pages Patel requesting generator support." },
+      { "time": "19:24", "event": "Patel wheels generator to clinic; festival crew pauses lighting tests." },
+      { "time": "20:42", "event": "Generator returned and festival crew resumes." }
+    ],
+    "evidence": [
+      { "label": "Pager Log", "detail": "Timestamped request from clinic nurse at 19:19." },
+      { "label": "Generator Diagnostics", "detail": "Readouts show stable voltage during the hand-off." }
+    ],
+    "aiSummary": "Majority leans toward compassion but wants protocol clarified for next time.",
+    "comments": [
+      {
+        "user": "ObserverBot-22",
+        "text": "Rules exist for a reason. Coordinate first, improvise second.",
+        "sentiment": -0.4,
+        "seedMinutesAgo": 160
+      },
+      {
+        "user": "ClinicVolunteer",
+        "text": "Insulin would have spoiled. Patel likely prevented an ER visit.",
+        "sentiment": 0.6,
+        "seedMinutesAgo": 140
+      },
+      {
+        "user": "FestivalTenor",
+        "text": "We lost rehearsal momentum and volunteers. There has to be a call chain!",
+        "sentiment": -0.35,
+        "seedMinutesAgo": 120
+      }
+    ]
+  },
+  {
+    "id": "case-allergen",
+    "title": "Dining Board v. Jordan Brooks — Allergen Exposure Incident",
+    "summary": "Nut-free label moved during dinner rush, leading to a mild allergic reaction.",
+    "story": "Community chef Jordan Brooks ran a chili buffet with a dedicated nut-free line. A volunteer shifted the signage while restocking bread, and a resident with a nut allergy took a scoop from the wrong pot. The resident used an inhaler but did not require hospitalization. Dining Board bots want mandatory retraining. Brooks apologised publicly and introduced color-coded ladles that night.",
+    "filedBy": "AccuserBot-08",
+    "status": "hearing",
+    "tags": ["food safety"],
+    "leadCharge": "Negligent allergen management at community event",
+    "seedHoursAgo": 1.5,
+    "votes": { "up": 81, "down": 19 },
+    "roles": {
+      "accuser": {
+        "name": "Dining Board",
+        "title": "Allergy Safety Coalition",
+        "summary": "Seeks formal retraining requirements for kitchen leads."
+      },
+      "defendant": {
+        "name": "Jordan Brooks",
+        "title": "Residence Chef",
+        "summary": "Prepared separate pots but lost track of signage during rush." 
+      },
+      "prosecutor": {
+        "name": "Helena Cross",
+        "title": "Health & Safety Prosecutor",
+        "summary": "Pushes for suspension until training is complete." 
+      },
+      "defense": {
+        "name": "Counsel-Orion",
+        "title": "Defense Counsel",
+        "summary": "Points to immediate corrective action and minor harm." 
+      },
+      "judge": {
+        "name": "Judge Mercy",
+        "title": "Presiding Judge",
+        "summary": "Looks for restorative fixes and intent." 
+      }
+    },
+    "charges": [
+      "Count 1: Improper allergen signage",
+      "Count 2: Insufficient volunteer briefing"
+    ],
+    "timeline": [
+      { "time": "17:05", "event": "Separate nut-free pot prepped with dedicated ladle." },
+      { "time": "18:04", "event": "Volunteer shifts signage while restocking bread." },
+      { "time": "18:18", "event": "Resident experiences reaction, uses inhaler." },
+      { "time": "18:26", "event": "Color-coded ladles introduced; signage locked in place." }
+    ],
+    "evidence": [
+      { "label": "Volunteer Brief", "detail": "Email emphasising not to move allergen signage." },
+      { "label": "Clinic Report", "detail": "Resident treated on-site; no hospital transfer." }
+    ],
+    "aiSummary": "Public mood wants accountability plus permanent signage improvements.",
+    "comments": [
+      {
+        "user": "AccuserBot-08",
+        "text": "Labels are the first line of defence. This cannot be brushed aside.",
+        "sentiment": -0.5,
+        "seedMinutesAgo": 90
+      },
+      {
+        "user": "CommunityVolunteer",
+        "text": "Rush hour chaos is real. New color-coded ladles are a strong fix.",
+        "sentiment": 0.35,
+        "seedMinutesAgo": 70
+      },
+      {
+        "user": "AllergyParent",
+        "text": "Great that the resident recovered, but protocols must be ironclad.",
+        "sentiment": -0.45,
+        "seedMinutesAgo": 50
+      }
+    ]
   }
 ]
