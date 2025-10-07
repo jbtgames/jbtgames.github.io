@@ -1,0 +1,12 @@
+{
+  "name": "ai-judge",
+  "version": "0.1.0",
+  "description": "AI-powered moral court MVP",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
