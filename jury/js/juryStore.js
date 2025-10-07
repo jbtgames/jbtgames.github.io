@@ -29,6 +29,37 @@
     };
   })();
 
+  const judgeDirectory = {
+    'Judge Iron': {
+      id: 'iron',
+      leaning: 'prosecution',
+      summary: 'Prefers strict adherence to codes and measurable restitution.',
+      philosophy: 'Rule of law above emotion.',
+      title: 'Presiding Judge'
+    },
+    'Judge Mercy': {
+      id: 'mercy',
+      leaning: 'defense',
+      summary: 'Centers intent, harm reduction, and restorative practices.',
+      philosophy: 'Compassion before consequence.',
+      title: 'Presiding Judge'
+    },
+    'Judge Vega': {
+      id: 'vega',
+      leaning: 'balanced',
+      summary: 'Balances policy with community outcomes and data-driven fairness.',
+      philosophy: 'Equity through context.',
+      title: 'Presiding Judge'
+    },
+    'Judge Marlowe': {
+      id: 'marlowe',
+      leaning: 'prosecution',
+      summary: 'Believes accountability deters repeat negligence in shared spaces.',
+      philosophy: 'Discipline builds trust.',
+      title: 'Presiding Judge'
+    }
+  };
+
   function safeStorage() {
     try {
       if (typeof window === 'undefined' || !window.localStorage) {
@@ -83,20 +114,32 @@
       return {
         name: fallbackName,
         title: fallbackTitle,
-        summary: ''
+        summary: '',
+        role: fallbackTitle.toLowerCase(),
+        roleNote: '',
+        side: '',
+        profile: ''
       };
     }
     if (typeof party === 'string') {
       return {
         name: party.slice(0, 80) || fallbackName,
         title: fallbackTitle,
-        summary: ''
+        summary: '',
+        role: fallbackTitle.toLowerCase(),
+        roleNote: '',
+        side: '',
+        profile: ''
       };
     }
     return {
       name: (party?.name || fallbackName).toString().slice(0, 80),
       title: (party?.title || fallbackTitle).toString().slice(0, 120),
-      summary: (party?.summary || '').toString().slice(0, 240)
+      summary: (party?.summary || '').toString().slice(0, 240),
+      role: (party?.role || fallbackTitle.toLowerCase()).toString().slice(0, 40),
+      roleNote: (party?.roleNote || '').toString().slice(0, 280),
+      side: (party?.side || '').toString().slice(0, 40),
+      profile: (party?.profile || '').toString().slice(0, 320)
     };
   }
 
@@ -135,6 +178,85 @@
     };
   }
 
+  function normaliseVerdict(verdict) {
+    if (!verdict || typeof verdict !== 'object') {
+      return null;
+    }
+    const result = {
+      decision: (verdict.decision || '').toString().slice(0, 200),
+      reasoning: (verdict.reasoning || '').toString().slice(0, 900),
+      judge: (verdict.judge || '').toString().slice(0, 80)
+    };
+    if (Number.isFinite(Number(verdict.confidence))) {
+      result.confidence = Number(verdict.confidence);
+    }
+    if (Number.isFinite(Number(verdict.finalScore))) {
+      result.finalScore = Number(verdict.finalScore);
+    }
+    if (verdict.siding) {
+      result.siding = verdict.siding.toString().slice(0, 40);
+    }
+    if (verdict.leaning) {
+      result.leaning = verdict.leaning.toString().slice(0, 40);
+    }
+    return result;
+  }
+
+  function normaliseJudgeProfile(profile, fallbackName) {
+    const name = (profile?.name || fallbackName || 'Presiding Judge').toString().slice(0, 80);
+    const directory = judgeDirectory[name] || {};
+    return {
+      name,
+      title: (profile?.title || directory.title || 'Presiding Judge').toString().slice(0, 120),
+      summary: (profile?.summary || directory.summary || '').toString().slice(0, 320),
+      leaning: (profile?.leaning || directory.leaning || 'balanced').toString().slice(0, 40),
+      philosophy: (profile?.philosophy || directory.philosophy || '').toString().slice(0, 240)
+    };
+  }
+
+  function normaliseBotMeta(meta) {
+    if (!meta || typeof meta !== 'object') {
+      return {};
+    }
+    const result = {};
+    if (meta.uploadedOn) {
+      result.uploadedOn = meta.uploadedOn.toString().slice(0, 24);
+    }
+    if (meta.lastEngaged) {
+      result.lastEngaged = meta.lastEngaged.toString().slice(0, 24);
+    }
+    if (Number.isFinite(Number(meta.trendingScore))) {
+      result.trendingScore = Number(meta.trendingScore);
+    }
+    if (Number.isFinite(Number(meta.uploads))) {
+      result.uploads = Number(meta.uploads);
+    }
+    return result;
+  }
+
+  function pickJudgeName(caseItem) {
+    const names = Object.keys(judgeDirectory);
+    if (!names.length) {
+      return 'Judge Iron';
+    }
+    const spread = ((caseItem?.juryBox?.votesForProsecution || 0) - (caseItem?.juryBox?.votesForDefense || 0));
+    if (spread >= 2) {
+      const tough = names.filter((name) => judgeDirectory[name].leaning === 'prosecution');
+      if (tough.length) {
+        return tough[spread % tough.length];
+      }
+    }
+    if (spread <= -2) {
+      const lenient = names.filter((name) => judgeDirectory[name].leaning === 'defense');
+      if (lenient.length) {
+        return lenient[Math.abs(spread) % lenient.length];
+      }
+    }
+    const id = (caseItem?.id || '').toString();
+    const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return names[hash % names.length];
+  }
+
   function computeAverageSentiment(comments = []) {
     if (!comments.length) return 0;
     const total = comments.reduce((acc, item) => acc + (Number(item.sentiment) || 0), 0);
@@ -153,8 +275,10 @@
       status: item?.status === 'judged' ? 'judged' : 'pending',
       prosecution: typeof item?.prosecution === 'string' ? item.prosecution : '',
       defense: typeof item?.defense === 'string' ? item.defense : '',
-      verdict: item?.verdict && typeof item.verdict === 'object' ? clone(item.verdict) : null
+      verdict: normaliseVerdict(item?.verdict)
     };
+    base.createdAt = Number.isFinite(Number(item?.createdAt)) ? Number(item.createdAt) : Date.now();
+    base.botMeta = normaliseBotMeta(item?.botMeta);
     if (Number.isFinite(Number(item?.finalScore))) {
       base.finalScore = Number(item.finalScore);
     }
@@ -162,16 +286,19 @@
       ? Number(item.publicSentiment)
       : computeAverageSentiment(comments);
     base.publicSentiment = sentiment;
+    const filedByName = (item?.filedBy || '').toString().slice(0, 80) || 'Court Clerk';
+    base.filedBy = filedByName;
     base.parties = {
+      accuser: normaliseParty(item?.accuser || item?.parties?.accuser, filedByName, 'Accuser'),
       prosecutor: normaliseParty(item?.prosecutor || item?.prosecutorProfile, 'Prosecutor', 'State Attorney'),
       defendant: normaliseParty(item?.defendant || item?.defendantProfile, 'Defendant', 'Accused'),
       defense: normaliseParty(item?.defenseCounsel || item?.defenseProfile || item?.defenceCounsel, 'Defense Counsel', 'Court-Appointed')
     };
-    base.filedBy = (item?.filedBy || base.parties.prosecutor.name || 'Court Clerk').toString().slice(0, 80);
     base.charges = Array.isArray(item?.charges) ? item.charges.map(normaliseCharge) : [];
     base.timeline = Array.isArray(item?.timeline) ? item.timeline.map(normaliseTimelineEntry) : [];
     base.evidence = Array.isArray(item?.evidence) ? item.evidence.map(normaliseEvidenceItem) : [];
     base.juryBox = normaliseJuryBox(item?.juryBox);
+    base.judgeProfile = normaliseJudgeProfile(item?.judgeProfile, base.verdict?.judge);
     return base;
   }
 
@@ -253,12 +380,14 @@
       .join(' ')
       .trim();
     const defendantName = parties?.defendant?.name || 'the defendant';
+    const defendantTitle = parties?.defendant?.title || '';
     const prosecutorName = parties?.prosecutor?.name || 'the prosecutor';
     const defenseCounselName = parties?.defense?.name || 'defense counsel';
+    const accuserName = parties?.accuser?.name || 'the accuser';
     if (role === 'prosecution') {
-      return `${prosecutorName} for the prosecution argues that ${defendantName}'s choices created tangible harm. ${intro} This reflects avoidable disrespect for shared boundaries and poor communication.`;
+      return `${prosecutorName} represents ${accuserName} and argues that ${defendantName}'s choices created tangible harm. ${intro} They press the bench to recognise ${accuserName}'s complaint and deliver a culpability ruling.`;
     }
-    return `${defenseCounselName} for the defense highlights the context and intent behind the decision. ${intro} Considering the pressures involved, ${defendantName} attempted to minimise fallout while solving an urgent problem.`;
+    return `${defenseCounselName} defends ${defendantName}${defendantTitle ? ` (${defendantTitle})` : ''} and highlights the context and intent behind the decision. ${intro} They insist the court credit the mitigating factors and return a defense-favoured outcome.`;
   }
 
   function summariseComments(comments = []) {
@@ -278,33 +407,47 @@
   }
 
   function judgeVerdict(caseItem, prosecution, defense, summary) {
+    const judgeName = pickJudgeName(caseItem);
+    const judgeInfo = judgeDirectory[judgeName] || {};
     const severity = Math.max(0, prosecution.length - defense.length);
-    const judgeScore = severity > 0 ? 70 : 30;
+    let judgeScore = severity > 0 ? 62 : 38;
+    if (judgeInfo.leaning === 'prosecution') {
+      judgeScore += 6;
+    } else if (judgeInfo.leaning === 'defense') {
+      judgeScore -= 6;
+    }
     const toneLine = summary.lines.find((line) => line.toLowerCase().includes('crowd tone')) || '';
-    const publicScore = toneLine.includes('supportive') ? 30 : toneLine.includes('critical') ? 70 : 50;
+    const publicScore = toneLine.includes('supportive') ? 35 : toneLine.includes('critical') ? 65 : 50;
     const juryScore = Math.round((summary.average + 1) * 50);
     const box = caseItem?.juryBox || { votesForProsecution: 0, votesForDefense: 0 };
-    const boxSpread = Math.max(0, box.votesForProsecution - box.votesForDefense);
-    const boxWeight = Math.min(20, boxSpread * 2);
-    const finalScore = Math.max(0, Math.min(100, Math.round(0.5 * judgeScore + 0.3 * publicScore + 0.2 * juryScore)));
-    const adjustedScore = Math.max(0, Math.min(100, finalScore + boxWeight));
+    const boxSpread = (Number(box.votesForProsecution) || 0) - (Number(box.votesForDefense) || 0);
+    const spreadWeight = Math.max(-12, Math.min(12, boxSpread * 2));
+    const weightedScore = Math.round(0.45 * judgeScore + 0.3 * publicScore + 0.25 * juryScore + spreadWeight);
+    const finalScore = Math.max(0, Math.min(100, weightedScore));
 
     let decision;
-    if (adjustedScore >= 60) {
+    let siding;
+    if (finalScore >= 65) {
       decision = 'GUILTY — Policy Breach Confirmed';
-    } else if (adjustedScore >= 45) {
+      siding = 'Prosecution';
+    } else if (finalScore >= 50) {
       decision = 'RESPONSIBLE WITH MITIGATION';
+      siding = 'Prosecution';
     } else {
       decision = 'NOT GUILTY — Emergency Defense Accepted';
+      siding = 'Defense';
     }
 
     const commentCount = Array.isArray(caseItem?.comments) ? caseItem.comments.length : 0;
+    const reasoning = `Judge ${judgeName} weighs ${commentCount} public submissions, the Jury Box split (${box.votesForProsecution || 0} for prosecution vs ${box.votesForDefense || 0} for defense), and ${toneLine || 'crowd sentiment'}, ultimately siding with the ${siding.toLowerCase()}.`;
     return {
       decision,
-      reasoning: `After reviewing ${commentCount} public submissions, the Jury Box tally (prosecution ${box.votesForProsecution} vs defense ${box.votesForDefense}), and ${toneLine || 'the crowd tone'}, the court rules ${decision.toLowerCase()}.`,
+      reasoning,
       confidence: 72,
-      judge: 'Judge Iron',
-      finalScore: adjustedScore
+      judge: judgeName,
+      finalScore,
+      siding,
+      judgeProfile: { ...judgeInfo, name: judgeName }
     };
   }
 
@@ -319,13 +462,49 @@
     base.ai_summary = summary.lines.join('\n');
     base.publicSentiment = summary.average;
     base.status = 'judged';
-    base.verdict = {
+    const verdictPayload = {
       decision: verdict.decision,
       reasoning: verdict.reasoning,
       confidence: verdict.confidence,
-      judge: verdict.judge
+      judge: verdict.judge,
+      finalScore: verdict.finalScore,
+      siding: verdict.siding,
+      leaning: verdict.judgeProfile?.leaning
     };
+    base.verdict = normaliseVerdict(verdictPayload);
     base.finalScore = verdict.finalScore;
+    base.judgeProfile = normaliseJudgeProfile(verdict.judgeProfile, verdict.judge);
+
+    const accuserName = base.parties.accuser?.name || base.filedBy || 'the accuser';
+    const defendantName = base.parties.defendant?.name || 'the defendant';
+    if (base.parties.accuser) {
+      base.parties.accuser.role = 'accuser';
+      base.parties.accuser.side = 'Prosecution';
+      if (!base.parties.accuser.roleNote) {
+        base.parties.accuser.roleNote = `${accuserName} initiated the complaint and keeps pressing for accountability.`;
+      }
+    }
+    if (base.parties.prosecutor) {
+      base.parties.prosecutor.role = 'prosecutor';
+      base.parties.prosecutor.side = 'Prosecution';
+      base.parties.prosecutor.roleNote = verdict.siding === 'Prosecution'
+        ? `${base.parties.prosecutor.name} secured a ruling for ${accuserName}.`
+        : `${base.parties.prosecutor.name} concedes as the defense claim prevailed.`;
+    }
+    if (base.parties.defense) {
+      base.parties.defense.role = 'defense';
+      base.parties.defense.side = 'Defense';
+      base.parties.defense.roleNote = verdict.siding === 'Defense'
+        ? `${base.parties.defense.name} successfully defended ${defendantName}.`
+        : `${base.parties.defense.name} could not overturn the accusations from ${accuserName}.`;
+    }
+    if (base.parties.defendant) {
+      base.parties.defendant.role = 'defendant';
+      base.parties.defendant.side = 'Defense';
+      base.parties.defendant.roleNote = verdict.siding === 'Defense'
+        ? `${defendantName} leaves court vindicated by the verdict.`
+        : `${defendantName} now faces the remedies ordered by the bench.`;
+    }
     return base;
   }
 

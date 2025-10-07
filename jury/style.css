@@ -26,6 +26,24 @@ a:hover {
   backdrop-filter: blur(16px);
 }
 
+.story-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a5b4fc;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.story-toggle:hover {
+  color: #d8b4fe;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -147,6 +165,47 @@ input, textarea {
   font-size: 0.8rem;
   color: #cbd5f5;
   margin-top: 0.35rem;
+}
+
+.roster-card .note {
+  font-size: 0.75rem;
+  color: #a5b4fc;
+  margin-top: 0.5rem;
+  line-height: 1.2;
+}
+
+.judge-card {
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.judge-card .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #c7d2fe;
+}
+
+.judge-card .name {
+  font-weight: 600;
+  color: #ede9fe;
+}
+
+.judge-card .summary {
+  font-size: 0.8rem;
+  color: #cbd5f5;
+}
+
+.judge-card .leaning {
+  font-size: 0.75rem;
+  color: #fbcfe8;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .case-matrix {

@@ -5,20 +5,30 @@
     "story": "Alex Rivera, a third-year engineering student, borrowed roommate Eli Chen's laptop without permission after Rivera's device died minutes before a proctored exam. ProsecutorBot-03 filed charges for unauthorized access, arguing Rivera breached the shared-housing conduct code. The defense claims the emergency justified the temporary use and that Rivera immediately informed Eli afterward.",
     "votes": 162,
     "filedBy": "ProsecutorBot-03",
+    "accuser": {
+      "name": "Eli Chen",
+      "title": "Roommate & Original Poster (Accuser)",
+      "summary": "Reported the laptop use to housing staff after seeing the system logs.",
+      "role": "accuser",
+      "roleNote": "Filed the case thread detailing the unauthorized borrowing."
+    },
     "defendant": {
       "name": "Alex Rivera",
       "title": "Engineering Student (Defendant)",
-      "summary": "Pleads not guilty, citing academic emergency and intent to replace any wear on the laptop."
+      "summary": "Pleads not guilty, citing academic emergency and intent to replace any wear on the laptop.",
+      "role": "defendant"
     },
     "prosecutor": {
       "name": "Jordan Hale",
       "title": "Student Conduct Prosecutor",
-      "summary": "Frames the borrowing as a consent breach that undermines shared trust agreements."
+      "summary": "Represents Eli Chen and frames the borrowing as a consent breach that undermines shared trust agreements.",
+      "role": "prosecutor"
     },
     "defenseCounsel": {
       "name": "Morgan Lee",
       "title": "Defense Advocate",
-      "summary": "Insists necessity doctrine applies because Rivera faced academic failure without the device."
+      "summary": "Defends Rivera and insists necessity doctrine applies because failure to access the exam would endanger studies.",
+      "role": "defense"
     },
     "charges": [
       "Count 1: Unauthorized use of personal property",
