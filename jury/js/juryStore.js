@@ -8,6 +8,20 @@
   const CASE_BOT_INTERVAL = [90000, 140000];
   const COMMENT_BOT_INTERVAL = [35000, 65000];
 
+  const config = globalObject.JuryConfig || {};
+  const LEGACY_STORAGE_KEY =
+    typeof config.storageKey === 'string' && config.storageKey.trim().length
+      ? config.storageKey.trim()
+      : 'jury_cases_public_v1';
+  const LEGACY_CASES_URL =
+    typeof config.casesPath === 'string' && config.casesPath.trim().length
+      ? config.casesPath.trim()
+      : 'data/cases.json';
+
+  let legacyCases = [];
+  let legacyCasesLoaded = false;
+  let legacyReadyPromise = null;
+
   const botCaseDeck = [
     {
       id: 'bot-campus-hackathon',
@@ -502,6 +516,130 @@
     };
   }
 
+  function normaliseLegacyComment(comment) {
+    return {
+      user: (comment?.user || 'anon').toString().slice(0, 48),
+      text: (comment?.text || '').toString().slice(0, 600),
+      sentiment: Number.isFinite(Number(comment?.sentiment)) ? Number(comment.sentiment) : 0,
+      createdAt: Number.isFinite(Number(comment?.createdAt)) ? Number(comment.createdAt) : undefined
+    };
+  }
+
+  function normaliseLegacyCase(entry) {
+    const comments = normaliseArray(entry?.comments, normaliseLegacyComment);
+    const verdict = entry?.verdict && typeof entry.verdict === 'object'
+      ? {
+          decision: (entry.verdict.decision || '').toString().slice(0, 200),
+          reasoning: (entry.verdict.reasoning || '').toString().slice(0, 1000),
+          judge: (entry.verdict.judge || '').toString().slice(0, 120),
+          confidence: Number.isFinite(Number(entry.verdict.confidence))
+            ? Number(entry.verdict.confidence)
+            : undefined
+        }
+      : null;
+    const finalScore = Number.isFinite(Number(entry?.finalScore)) ? Number(entry.finalScore) : undefined;
+    const publicSentiment = Number.isFinite(Number(entry?.publicSentiment)) ? Number(entry.publicSentiment) : undefined;
+    const createdAt = Number.isFinite(Number(entry?.createdAt)) ? Number(entry.createdAt) : undefined;
+    return {
+      id: (entry?.id || `legacy_${Math.random().toString(36).slice(2, 8)}`).toString(),
+      title: (entry?.title || 'Untitled Case').toString().slice(0, 160),
+      story: (entry?.story || '').toString().slice(0, 4000),
+      votes: Number.isFinite(Number(entry?.votes)) ? Number(entry.votes) : 0,
+      comments,
+      ai_summary: (entry?.ai_summary || '').toString().slice(0, 600),
+      status: (entry?.status || 'pending').toString().slice(0, 48),
+      prosecution: (entry?.prosecution || '').toString().slice(0, 1200),
+      defense: (entry?.defense || '').toString().slice(0, 1200),
+      verdict,
+      finalScore,
+      publicSentiment,
+      createdAt
+    };
+  }
+
+  function persistLegacyCases() {
+    if (!storage) {
+      return;
+    }
+    try {
+      storage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(legacyCases));
+    } catch (error) {
+      console.warn('Failed to persist legacy jury cases', error);
+    }
+  }
+
+  function loadLegacyFromStorage() {
+    if (!storage) {
+      return null;
+    }
+    const raw = storage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      console.warn('Failed to parse stored legacy jury cases', error);
+      return null;
+    }
+  }
+
+  async function fetchLegacyCases() {
+    try {
+      const response = await fetch(LEGACY_CASES_URL, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch legacy cases: ${response.status}`);
+      }
+      const payload = await response.json();
+      return normaliseArray(payload, normaliseLegacyCase);
+    } catch (error) {
+      console.warn('Unable to fetch legacy jury cases, defaulting to empty list', error);
+      return [];
+    }
+  }
+
+  async function ensureLegacyCasesReady() {
+    if (legacyCasesLoaded) {
+      return;
+    }
+    if (!legacyReadyPromise) {
+      legacyReadyPromise = (async () => {
+        const stored = loadLegacyFromStorage();
+        if (stored) {
+          legacyCases = normaliseArray(stored, normaliseLegacyCase);
+          legacyCasesLoaded = true;
+          return;
+        }
+        legacyCases = await fetchLegacyCases();
+        legacyCasesLoaded = true;
+        if (legacyCases.length) {
+          persistLegacyCases();
+        }
+      })();
+    }
+    await legacyReadyPromise;
+  }
+
+  async function loadCases() {
+    await ensureLegacyCasesReady();
+    return clone(legacyCases);
+  }
+
+  function saveCases(nextCases) {
+    legacyCases = normaliseArray(nextCases, normaliseLegacyCase);
+    legacyCasesLoaded = true;
+    legacyReadyPromise = Promise.resolve();
+    persistLegacyCases();
+    return clone(legacyCases);
+  }
+
+  function findLegacyCaseIndex(caseId) {
+    if (!caseId) {
+      return -1;
+    }
+    return legacyCases.findIndex((item) => item.id === caseId);
+  }
+
   function normaliseState(rawState) {
     if (!rawState || typeof rawState !== 'object') {
       return clone(state);
@@ -687,7 +825,17 @@
   function updateCase(caseId, updater) {
     const index = state.cases.findIndex((item) => item.id === caseId);
     if (index === -1) {
-      return null;
+      const legacyIndex = findLegacyCaseIndex(caseId);
+      if (legacyIndex === -1) {
+        return null;
+      }
+      const currentLegacy = clone(legacyCases[legacyIndex]);
+      const updatedLegacy =
+        typeof updater === 'function' ? updater(clone(currentLegacy)) : { ...currentLegacy, ...updater };
+      const normalisedLegacy = normaliseLegacyCase({ ...currentLegacy, ...updatedLegacy, id: currentLegacy.id });
+      legacyCases.splice(legacyIndex, 1, normalisedLegacy);
+      persistLegacyCases();
+      return clone(normalisedLegacy);
     }
     const current = state.cases[index];
     const updated = typeof updater === 'function' ? updater(clone(current)) : { ...current, ...updater };
@@ -701,7 +849,17 @@
   function addComment(caseId, commentInput) {
     const index = state.cases.findIndex((item) => item.id === caseId);
     if (index === -1) {
-      return null;
+      const legacyIndex = findLegacyCaseIndex(caseId);
+      if (legacyIndex === -1) {
+        return null;
+      }
+      const comment = normaliseLegacyComment(commentInput);
+      if (!Array.isArray(legacyCases[legacyIndex].comments)) {
+        legacyCases[legacyIndex].comments = [];
+      }
+      legacyCases[legacyIndex].comments.push(comment);
+      persistLegacyCases();
+      return clone(comment);
     }
     const comment = normaliseComment({ ...commentInput, createdAt: commentInput?.createdAt || Date.now() });
     state.cases[index].comments.push(comment);
@@ -714,7 +872,22 @@
   function vote(caseId, direction) {
     const index = state.cases.findIndex((item) => item.id === caseId);
     if (index === -1) {
-      return null;
+      const legacyIndex = findLegacyCaseIndex(caseId);
+      if (legacyIndex === -1) {
+        return null;
+      }
+      const currentVotes = Number.isFinite(Number(legacyCases[legacyIndex]?.votes))
+        ? Number(legacyCases[legacyIndex].votes)
+        : 0;
+      let nextVotes = currentVotes;
+      if (direction === 'up') {
+        nextVotes = currentVotes + 1;
+      } else if (direction === 'down') {
+        nextVotes = Math.max(0, currentVotes - 1);
+      }
+      legacyCases[legacyIndex] = { ...legacyCases[legacyIndex], votes: nextVotes };
+      persistLegacyCases();
+      return { up: nextVotes, down: 0 };
     }
     if (direction === 'up') {
       state.cases[index].votes.up += 1;
@@ -732,7 +905,15 @@
   }
 
   function getCase(caseId) {
-    return clone(state.cases.find((item) => item.id === caseId) || null);
+    const modern = state.cases.find((item) => item.id === caseId);
+    if (modern) {
+      return clone(modern);
+    }
+    const legacyIndex = findLegacyCaseIndex(caseId);
+    if (legacyIndex !== -1) {
+      return clone(legacyCases[legacyIndex]);
+    }
+    return null;
   }
 
   function getState() {
@@ -781,6 +962,8 @@
 
   globalObject.JuryStore = {
     ready,
+    loadCases,
+    saveCases,
     getCases,
     getCase,
     getState,
