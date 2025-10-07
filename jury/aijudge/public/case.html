@@ -79,111 +79,132 @@
   </main>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const caseId = params.get('id');
-    if (!caseId) {
-      window.location.replace('index.html');
-    }
-
-    async function loadCase() {
-      const response = await fetch('../data/cases.json?_=' + Date.now());
-      const cases = await response.json();
-      const item = cases.find((entry) => entry.id === caseId);
-      if (!item) {
-        document.getElementById('case-card').innerHTML = '<p class="text-slate-300">Case not found.</p>';
+    window.JuryConfig = {
+      casesPath: '../data/cases.json',
+      storageKey: 'jury_cases_public_v1'
+    };
+  </script>
+  <script src="../../js/juryStore.js"></script>
+  <script>
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const caseId = params.get('id');
+      if (!caseId) {
+        window.location.replace('index.html');
         return;
       }
-      document.getElementById('case-title').textContent = item.title;
-      document.getElementById('case-story').textContent = item.story;
-      document.getElementById('case-votes').textContent = item.votes;
-      document.getElementById('case-status').textContent = item.status === 'judged' ? 'VERDICT PUBLISHED' : 'AWAITING TRIAL';
 
+      const store = window.JuryStore;
+      const ai = window.JuryAI;
+      const commentForm = document.getElementById('comment-form');
+      const summarySection = document.getElementById('summary-section');
+      const summaryList = document.getElementById('summary-list');
+      const sentimentScore = document.getElementById('sentiment-score');
+      const commentList = document.getElementById('comment-list');
       const verdictSection = document.getElementById('verdict-section');
       const scoreWrap = document.getElementById('score-wrap');
 
-      if (item.verdict) {
-        verdictSection.hidden = false;
-        document.getElementById('verdict-decision').textContent = item.verdict.decision;
-        document.getElementById('verdict-reasoning').textContent = item.verdict.reasoning;
-        const judgeName = item.verdict.judge || 'Unknown Judge';
-        const metaBits = [judgeName];
-        if (Number.isFinite(item.verdict.confidence)) {
-          metaBits.push(`Confidence ${item.verdict.confidence}%`);
-        }
-        document.getElementById('verdict-meta').textContent = metaBits.join(' • ');
-        if (Number.isFinite(item.finalScore)) {
-          scoreWrap.hidden = false;
-          const scoreFill = document.getElementById('score-fill');
-          const clamped = Math.max(0, Math.min(100, Math.round(item.finalScore)));
-          scoreFill.style.width = clamped + '%';
-          document.getElementById('score-note').textContent = `Composite score ${clamped}/100 from judge and crowd weighting.`;
-        } else {
-          scoreWrap.hidden = true;
-        }
-        document.querySelector('#prosecution p').textContent = item.prosecution || 'Awaiting trial.';
-        document.querySelector('#defense p').textContent = item.defense || 'Awaiting trial.';
-      } else {
-        verdictSection.hidden = true;
-        scoreWrap.hidden = true;
+      await store.loadCases();
+      let currentCase = store.getCase(caseId);
+      if (!currentCase) {
+        document.getElementById('case-card').innerHTML = '<p class="text-slate-300">Case not found.</p>';
+        commentForm.hidden = true;
+        summarySection.hidden = true;
+        return;
       }
 
-      const summarySection = document.getElementById('summary-section');
-      const summaryList = document.getElementById('summary-list');
-      if (item.ai_summary) {
-        summarySection.hidden = false;
-        summaryList.innerHTML = '';
-        item.ai_summary
-          .split('\n')
-          .map((line) => line.trim())
-          .filter(Boolean)
-          .forEach((line) => {
+      function renderCase() {
+        document.getElementById('case-title').textContent = currentCase.title;
+        document.getElementById('case-story').textContent = currentCase.story;
+        document.getElementById('case-votes').textContent = currentCase.votes;
+        document.getElementById('case-status').textContent = currentCase.status === 'judged' ? 'VERDICT PUBLISHED' : 'AWAITING TRIAL';
+
+        if (currentCase.verdict) {
+          verdictSection.hidden = false;
+          document.getElementById('verdict-decision').textContent = currentCase.verdict.decision;
+          document.getElementById('verdict-reasoning').textContent = currentCase.verdict.reasoning;
+          const judgeName = currentCase.verdict.judge || 'Unknown Judge';
+          const metaBits = [judgeName];
+          if (Number.isFinite(currentCase.verdict.confidence)) {
+            metaBits.push(`Confidence ${currentCase.verdict.confidence}%`);
+          }
+          document.getElementById('verdict-meta').textContent = metaBits.join(' • ');
+          if (Number.isFinite(currentCase.finalScore)) {
+            scoreWrap.hidden = false;
+            const scoreFill = document.getElementById('score-fill');
+            const clamped = Math.max(0, Math.min(100, Math.round(currentCase.finalScore)));
+            scoreFill.style.width = clamped + '%';
+            document.getElementById('score-note').textContent = `Composite score ${clamped}/100 from judge and crowd weighting.`;
+          } else {
+            scoreWrap.hidden = true;
+          }
+          document.querySelector('#prosecution p').textContent = currentCase.prosecution || 'Awaiting trial.';
+          document.querySelector('#defense p').textContent = currentCase.defense || 'Awaiting trial.';
+        } else {
+          verdictSection.hidden = true;
+          scoreWrap.hidden = true;
+        }
+
+        const summaryInfo = currentCase.ai_summary
+          ? { lines: currentCase.ai_summary.split('\n').filter(Boolean), average: currentCase.publicSentiment ?? ai.summariseComments(currentCase.comments || []).average }
+          : ai.summariseComments(currentCase.comments || []);
+        if (summaryInfo.lines.length) {
+          summarySection.hidden = false;
+          summaryList.innerHTML = '';
+          summaryInfo.lines.forEach((line) => {
             const entry = document.createElement('li');
             entry.textContent = line.replace(/^•\s*/, '');
             summaryList.appendChild(entry);
           });
-      } else {
-        summarySection.hidden = true;
-      }
+        } else {
+          summarySection.hidden = true;
+        }
 
-      const comments = item.comments || [];
-      const list = document.getElementById('comment-list');
-      list.innerHTML = '';
-      comments.forEach((comment) => {
-        const li = document.createElement('li');
-        li.className = 'bg-slate-900/40 rounded-xl p-3 text-sm flex flex-col gap-1';
-        li.innerHTML = `<div class="flex items-center justify-between text-slate-400"><span>${comment.user}</span><span>${formatSentiment(comment.sentiment)}</span></div><p class="text-slate-200">${comment.text}</p>`;
-        list.appendChild(li);
-      });
-      const average = comments.reduce((acc, c) => acc + (c.sentiment || 0), 0) / Math.max(1, comments.length);
-      document.getElementById('sentiment-score').textContent = `Crowd Sentiment: ${(average * 100).toFixed(0)} / 100`;
-    }
-
-    function formatSentiment(score = 0) {
-      if (score > 0.25) return 'Supportive';
-      if (score < -0.25) return 'Critical';
-      return 'Mixed';
-    }
-
-    document.getElementById('comment-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const formData = new FormData(event.target);
-      const payload = Object.fromEntries(formData.entries());
-      payload.sentiment = Number(payload.sentiment);
-      payload.id = caseId;
-      try {
-        await fetch('/api/comment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+        commentList.innerHTML = '';
+        (currentCase.comments || []).forEach((comment) => {
+          const li = document.createElement('li');
+          li.className = 'bg-slate-900/40 rounded-xl p-3 text-sm flex flex-col gap-1';
+          li.innerHTML = `<div class="flex items-center justify-between text-slate-400"><span>${comment.user}</span><span>${formatSentiment(comment.sentiment)}</span></div><p class="text-slate-200">${comment.text}</p>`;
+          commentList.appendChild(li);
         });
-        event.target.reset();
-        loadCase();
-      } catch (error) {
-        console.error('Comment failed', error);
-      }
-    });
 
-    loadCase();
+        const summary = ai.summariseComments(currentCase.comments || []);
+        sentimentScore.textContent = `Crowd Sentiment: ${(summary.average * 100).toFixed(0)} / 100`;
+      }
+
+      function formatSentiment(score = 0) {
+        if (score > 0.25) return 'Supportive';
+        if (score < -0.25) return 'Critical';
+        return 'Mixed';
+      }
+
+      commentForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(commentForm);
+        const user = (formData.get('user') || '').toString().trim();
+        const text = (formData.get('text') || '').toString().trim();
+        const sentiment = Number(formData.get('sentiment') || 0);
+        if (!user || !text) return;
+
+        currentCase = store.updateCase(caseId, (item) => {
+          const comments = Array.isArray(item.comments) ? item.comments.slice() : [];
+          comments.push({ user: user.slice(0, 40), text: text.slice(0, 500), sentiment });
+          const summary = ai.summariseComments(comments);
+          const next = {
+            ...item,
+            comments,
+            ai_summary: summary.lines.join('\n'),
+            publicSentiment: summary.average
+          };
+          return next;
+        });
+
+        commentForm.reset();
+        renderCase();
+      });
+
+      renderCase();
+    })();
   </script>
 </body>
 </html>
