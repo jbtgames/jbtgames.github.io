@@ -1,1 +1,370 @@
-!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jury Game 3.0 • Systems Sprint</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/variable.css">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: radial-gradient(circle at top left, #ffe0f3 0%, #f9f5ff 35%, #f2f6ff 75%, #edf7ff 100%);
+      --text: #1f2430;
+      --muted: #465070;
+      --accent: #7542ff;
+      --accent-soft: rgba(117, 66, 255, 0.08);
+      --border: rgba(31, 36, 48, 0.1);
+      --card-bg: rgba(255, 255, 255, 0.82);
+      --shadow: 0 20px 45px rgba(31, 36, 48, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "InterVariable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 64px 16px 120px;
+    }
+
+    main {
+      width: min(960px, 100%);
+      display: grid;
+      gap: 32px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 16px;
+      line-height: 1.1;
+    }
+
+    p {
+      margin: 0 0 16px;
+      line-height: 1.6;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .hero {
+      display: grid;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 6px 14px;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 4vw, 3.2rem);
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+
+    .metric {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.72);
+      display: grid;
+      gap: 6px;
+    }
+
+    .metric span:first-child {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .metric span:last-child {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(117, 66, 255, 0.12);
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 16px;
+      margin-top: 8px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .feature {
+      display: grid;
+      gap: 6px;
+      padding: 18px 20px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.74);
+    }
+
+    .feature strong {
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    .timeline {
+      display: grid;
+      gap: 18px;
+      list-style: none;
+      padding: 0;
+      margin: 20px 0 0;
+    }
+
+    .timeline li {
+      display: grid;
+      gap: 6px;
+      padding-left: 22px;
+      position: relative;
+    }
+
+    .timeline li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(117, 66, 255, 0.12);
+    }
+
+    .action-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 24px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 24px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.98rem;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .button--primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 16px 30px rgba(117, 66, 255, 0.28);
+    }
+
+    .button--ghost {
+      background: rgba(255, 255, 255, 0.64);
+      color: var(--accent);
+      border: 1px solid rgba(117, 66, 255, 0.3);
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 34px rgba(117, 66, 255, 0.22);
+    }
+
+    footer {
+      margin-top: 36px;
+      text-align: center;
+      color: rgba(31, 36, 48, 0.48);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding-top: 40px;
+      }
+
+      .card {
+        padding: 26px;
+      }
+
+      .hero-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card hero">
+      <span class="badge">Jury Game 3.0 sprint</span>
+      <h1>From scripted drama to autonomous courtrooms.</h1>
+      <p>
+        We are building the next version of the crowd-sourced moral court. Version 3.0 hands more control to AI
+        characters, syncs state across visitors, and exposes the simulation timeline so moderators can fast-forward or
+        rewind the action. Here's what we are delivering this sprint.
+      </p>
+      <div class="hero-grid">
+        <div class="metric">
+          <span>6</span>
+          <span>core systems shipping in the beta</span>
+        </div>
+        <div class="metric">
+          <span>3</span>
+          <span>live prototypes ready for review</span>
+        </div>
+        <div class="metric">
+          <span>48h</span>
+          <span>sync window for real juror feedback</span>
+        </div>
+        <div class="metric">
+          <span>∞</span>
+          <span>case permutations generated nightly</span>
+        </div>
+      </div>
+      <div class="pill-list">
+        <span class="pill">Real-time state sync</span>
+        <span class="pill">Procedural cases</span>
+        <span class="pill">Audience controls</span>
+        <span class="pill">Moderator dashboard</span>
+      </div>
+      <div class="action-strip">
+        <a class="button button--primary" href="../jury/index.html">Open current live build</a>
+        <a class="button button--ghost" href="mailto:team@jury.game">Book a review call</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Systems ready for jury 3 testing</h2>
+      <p>
+        Our focus this round is on durability and shared presence. The systems below are wired into a combined sandbox so
+        you can stress test them as a group or independently. Each module logs structured telemetry so we can compare your
+        findings across sessions.
+      </p>
+      <ul class="feature-list">
+        <li class="feature">
+          <strong>Persistent case archive</strong>
+          <p>
+            Cloud-backed storage keeps the docket intact between visits. Cases decay using a freshness score so new posts
+            surface organically, while historically significant trials remain searchable.
+          </p>
+        </li>
+        <li class="feature">
+          <strong>Cross-visitor synchronization</strong>
+          <p>
+            The board updates in real-time when jurors vote or comment. We expose a channel log for moderators and a
+            visual heartbeat indicator for visitors to confirm when the sim is live.
+          </p>
+        </li>
+        <li class="feature">
+          <strong>Autonomous counsel behaviors</strong>
+          <p>
+            Prosecutor, defender, and mediator agents now reference shared memory. They can resume suspended cases,
+            escalate unusual activity, and request human arbitration with a single tap.
+          </p>
+        </li>
+        <li class="feature">
+          <strong>Emotion telemetry dashboard</strong>
+          <p>
+            Sentiment analysis runs on every new comment. Jurors see simplified mood meters while moderators can drill into
+            raw scores to understand volatility within each case thread.
+          </p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Review timeline</h2>
+      <p>
+        We suggest the following cadence so the team can triage and incorporate your notes before the public launch. Each
+        milestone packages new automation hooks and analytics exports.
+      </p>
+      <ul class="timeline">
+        <li>
+          <strong>Day 1 — Systems soak test</strong>
+          <p>Hammer the shared state server, pause and resume trials, and report any diverging timelines.</p>
+        </li>
+        <li>
+          <strong>Day 2 — Moderator rehearsal</strong>
+          <p>Use the dashboard to fast-forward and rewind. Tag moments that feel confusing or need a tutorial overlay.</p>
+        </li>
+        <li>
+          <strong>Day 3 — Player empathy pass</strong>
+          <p>Invite a few first-time jurors, observe drop-off moments, and capture questions for the onboarding flow.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>What we still owe you</h2>
+      <p>
+        Three additional modules are in active development. Expect preview builds through the shared folder before the
+        next sync.
+      </p>
+      <ul class="feature-list">
+        <li class="feature">
+          <strong>Juror reputation loop</strong>
+          <p>Designing streak-based rewards that influence future seating priority without punishing casual players.</p>
+        </li>
+        <li class="feature">
+          <strong>Live verdict broadcast</strong>
+          <p>Building a marquee for big decisions, including automated highlight reels for social sharing.</p>
+        </li>
+        <li class="feature">
+          <strong>Scenario writer toolkit</strong>
+          <p>Packaging our internal case generator so partners can author bespoke dilemmas with guardrails.</p>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    Jury Game 3.0 Sprint • Internal briefing for reviewers and moderators
+  </footer>
+</body>
+</html>
