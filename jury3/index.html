@@ -1,1 +1,106 @@
-!
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jury Duty v3 · Hourly AI Trials</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="logo">Jury<span>3</span></div>
+      <nav class="primary-nav" aria-label="Primary">
+        <button class="nav-btn" data-view="home" aria-pressed="true">Home</button>
+        <button class="nav-btn" data-view="courtroom" aria-pressed="false">Courtroom</button>
+        <button class="nav-btn" data-view="verdict" aria-pressed="false">Verdict</button>
+      </nav>
+    </header>
+
+    <main id="app" class="app-shell">
+      <section id="home" class="view active" aria-labelledby="home-heading">
+        <h1 id="home-heading">Hourly Courtroom</h1>
+        <p class="tagline">Watch AI advocates and jurors resolve community disputes in real time.</p>
+
+        <div class="status-panel" role="status">
+          <h2>Next Case</h2>
+          <div class="countdown">
+            <span id="countdown-clock" aria-live="polite">Loading…</span>
+            <button id="skip-to-trial" class="primary">Jump In</button>
+          </div>
+        </div>
+
+        <section class="top-cases" aria-labelledby="top-cases-heading">
+          <div class="section-heading">
+            <h2 id="top-cases-heading">Top Submissions</h2>
+            <button id="refresh-top" class="ghost">Refresh</button>
+          </div>
+          <ul id="top-cases-list" class="case-list" aria-live="polite"></ul>
+        </section>
+
+        <section class="submit-cta" aria-labelledby="submit-heading">
+          <h2 id="submit-heading">Have a case?</h2>
+          <p>We accept thoughtfully framed disputes. Submissions run through safety filters and community ranking before trial.</p>
+          <button class="primary" id="open-submit">Submit Case</button>
+        </section>
+      </section>
+
+      <section id="courtroom" class="view" aria-labelledby="courtroom-heading">
+        <div class="courtroom-header">
+          <div>
+            <h1 id="courtroom-heading">Live Trial</h1>
+            <p id="case-title" class="case-title">Select a case to begin.</p>
+          </div>
+          <div class="case-meta" id="case-meta" aria-live="polite"></div>
+        </div>
+
+        <article class="transcript" id="transcript" aria-live="polite"></article>
+
+        <div class="phase-controls">
+          <button id="proceed-btn" class="primary" disabled>Proceed</button>
+          <span id="phase-indicator">Waiting for case…</span>
+        </div>
+      </section>
+
+      <section id="verdict" class="view" aria-labelledby="verdict-heading">
+        <h1 id="verdict-heading">Verdict</h1>
+        <div class="verdict-card" id="verdict-card">
+          <p class="placeholder">Run a trial to see the verdict summary.</p>
+        </div>
+
+        <section class="jury-panel" aria-labelledby="jury-heading">
+          <h2 id="jury-heading">Jury Panel</h2>
+          <ul id="jury-list" class="jury-list"></ul>
+        </section>
+
+        <section class="poll" aria-labelledby="poll-heading">
+          <h2 id="poll-heading">Do you agree?</h2>
+          <div class="poll-actions">
+            <button class="ghost" data-poll="agree">Agree</button>
+            <button class="ghost" data-poll="disagree">Disagree</button>
+          </div>
+          <p class="poll-thanks" id="poll-feedback" role="status" aria-live="polite"></p>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="submit-modal" aria-labelledby="submit-modal-title">
+      <form method="dialog">
+        <h2 id="submit-modal-title">Submit a Case</h2>
+        <p>Submissions open soon. For now, explore the sample trial.</p>
+        <button class="primary" value="close">Close</button>
+      </form>
+    </dialog>
+
+    <template id="transcript-row">
+      <section class="utterance" data-speaker="">
+        <header>
+          <span class="speaker"></span>
+          <span class="phase"></span>
+        </header>
+        <p class="content"></p>
+      </section>
+    </template>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

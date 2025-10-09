@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "id": "dog-noise-9a2f",
+      "verdict": {"winner": "A", "split": "4–3", "factors": ["clear pattern of disturbance", "feasible mitigation"]},
+      "decidedAt": "2025-10-09T13:00:00Z"
+    }
+  ]
+}
