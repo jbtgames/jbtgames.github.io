@@ -1,0 +1,13 @@
+{
+  "lawyerFill": {
+    "vars": ["thesis", "evidence", "facts", "harm", "context", "badOutcome", "precedent", "n", "elementReason", "keyBeat", "label", "claim", "counterfact", "standard", "cite", "expectedAction", "side", "opponent"],
+    "fallbacks": {"precedent": "relevant precedent", "cite": "controlling authority"}
+  },
+  "jurorRemark": "({name}) {remark}",
+  "jurorRemarkPatterns": [
+    "I'm weighing {factorA} more than {factorB}. That points to {side}.",
+    "Intent matters here; I lean {side}.",
+    "The record on {factorA} is clearer; I prefer {side}."
+  ],
+  "verdictFactorsJoiner": ", "
+}

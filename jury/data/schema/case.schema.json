@@ -1,0 +1,27 @@
+{
+  "$id": "case.schema.json",
+  "type": "object",
+  "required": ["id", "title", "context", "sideA", "sideB", "submittedBy", "createdAt"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9_-]{8,}$"},
+    "title": {"type": "string", "maxLength": 120},
+    "context": {"type": "string", "minLength": 50, "maxLength": 1800},
+    "sideA": {"type": "string", "minLength": 30, "maxLength": 800},
+    "sideB": {"type": "string", "minLength": 30, "maxLength": 800},
+    "tags": {"type": "array", "items": {"type": "string"}, "maxItems": 8},
+    "submittedBy": {"type": "string"},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "score": {"type": "number", "default": 0},
+    "signals": {
+      "type": "object",
+      "properties": {
+        "upvotes": {"type": "integer", "minimum": 0},
+        "downvotes": {"type": "integer", "minimum": 0},
+        "reports": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "status": {"type": "string", "enum": ["inbox", "queued", "live", "decided"], "default": "inbox"}
+  },
+  "additionalProperties": false
+}
