@@ -77,13 +77,26 @@ const JuryRuntime = (() => {
   }
 
   const transientState = {
-    queue: []
+    queue: [],
+    archive: []
   };
 
   async function writeQueue(ids) {
     transientState.queue = [...ids];
+    const payload = { ids: [...ids] };
+    dataCache.set('./data/cases.queue.json', payload);
     // In production this would persist to a database / API.
     console.debug('Queue updated', transientState.queue);
+    return payload;
+  }
+
+  async function loadQueue({ bust = false } = {}) {
+    const queue = await loadJSON('./data/cases.queue.json', { bust });
+    const ids = Array.isArray(queue?.ids) ? queue.ids : [];
+    if (!transientState.queue.length || bust) {
+      transientState.queue = [...ids];
+    }
+    return transientState.queue;
   }
 
   async function pickHourlyCase(now = new Date()) {
@@ -93,6 +106,37 @@ const JuryRuntime = (() => {
     if (!chosen) return null;
     await writeQueue([chosen.id]);
     return chosen;
+  }
+
+  async function prepareQueue({ count = 3, now = new Date() } = {}) {
+    const settings = await loadSettings();
+    const inbox = await loadJSON('./data/cases.inbox.json');
+    if (!Array.isArray(inbox?.cases) || !inbox.cases.length) return [];
+
+    const ranked = inbox.cases
+      .map((entry) => ({
+        id: entry.id,
+        score: computeHotScore(entry, settings.ranking, now)
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, Math.max(1, count));
+
+    const ids = ranked.map((item) => item.id);
+    await writeQueue(ids);
+    return ids;
+  }
+
+  async function drawNextQueuedCase({ now = new Date() } = {}) {
+    const queue = await loadQueue();
+    if (!queue.length) {
+      const prepared = await prepareQueue({ count: 1, now });
+      if (!prepared.length) return null;
+    }
+
+    const [nextId, ...rest] = transientState.queue;
+    await writeQueue(rest);
+    if (!nextId) return null;
+    return loadCaseById(nextId);
   }
 
   function hashSeed(...parts) {
@@ -172,14 +216,18 @@ const JuryRuntime = (() => {
     return scoreA > scoreB ? 'A' : 'B';
   }
 
-  function majority(votes) {
-    const tally = votes.reduce(
+  function tallyVotes(votes) {
+    return votes.reduce(
       (acc, vote) => {
         acc[vote] = (acc[vote] ?? 0) + 1;
         return acc;
       },
       { A: 0, B: 0, abstain: 0 }
     );
+  }
+
+  function majority(votes) {
+    const tally = tallyVotes(votes);
     if (tally.A === tally.B) {
       return tally.abstain > 0 ? 'split' : 'A';
     }
@@ -193,16 +241,31 @@ const JuryRuntime = (() => {
       .map((line) => line.text);
   }
 
-  function formatVerdict(judge, winner, factors) {
-    const seed = hashSeed('verdict', winner, factors.join('|'));
+  function formatSplit({ A, B, abstain }) {
+    const main = `${A}-${B}`;
+    if (!abstain) return main;
+    return `${main} • ${abstain} abstain`;
+  }
+
+  function formatVerdict(judge, winner, factors, votes) {
+    const tally = tallyVotes(votes);
+    const useFactors = factors.length ? factors : ['the overall balance of evidence'];
+    const seed = hashSeed('verdict', winner, useFactors.join('|'));
     const random = seededRandom(seed);
     const templateIndex = Math.floor(random() * judge.verdictTemplates.length);
     const template = judge.verdictTemplates[templateIndex];
     const joiner = ', ';
-    return fillTemplate(template, {
+    const text = fillTemplate(template, {
       winner,
-      factors: factors.join(joiner)
+      factors: useFactors.join(joiner)
     });
+    return {
+      winner,
+      factors: useFactors,
+      text,
+      tally,
+      split: formatSplit(tally)
+    };
   }
 
   async function runTrial(caseId) {
@@ -240,7 +303,7 @@ const JuryRuntime = (() => {
     const votes = panel.map((juror) => jurorVote(juror, caseData, transcript));
     const winner = majority(votes);
     const factors = extractFactors(transcript);
-    const verdict = formatVerdict(judge, winner, factors);
+    const verdict = formatVerdict(judge, winner, factors, votes);
 
     return {
       case: caseData,
@@ -252,6 +315,41 @@ const JuryRuntime = (() => {
     };
   }
 
+  async function recordVerdict(trialResult, decidedAt = new Date()) {
+    if (!trialResult?.case?.id) {
+      throw new Error('Cannot record verdict without a case id.');
+    }
+    const archive = await loadJSON('./data/cases.archive.json', { bust: true });
+    const existing = Array.isArray(archive?.cases) ? archive.cases : [];
+    const entry = {
+      id: trialResult.case.id,
+      verdict: {
+        winner: trialResult.verdict.winner,
+        split: trialResult.verdict.split,
+        factors: trialResult.verdict.factors
+      },
+      summary: trialResult.verdict.text,
+      decidedAt: decidedAt.toISOString()
+    };
+    const updated = [
+      ...existing.filter((item) => item.id !== entry.id),
+      entry
+    ];
+    const payload = { cases: updated };
+    transientState.archive = updated;
+    dataCache.set('./data/cases.archive.json', payload);
+    console.debug('Archive updated', entry);
+    return entry;
+  }
+
+  async function progressTrial({ now = new Date() } = {}) {
+    const caseData = await drawNextQueuedCase({ now });
+    if (!caseData) return null;
+    const result = await runTrial(caseData.id);
+    await recordVerdict(result, now);
+    return result;
+  }
+
   return {
     loadJSON,
     loadSettings,
@@ -259,7 +357,11 @@ const JuryRuntime = (() => {
     computeHotScore,
     rankAndPickTop,
     pickHourlyCase,
+    prepareQueue,
+    drawNextQueuedCase,
     runTrial,
+    recordVerdict,
+    progressTrial,
     _state: transientState
   };
 })();
