@@ -350,6 +350,111 @@ const JuryRuntime = (() => {
     return result;
   }
 
+  /**
+   * Call Groq's chat completion endpoint to score a case using an external model.
+   * The helpers stay deterministic by only formatting the prompt and handling the
+   * HTTP call — no secrets are stored in state.
+   */
+  async function requestGroqVerdict({
+    apiKey,
+    caseData,
+    transcript = [],
+    model = 'llama3-70b-8192',
+    signal
+  } = {}) {
+    if (!apiKey) {
+      throw new Error('Groq API key is required.');
+    }
+    if (!caseData) {
+      throw new Error('A case must be queued before requesting Groq reasoning.');
+    }
+
+    const summaryLines = [
+      `Case ID: ${caseData.id}`,
+      `Title: ${caseData.title}`,
+      `Context: ${caseData.context}`,
+      `Side A position: ${caseData.sideA}`,
+      `Side B position: ${caseData.sideB}`
+    ];
+
+    if (Array.isArray(caseData.tags) && caseData.tags.length) {
+      summaryLines.push(`Tags: ${caseData.tags.join(', ')}`);
+    }
+
+    const transcriptLines = Array.isArray(transcript)
+      ? transcript
+          .map((line) => `${line.by?.toUpperCase() ?? 'UNKNOWN'} (${line.phase}): ${line.text}`)
+          .slice(-12)
+      : [];
+
+    const userPrompt = [
+      'Review the following civic dispute and act as a neutral deliberation analyst.',
+      'Assess both arguments and produce a balanced verdict with a short rationale and explicit vote tally.',
+      '',
+      summaryLines.join('\n'),
+      '',
+      transcriptLines.length
+        ? ['Recent transcript snippets:', ...transcriptLines].join('\n')
+        : 'No transcript is available yet; base your reasoning on the brief alone.',
+      '',
+      'Respond in the following JSON shape:',
+      '{"winner": "A or B or split", "summary": "2-3 sentence rationale", "factors": ["key factor"], "recommended_actions": ["next step"], "confidence": "high/medium/low"}'
+    ].join('\n');
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.2,
+        max_tokens: 800,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are an impartial civic juror AI. Weigh evidence from both sides, explain your reasoning, and keep tone professional.'
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ]
+      }),
+      signal
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Groq request failed: ${response.status} ${text}`);
+    }
+
+    const payload = await response.json();
+    const content = payload?.choices?.[0]?.message?.content ?? '';
+
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (error) {
+      parsed = {
+        winner: 'undetermined',
+        summary: content || 'Groq did not return structured JSON.',
+        factors: [],
+        recommended_actions: [],
+        confidence: 'unknown'
+      };
+    }
+
+    return {
+      model,
+      content,
+      parsed,
+      raw: payload
+    };
+  }
+
   return {
     loadJSON,
     loadSettings,
@@ -362,6 +467,7 @@ const JuryRuntime = (() => {
     runTrial,
     recordVerdict,
     progressTrial,
+    requestGroqVerdict,
     _state: transientState
   };
 })();
