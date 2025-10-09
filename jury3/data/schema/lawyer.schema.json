@@ -1,0 +1,22 @@
+{
+  "$id": "lawyer.schema.json",
+  "type": "object",
+  "required": ["id", "name", "angle", "tone", "style", "templates"],
+  "properties": {
+    "id": {"type": "string"},
+    "name": {"type": "string"},
+    "angle": {"type": "string"},
+    "tone": {"type": "string"},
+    "style": {"type": "array", "items": {"type": "string"}},
+    "templates": {
+      "type": "object",
+      "required": ["opening", "rebuttal", "closing"],
+      "properties": {
+        "opening": {"type": "array", "items": {"type": "string"}},
+        "rebuttal": {"type": "array", "items": {"type": "string"}},
+        "closing": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "additionalProperties": false
+}
