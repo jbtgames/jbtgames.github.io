@@ -1,0 +1,192 @@
+{
+  "cases": [
+    {
+      "id": "newsroom-ai-credits",
+      "case": {
+        "id": "newsroom-ai-credits",
+        "title": "Should AI assistants receive on-air credit for investigative packages?",
+        "context": "A national newsroom wants to credit its AI summarization system alongside reporters on televised investigations.",
+        "sideA": "The reporters' guild argues contractual byline language requires human credit unless renegotiated.",
+        "sideB": "Studio leadership claims acknowledging AI tooling builds transparency and audience trust.",
+        "tags": [
+          "media",
+          "labor",
+          "ai"
+        ],
+        "signals": {
+          "upvotes": 1840,
+          "downvotes": 620,
+          "reports": 14
+        },
+        "score": 87.4,
+        "createdAt": "2024-08-10T14:05:00Z",
+        "submittedBy": "UnionWatch"
+      },
+      "panel": [
+        {
+          "id": "pragmatist",
+          "name": "The Pragmatist"
+        },
+        {
+          "id": "empath",
+          "name": "The Empath"
+        },
+        {
+          "id": "logician",
+          "name": "The Logician"
+        },
+        {
+          "id": "traditionalist",
+          "name": "The Traditionalist"
+        },
+        {
+          "id": "progressive",
+          "name": "The Progressive"
+        },
+        {
+          "id": "realist",
+          "name": "The Realist"
+        },
+        {
+          "id": "contrarian",
+          "name": "The Contrarian"
+        }
+      ],
+      "votes": [
+        "A",
+        "A",
+        "B",
+        "A",
+        "A",
+        "B",
+        "A"
+      ],
+      "transcript": [
+        {
+          "by": "A",
+          "phase": "opening",
+          "text": "Our contract binds credits to human journalists; adding software without bargaining weakens accountability."
+        },
+        {
+          "by": "B",
+          "phase": "opening",
+          "text": "Viewers deserve to know when automation helped surface leads\u2014it's disclosure, not theft."
+        },
+        {
+          "by": "A",
+          "phase": "rebuttal",
+          "text": "Transparency can happen in footnotes; credit implies authorship and erodes reporter leverage."
+        },
+        {
+          "by": "B",
+          "phase": "closing",
+          "text": "Audiences already assume AI is involved; naming it keeps trust intact while honoring innovation."
+        }
+      ],
+      "verdict": {
+        "winner": "A",
+        "split": "5-2",
+        "factors": [
+          "union contract language",
+          "documented overtime"
+        ]
+      },
+      "summary": "Panel sided with the reporters' guild, finding the studio must negotiate before crediting AI systems on investigative packages.",
+      "decidedAt": "2024-08-22T18:20:00Z"
+    },
+    {
+      "id": "city-ebike-curfew",
+      "case": {
+        "id": "city-ebike-curfew",
+        "title": "Can the city enforce an overnight e-bike delivery curfew?",
+        "context": "City officials propose a midnight-to-6am e-bike ban after a spike in late-night collisions.",
+        "sideA": "Delivery platforms argue the curfew unfairly cuts income for riders who rely on overnight demand.",
+        "sideB": "The transportation department cites emergency room data and wants a temporary cooling-off period.",
+        "tags": [
+          "mobility",
+          "policy",
+          "safety"
+        ],
+        "signals": {
+          "upvotes": 960,
+          "downvotes": 780,
+          "reports": 22
+        },
+        "score": 68.1,
+        "createdAt": "2024-07-02T09:30:00Z",
+        "submittedBy": "CivicPulse"
+      },
+      "panel": [
+        {
+          "id": "pragmatist",
+          "name": "The Pragmatist"
+        },
+        {
+          "id": "empath",
+          "name": "The Empath"
+        },
+        {
+          "id": "logician",
+          "name": "The Logician"
+        },
+        {
+          "id": "traditionalist",
+          "name": "The Traditionalist"
+        },
+        {
+          "id": "progressive",
+          "name": "The Progressive"
+        },
+        {
+          "id": "realist",
+          "name": "The Realist"
+        },
+        {
+          "id": "contrarian",
+          "name": "The Contrarian"
+        }
+      ],
+      "votes": [
+        "B",
+        "B",
+        "A",
+        "B",
+        "B",
+        "A",
+        "A"
+      ],
+      "transcript": [
+        {
+          "by": "A",
+          "phase": "opening",
+          "text": "Riders already passed safety courses; the city should target reckless actors, not gut incomes."
+        },
+        {
+          "by": "B",
+          "phase": "opening",
+          "text": "ER admissions tripled after midnight; a short pause gives space to add lighting and training."
+        },
+        {
+          "by": "A",
+          "phase": "rebuttal",
+          "text": "Platforms offered to co-fund reflective gear\u2014work with them rather than impose a blanket ban."
+        },
+        {
+          "by": "B",
+          "phase": "closing",
+          "text": "A 90-day pilot with weekly data releases balances livelihoods with immediate public safety."
+        }
+      ],
+      "verdict": {
+        "winner": "B",
+        "split": "4-3",
+        "factors": [
+          "public safety reports",
+          "temporary waiver offered"
+        ]
+      },
+      "summary": "Majority let the curfew pilot proceed, requiring the city to publish weekly data on delivery delays during the 90-day trial.",
+      "decidedAt": "2024-07-14T11:05:00Z"
+    }
+  ]
+}

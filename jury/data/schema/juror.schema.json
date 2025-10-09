@@ -1,0 +1,30 @@
+{
+  "$id": "juror.schema.json",
+  "type": "object",
+  "required": ["id", "name", "biases", "voice", "voteHeuristics"],
+  "properties": {
+    "id": {"type": "string"},
+    "name": {"type": "string"},
+    "voice": {"type": "string"},
+    "biases": {"type": "array", "items": {"type": "string"}},
+    "voteHeuristics": {
+      "type": "object",
+      "properties": {
+        "weights": {
+          "type": "object",
+          "properties": {
+            "facts": {"type": "number"},
+            "precedent": {"type": "number"},
+            "empathy": {"type": "number"},
+            "fairness": {"type": "number"},
+            "practicality": {"type": "number"}
+          },
+          "additionalProperties": false
+        },
+        "tiebreak": {"type": "string", "enum": ["A", "B", "abstain"]}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,74 @@
+{
+  "jurors": [
+    {
+      "id": "pragmatist",
+      "name": "The Pragmatist",
+      "voice": "plain, outcome-focused",
+      "biases": ["workability", "trade-offs"],
+      "voteHeuristics": {
+        "weights": {"facts": 0.25, "precedent": 0.15, "empathy": 0.15, "fairness": 0.2, "practicality": 0.25},
+        "tiebreak": "A"
+      }
+    },
+    {
+      "id": "empath",
+      "name": "The Empath",
+      "voice": "gentle, people-first",
+      "biases": ["harm reduction", "intent"],
+      "voteHeuristics": {
+        "weights": {"facts": 0.15, "precedent": 0.1, "empathy": 0.35, "fairness": 0.25, "practicality": 0.15},
+        "tiebreak": "B"
+      }
+    },
+    {
+      "id": "logician",
+      "name": "The Logician",
+      "voice": "structured, concise",
+      "biases": ["consistency", "burden of proof"],
+      "voteHeuristics": {
+        "weights": {"facts": 0.35, "precedent": 0.25, "empathy": 0.05, "fairness": 0.2, "practicality": 0.15},
+        "tiebreak": "A"
+      }
+    },
+    {
+      "id": "traditionalist",
+      "name": "The Traditionalist",
+      "voice": "measured, conservative",
+      "biases": ["norms", "personal responsibility"],
+      "voteHeuristics": {
+        "weights": {"facts": 0.3, "precedent": 0.25, "empathy": 0.1, "fairness": 0.2, "practicality": 0.15},
+        "tiebreak": "A"
+      }
+    },
+    {
+      "id": "progressive",
+      "name": "The Progressive",
+      "voice": "reform-minded",
+      "biases": ["equity", "context"],
+      "voteHeuristics": {
+        "weights": {"facts": 0.2, "precedent": 0.15, "empathy": 0.25, "fairness": 0.25, "practicality": 0.15},
+        "tiebreak": "B"
+      }
+    },
+    {
+      "id": "realist",
+      "name": "The Realist",
+      "voice": "candid, unsentimental",
+      "biases": ["likelihoods", "incentives"],
+      "voteHeuristics": {
+        "weights": {"facts": 0.3, "precedent": 0.15, "empathy": 0.1, "fairness": 0.2, "practicality": 0.25},
+        "tiebreak": "A"
+      }
+    },
+    {
+      "id": "contrarian",
+      "name": "The Contrarian",
+      "voice": "probing, skeptical",
+      "biases": ["burden shifting", "devil's advocate"],
+      "voteHeuristics": {
+        "weights": {"facts": 0.25, "precedent": 0.2, "empathy": 0.1, "fairness": 0.2, "practicality": 0.25},
+        "tiebreak": "abstain"
+      }
+    }
+  ]
+}

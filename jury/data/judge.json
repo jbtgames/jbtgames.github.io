@@ -1,0 +1,16 @@
+{
+  "interjections": [
+    "Counsel, keep your remarks tethered to the record.",
+    "We will avoid speculation. Address the evidence.",
+    "One at a time. Finish your point, then we'll hear the response."
+  ],
+  "disallow": [
+    "personal attacks",
+    "hearsay without foundation",
+    "introducing new facts after closings"
+  ],
+  "verdictTemplates": [
+    "Having considered the arguments and the record, the court finds for {winner}. The decisive factors were {factors}.",
+    "On balance of evidence and credibility, judgment is entered for {winner}. Key considerations: {factors}."
+  ]
+}

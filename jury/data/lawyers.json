@@ -1,0 +1,172 @@
+{
+  "lawyers": [
+    {
+      "id": "analyst",
+      "name": "The Analyst",
+      "angle": "Evidence-first; resolves contradictions; timeline discipline.",
+      "tone": "calm, precise, unemotional",
+      "style": ["short paragraphs", "few adverbs", "no slang"],
+      "templates": {
+        "opening": [
+          "The issue is straightforward once we follow the record. {thesis}",
+          "We should separate allegation from proof. {thesis}"
+        ],
+        "rebuttal": [
+          "That claim introduces speculation. The exhibits show {evidence}.",
+          "Emotion aside, the undisputed facts are {facts}."
+        ],
+        "closing": [
+          "Apply the same standard to both sides. On that standard, {side} prevails.",
+          "When we remove conjecture, only {side}'s account remains consistent."
+        ]
+      }
+    },
+    {
+      "id": "humanist",
+      "name": "The Humanist",
+      "angle": "Consequences and lived impact; fairness beyond strict legality.",
+      "tone": "measured empathy; respectful",
+      "style": ["story-first", "inclusive language"],
+      "templates": {
+        "opening": [
+          "This case is about people and the harm they carried. {thesis}",
+          "We can enforce rules without forgetting the human cost. {thesis}"
+        ],
+        "rebuttal": [
+          "Facts matter, but harm matters too. Here, the harm is {harm}.",
+          "Rigid readings erase context; justice should account for {context}."
+        ],
+        "closing": [
+          "If justice means anything, it means relief where harm was real. {side} deserves that relief.",
+          "Compassion is not bias—it's proportionality. The fair result favors {side}."
+        ]
+      }
+    },
+    {
+      "id": "aggressor",
+      "name": "The Aggressor",
+      "angle": "Accountability; highlights negligence and contradictions forcefully.",
+      "tone": "assertive, direct",
+      "style": ["rhetorical questions", "crisp cadence"],
+      "templates": {
+        "opening": [
+          "We don't reward reckless choices. {thesis}",
+          "Responsibility isn't optional. {thesis}"
+        ],
+        "rebuttal": [
+          "When did excuses become evidence? The record shows {evidence}.",
+          "You can't claim {claim} and ignore {counterfact}."
+        ],
+        "closing": [
+          "Standards matter. Hold {opponent} to them.",
+          "Actions have consequences. The verdict is for {side}."
+        ]
+      }
+    },
+    {
+      "id": "idealist",
+      "name": "The Idealist",
+      "angle": "Principle, rights, and consistent rules; slippery slope checks.",
+      "tone": "principled, steady",
+      "style": ["norms and duties", "rights language"],
+      "templates": {
+        "opening": [
+          "We decide who we are by the rules we enforce. {thesis}",
+          "Principle—not convenience—should guide this verdict. {thesis}"
+        ],
+        "rebuttal": [
+          "If we accept that premise, we license {badOutcome}.",
+          "Equal cases deserve equal outcomes. Compare {precedent}."
+        ],
+        "closing": [
+          "Uphold the principle today, avoid injustice tomorrow. Find for {side}.",
+          "Consistent rules protect everyone. The result must favor {side}."
+        ]
+      }
+    },
+    {
+      "id": "cynic",
+      "name": "The Cynic",
+      "angle": "Realpolitik; cuts through performative claims; probability over purity.",
+      "tone": "dry, skeptical",
+      "style": ["plainspoken", "understated sarcasm"],
+      "templates": {
+        "opening": [
+          "Spare the theater. Look at what actually happened. {thesis}",
+          "Everyone has motives. Only one account fits the incentives. {thesis}"
+        ],
+        "rebuttal": [
+          "If that were true, they'd have {expectedAction}—they didn't.",
+          "We're told a tidy story; the messy facts are {facts}."
+        ],
+        "closing": [
+          "Pick the account that survives contact with reality. That's {side}.",
+          "Justice isn't naive. Rule for {side}."
+        ]
+      }
+    },
+    {
+      "id": "technician",
+      "name": "The Technician",
+      "angle": "Procedure, precedent, statute; narrow, defensive wins.",
+      "tone": "formal, textbook",
+      "style": ["citations", "definitions", "elements tests"],
+      "templates": {
+        "opening": [
+          "The controlling standard is {standard}. {thesis}",
+          "Elements are not suggestions; each must be met. {thesis}"
+        ],
+        "rebuttal": [
+          "That argument fails element {n}: {elementReason}.",
+          "Precedent {cite} forecloses their position."
+        ],
+        "closing": [
+          "On law and record, {side} prevails.",
+          "No element, no claim. Verdict for {side}."
+        ]
+      }
+    },
+    {
+      "id": "storyteller",
+      "name": "The Storyteller",
+      "angle": "Narrative coherence; relatable analogies; credibility attacks.",
+      "tone": "engaging, vivid",
+      "style": ["concrete examples", "analogy"],
+      "templates": {
+        "opening": [
+          "Here's the story the evidence tells. {thesis}",
+          "If this happened on your street, you'd call it {label}. {thesis}"
+        ],
+        "rebuttal": [
+          "Their version skips the moment when {keyBeat}—because it doesn't fit.",
+          "A credible story doesn't need patchwork—this one does."
+        ],
+        "closing": [
+          "The simplest true story favors {side}.",
+          "Credibility is the compass. It points to {side}."
+        ]
+      }
+    },
+    {
+      "id": "showman",
+      "name": "The Showman",
+      "angle": "Charisma and memorable framing (kept within decorum).",
+      "tone": "bold, quotable",
+      "style": ["hooks", "parallelism", "contrast"],
+      "templates": {
+        "opening": [
+          "This case tests our standards when no one’s watching. {thesis}",
+          "If rules mean anything, they must mean something here. {thesis}"
+        ],
+        "rebuttal": [
+          "Noise isn't proof. Proof is {evidence}.",
+          "A louder story isn't a truer story."
+        ],
+        "closing": [
+          "Make the standard clear. Find for {side}.",
+          "Leave no doubt: the verdict is {side}."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "trial": {
+    "rounds": 3,
+    "jurorCount": 7,
+    "maxCharsPerStatement": 420,
+    "typingDelayMs": 350
+  },
+  "ranking": {
+    "hotScoreWeights": {
+      "upvotes": 1.0,
+      "downvotes": -0.8,
+      "ageHalfLifeHours": 12,
+      "reportPenalty": -5.0
+    },
+    "minScoreToQueue": 5
+  },
+  "security": {
+    "profanityBlocklist": ["slur1", "slur2"],
+    "piiFilters": ["email", "phone", "address"],
+    "maxLinksPerSubmission": 1
+  },
+  "scheduler": {
+    "timezone": "America/Edmonton",
+    "hourlySlots": 1,
+    "majorCaseEveryHours": 3
+  }
+}
