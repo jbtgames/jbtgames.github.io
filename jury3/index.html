@@ -7,18 +7,20 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/variable.css">
   <style>
     :root {
-      color-scheme: light dark;
-      --bg: linear-gradient(135deg, #eef3ff 0%, #f6edff 40%, #e9f7ff 100%);
-      --text: #12152b;
-      --muted: #4d5470;
-      --muted-strong: #1f2238;
-      --accent: #5f4dff;
-      --accent-strong: #2f27ff;
-      --accent-soft: rgba(95, 77, 255, 0.12);
-      --border: rgba(18, 21, 43, 0.12);
-      --card-bg: rgba(255, 255, 255, 0.78);
-      --surface: rgba(255, 255, 255, 0.6);
-      --shadow: 0 32px 64px rgba(18, 21, 43, 0.14);
+      color-scheme: only light;
+      --bg: linear-gradient(135deg, #fef6ec 0%, #f0f7ff 45%, #f9f2ff 100%);
+      --text: #0f1b3d;
+      --muted: #445274;
+      --muted-strong: #152046;
+      --accent: #6366f1;
+      --accent-strong: #4338ca;
+      --accent-soft: rgba(99, 102, 241, 0.14);
+      --accent-secondary: #f97316;
+      --accent-secondary-soft: rgba(249, 115, 22, 0.16);
+      --border: rgba(15, 27, 61, 0.08);
+      --card-bg: rgba(255, 255, 255, 0.82);
+      --surface: rgba(255, 255, 255, 0.68);
+      --shadow: 0 28px 54px rgba(15, 27, 61, 0.16);
     }
 
     * {
@@ -224,10 +226,73 @@
     }
 
     .demo-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      align-items: start;
+    }
+
+    .trial-gate {
+      display: grid;
+      gap: 8px;
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+    }
+
+    .trial-tab {
+      display: inline-flex;
       align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: rgba(99, 102, 241, 0.08);
+      color: var(--accent-strong);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .trial-tab:disabled {
+      cursor: not-allowed;
+      opacity: 0.72;
+      box-shadow: none;
+    }
+
+    .trial-tab--ready {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+      color: #fff;
+      box-shadow: 0 18px 36px rgba(99, 102, 241, 0.28);
+    }
+
+    .trial-tab--ready:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 22px 42px rgba(99, 102, 241, 0.32);
+    }
+
+    .trial-tab--running {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    .trial-tab--deliberated {
+      background: var(--accent-secondary-soft);
+      color: var(--accent-secondary);
+    }
+
+    .trial-tab--done {
+      background: rgba(15, 27, 61, 0.08);
+      color: var(--muted-strong);
+    }
+
+    .trial-hint {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.4;
     }
 
     .demo-status {
@@ -424,18 +489,18 @@
     .button--primary {
       background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
       color: #fff;
-      box-shadow: 0 20px 38px rgba(95, 77, 255, 0.28);
+      box-shadow: 0 20px 38px rgba(99, 102, 241, 0.26);
     }
 
     .button--ghost {
-      background: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.78);
       color: var(--accent);
-      border: 1px solid rgba(95, 77, 255, 0.3);
+      border: 1px solid rgba(99, 102, 241, 0.34);
     }
 
     .button:hover {
       transform: translateY(-1px);
-      box-shadow: 0 24px 42px rgba(95, 77, 255, 0.25);
+      box-shadow: 0 24px 42px rgba(99, 102, 241, 0.28);
     }
 
     .section-intro {
@@ -475,6 +540,11 @@
       gap: 10px;
       align-items: baseline;
       justify-content: space-between;
+    }
+
+    .docket-title-group {
+      display: grid;
+      gap: 6px;
     }
 
     .docket-title {
@@ -569,9 +639,9 @@
         <span class="badge">Jury Game 3.0 sprint</span>
         <h1>Real-world controversies, rendered in living glass.</h1>
         <p>
-          We upgraded the docket with headline disputes — from ride-share pay floors to campus speech battles — so
-          moderators can observe how jurors weigh every metric before locking in a verdict. Jury 3.0 threads AI counsel,
-          shared state, and transparent evidence scoring into one modern control room.
+          The refreshed control room ships with a living feed of 50 headline controversies — from ride-share pay floors
+          to campus speech battles — so moderators can observe how jurors weigh every metric before locking in a verdict.
+          Jury 3.0 threads AI counsel, shared state, and transparent evidence scoring into one sunlit workspace.
         </p>
         <div class="pill-list">
           <span class="pill">Live docket sync</span>
@@ -587,19 +657,19 @@
       <div class="hero-foot">
         <div class="hero-grid">
           <div class="metric">
-            <span>3</span>
-            <span>spotlight controversies refreshed hourly</span>
+            <span>50</span>
+            <span>headline controversies pinned to the docket</span>
           </div>
           <div class="metric">
             <span>92%</span>
             <span>of jurors review metrics before voting</span>
           </div>
           <div class="metric">
-            <span>12</span>
+            <span>14</span>
             <span>agent personas cross-training this sprint</span>
           </div>
           <div class="metric">
-            <span>4</span>
+            <span>5</span>
             <span>moderator tools shipping next</span>
           </div>
         </div>
@@ -704,8 +774,9 @@
         <h2>Spotlight controversies on the docket</h2>
       </div>
       <p>
-        We’re rotating in real-world disputes that put the simulation’s decision metrics to work. Each listing surfaces
-        current signals so the bench can size up sentiment before the agents plead their case.
+        The docket caps at 50 active controversies pulled from today’s news cycle. Older filings sit at the top of the
+        feed while newer submissions collect near the bottom, and community votes nudge the hot score you’ll see on the
+        right.
       </p>
       <div id="docket-preview">
         <p class="demo-status">Loading docket metrics…</p>
@@ -724,11 +795,14 @@
       </p>
       <div class="demo-grid">
         <div class="demo-actions">
-          <button class="button button--primary" id="demo-queue">Pick hourly spotlight case</button>
-          <button class="button button--ghost" id="demo-submit" disabled>Submit to jury</button>
-          <button class="button button--ghost is-hidden" id="demo-judge" disabled>Run judge ruling</button>
+          <button class="button button--primary" id="demo-queue">Load next headline case</button>
+          <div class="trial-gate">
+            <button class="trial-tab" id="demo-submit" disabled>Pre-trial</button>
+            <span class="trial-hint" id="trial-hint">Queue a case to unlock the courtroom.</span>
+          </div>
+          <button class="button button--ghost is-hidden" id="demo-judge" disabled>Finalize judge ruling</button>
         </div>
-        <div class="demo-status" id="demo-status">Idle — queue a case to review metrics before the jury weighs in.</div>
+        <div class="demo-status" id="demo-status">Pre-trial — load a case to ready the courtroom.</div>
         <div class="demo-panel ai-panel">
           <h3>Groq deliberation boost</h3>
           <p>Bring your Groq API key to sample an additional AI verdict that weighs both sides of the dispute.</p>
@@ -796,6 +870,7 @@
       const verdictEl = document.getElementById('demo-verdict');
       const queueBtn = document.getElementById('demo-queue');
       const submitBtn = document.getElementById('demo-submit');
+      const trialHint = document.getElementById('trial-hint');
       const judgeBtn = document.getElementById('demo-judge');
       const docketEl = document.getElementById('docket-preview');
       const archiveEl = document.getElementById('archive-preview');
@@ -821,6 +896,50 @@
       function setGroqStatus(message) {
         if (groqStatusEl) {
           groqStatusEl.textContent = message;
+        }
+      }
+
+      const trialGateStates = {
+        idle: {
+          text: 'Pre-trial',
+          hint: 'Queue a case to unlock the courtroom.'
+        },
+        ready: {
+          text: 'Proceed to trial',
+          hint: 'Launch the courtroom to seat jurors and capture votes.'
+        },
+        running: {
+          text: 'Court in session…',
+          hint: 'Deliberation is underway — stay tuned for the jury ledger.'
+        },
+        deliberated: {
+          text: 'Awaiting judge review',
+          hint: 'Invite the judge to finalize the ruling and update the archive.'
+        },
+        done: {
+          text: 'Trial complete',
+          hint: 'Archive updated. Load another case to reopen the court.'
+        }
+      };
+
+      function setTrialGate(state = 'idle') {
+        if (!submitBtn) return;
+        const next = trialGateStates[state] ?? trialGateStates.idle;
+        submitBtn.dataset.state = state;
+        submitBtn.textContent = next.text;
+        submitBtn.disabled = state !== 'ready';
+        submitBtn.classList.remove('trial-tab--ready', 'trial-tab--running', 'trial-tab--deliberated', 'trial-tab--done');
+        if (state === 'ready') {
+          submitBtn.classList.add('trial-tab--ready');
+        } else if (state === 'running') {
+          submitBtn.classList.add('trial-tab--running');
+        } else if (state === 'deliberated') {
+          submitBtn.classList.add('trial-tab--deliberated');
+        } else if (state === 'done') {
+          submitBtn.classList.add('trial-tab--done');
+        }
+        if (trialHint) {
+          trialHint.textContent = next.hint;
         }
       }
 
@@ -888,6 +1007,7 @@
         if (!caseData) {
           caseEl.innerHTML = '<h3>Active case</h3><p>No case selected yet. Queue a spotlight dispute to inspect metrics before submitting to the jury.</p>';
           updateGroqButtonState();
+          setTrialGate('idle');
           return;
         }
 
@@ -1082,7 +1202,7 @@
       async function handleQueueClick() {
         setStatus('Loading latest case…');
         queueBtn.disabled = true;
-        if (submitBtn) submitBtn.disabled = true;
+        setTrialGate('idle');
         if (judgeBtn) {
           judgeBtn.disabled = true;
           judgeBtn.classList.add('is-hidden');
@@ -1105,7 +1225,7 @@
           renderGroqOutput(null);
           setStatus(`Queued case ${picked.id}. Review the metrics below, then submit to the jury.`);
           setGroqStatus('Case queued. Submit to the jury or request Groq deliberation with Groq.');
-          if (submitBtn) submitBtn.disabled = false;
+          setTrialGate('ready');
         } catch (error) {
           console.error(error);
           setStatus('Unable to queue a case. Check the console for details.');
@@ -1121,18 +1241,19 @@
       async function handleSubmitClick() {
         if (!latestCase) {
           setStatus('Queue a case before submitting to the jury.');
-          if (submitBtn) submitBtn.disabled = false;
+          setTrialGate('idle');
           return;
         }
         setStatus('Submitting case to jury…');
         queueBtn.disabled = true;
-        if (submitBtn) submitBtn.disabled = true;
+        setTrialGate('running');
         if (judgeBtn) judgeBtn.disabled = true;
         try {
           const result = await window.JuryRuntime.deliberateQueuedCase();
           if (!result) {
             setStatus('No case available to deliberate. Queue a submission first.');
             renderJuryResult(null);
+            setTrialGate('ready');
             return;
           }
           latestCase = result.case;
@@ -1143,6 +1264,7 @@
           renderVerdict(null);
           setStatus(`Jury completed deliberation for ${result.case.id}. Review their findings, then run the judge.`);
           setGroqStatus('Jury verdict ready — request Groq deliberation or run the judge for a final ruling.');
+          setTrialGate('deliberated');
           if (judgeBtn) {
             judgeBtn.classList.remove('is-hidden');
             judgeBtn.disabled = false;
@@ -1151,7 +1273,11 @@
           console.error(error);
           setStatus('Jury deliberation failed. Inspect the console output for more information.');
           setGroqStatus('Groq reasoning is unavailable until the error is resolved.');
-          if (submitBtn) submitBtn.disabled = false;
+          if (latestCase) {
+            setTrialGate('ready');
+          } else {
+            setTrialGate('idle');
+          }
         } finally {
           queueBtn.disabled = false;
           updateGroqButtonState();
@@ -1166,7 +1292,7 @@
         }
         setStatus('Running judge ruling…');
         queueBtn.disabled = true;
-        if (submitBtn) submitBtn.disabled = true;
+        setTrialGate('running');
         if (judgeBtn) judgeBtn.disabled = true;
         try {
           const result = await window.JuryRuntime.runJudgeRuling(latestDeliberation);
@@ -1179,13 +1305,14 @@
           setStatus(`Judge finalized the ruling for ${result.case.id}. Case archived for review.`);
           setGroqStatus('Trial complete — request Groq deliberation to compare reasoning.');
           if (judgeBtn) judgeBtn.classList.add('is-hidden');
-          if (submitBtn) submitBtn.disabled = true;
+          setTrialGate('done');
           renderArchivePreview({ bust: true });
         } catch (error) {
           console.error(error);
           setStatus('Judge ruling failed. Inspect the console output for more information.');
           setGroqStatus('Groq reasoning is unavailable until the error is resolved.');
           if (judgeBtn) judgeBtn.disabled = false;
+          setTrialGate('deliberated');
         } finally {
           queueBtn.disabled = false;
           updateGroqButtonState();
@@ -1228,40 +1355,81 @@
       async function renderDocketPreview() {
         if (!docketEl) return;
         try {
-          const inbox = await window.JuryRuntime.loadJSON('./data/cases.inbox.json');
-          const cases = Array.isArray(inbox?.cases) ? inbox.cases : [];
+          const [inboxPayload, settings] = await Promise.all([
+            window.JuryRuntime.loadInbox
+              ? window.JuryRuntime.loadInbox()
+              : window.JuryRuntime.loadJSON('./data/cases.inbox.json'),
+            window.JuryRuntime.loadSettings()
+          ]);
+          const cases = Array.isArray(inboxPayload?.cases) ? inboxPayload.cases.slice(0, 50) : [];
           if (!cases.length) {
             docketEl.innerHTML = '<p class="demo-status">No active submissions. Add a case to the data pack to continue.</p>';
             return;
           }
 
-          const list = cases
+          const now = new Date();
+          const computeHot = (entry) => {
+            try {
+              return window.JuryRuntime.computeHotScore(entry, settings.ranking, now);
+            } catch (error) {
+              return Number(entry?.score) || 0;
+            }
+          };
+
+          const chronological = cases
             .slice()
-            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-            .slice(0, 3)
-            .map((caseData) => {
+            .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+          const trendingOrder = cases
+            .slice()
+            .sort((a, b) => computeHot(b) - computeHot(a));
+          const trendingMap = new Map();
+          trendingOrder.forEach((entry, index) => {
+            trendingMap.set(entry.id, index + 1);
+          });
+
+          const list = chronological
+            .map((caseData, index) => {
               const tags = (caseData.tags || [])
                 .map((tag) => `<span class="demo-tag">${escapeHtml(tag)}</span>`)
                 .join('');
               const signals = caseData.signals || {};
-              const metrics = [
-                `Score ${formatNumber(caseData.score, { digits: 1 })}`,
-                `Upvotes ${formatNumber(signals.upvotes)}`,
-                `Downvotes ${formatNumber(signals.downvotes)}`
-              ]
+              const hotScore = computeHot(caseData);
+              const trendingRank = trendingMap.get(caseData.id);
+              const metricLabels = [];
+              if (trendingRank !== undefined) {
+                metricLabels.push(`Hot #${formatNumber(trendingRank, { digits: 0 })}`);
+              }
+              metricLabels.push(`Score ${formatNumber(hotScore, { digits: 1 })}`);
+              if (signals.upvotes !== undefined) {
+                metricLabels.push(`Upvotes ${formatNumber(signals.upvotes)}`);
+              }
+              if (signals.downvotes !== undefined) {
+                metricLabels.push(`Downvotes ${formatNumber(signals.downvotes)}`);
+              }
+              if (signals.reports !== undefined) {
+                metricLabels.push(`Reports ${formatNumber(signals.reports)}`);
+              }
+              const metrics = metricLabels
                 .map((label) => `<span class="metric-chip">${escapeHtml(label)}</span>`)
                 .join('');
+              const hotRankText = trendingRank !== undefined
+                ? `#${formatNumber(trendingRank, { digits: 0 })}`
+                : '—';
 
               return `
                 <li class="docket-item">
                   <div class="docket-header">
-                    <h3 class="docket-title">${escapeHtml(caseData.title)}</h3>
+                    <div class="docket-title-group">
+                      <span class="signal-pill">Filed #${escapeHtml(index + 1)}</span>
+                      <h3 class="docket-title">${escapeHtml(caseData.title)}</h3>
+                    </div>
                     <div class="docket-metrics">${metrics}</div>
                   </div>
                   <p>${escapeHtml(caseData.context)}</p>
                   <div class="demo-meta">
                     <span><strong>Filed:</strong> ${formatDate(caseData.createdAt)}</span>
                     <span><strong>Submitted by:</strong> ${escapeHtml(caseData.submittedBy || 'anonymous')}</span>
+                    <span><strong>Hot rank:</strong> ${escapeHtml(hotRankText)}</span>
                   </div>
                   <div class="demo-tags">${tags}</div>
                 </li>
@@ -1384,6 +1552,7 @@
         groqKeyInput.addEventListener('input', updateGroqButtonState);
       }
 
+      setTrialGate('idle');
       renderCase(null);
       renderJuryResult(null);
       renderVerdict(null);

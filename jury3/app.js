@@ -10,6 +10,8 @@
 
 const JuryRuntime = (() => {
   const dataCache = new Map();
+  const INBOX_PATH = './data/cases.inbox.json';
+  const INBOX_LIMIT = 50;
 
   async function loadJSON(path, { bust = false } = {}) {
     if (!bust && dataCache.has(path)) {
@@ -24,26 +26,34 @@ const JuryRuntime = (() => {
     return json;
   }
 
+  async function loadInbox({ bust = false } = {}) {
+    const payload = await loadJSON(INBOX_PATH, { bust });
+    const cases = Array.isArray(payload?.cases) ? payload.cases.slice(0, INBOX_LIMIT) : [];
+    const normalized = { ...payload, cases };
+    dataCache.set(INBOX_PATH, normalized);
+    return normalized;
+  }
+
   async function loadSettings() {
     return loadJSON('./data/settings.json');
   }
 
   async function loadCaseById(id) {
     const sources = [
-      './data/cases.inbox.json',
+      INBOX_PATH,
       './data/cases.queue.json',
       './data/cases.archive.json'
     ];
 
     for (const path of sources) {
-      const payload = await loadJSON(path);
+      const payload = path === INBOX_PATH ? await loadInbox() : await loadJSON(path);
       if (Array.isArray(payload?.cases)) {
         const match = payload.cases.find((c) => c.id === id);
         if (match) return match;
       }
       if (Array.isArray(payload?.ids)) {
         if (payload.ids.includes(id)) {
-          return loadJSON('./data/cases.inbox.json').then((inbox) =>
+          return loadInbox().then((inbox) =>
             inbox.cases.find((c) => c.id === id)
           );
         }
@@ -101,7 +111,7 @@ const JuryRuntime = (() => {
 
   async function pickHourlyCase(now = new Date()) {
     const settings = await loadSettings();
-    const inbox = await loadJSON('./data/cases.inbox.json');
+    const inbox = await loadInbox();
     const chosen = rankAndPickTop(inbox.cases, settings.ranking, now);
     if (!chosen) return null;
     await writeQueue([chosen.id]);
@@ -110,7 +120,7 @@ const JuryRuntime = (() => {
 
   async function prepareQueue({ count = 3, now = new Date() } = {}) {
     const settings = await loadSettings();
-    const inbox = await loadJSON('./data/cases.inbox.json');
+    const inbox = await loadInbox();
     if (!Array.isArray(inbox?.cases) || !inbox.cases.length) return [];
 
     const ranked = inbox.cases
@@ -489,6 +499,7 @@ const JuryRuntime = (() => {
 
   return {
     loadJSON,
+    loadInbox,
     loadSettings,
     loadCaseById,
     computeHotScore,
