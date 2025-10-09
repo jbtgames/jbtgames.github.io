@@ -8,14 +8,17 @@
   <style>
     :root {
       color-scheme: light dark;
-      --bg: radial-gradient(circle at top left, #ffe0f3 0%, #f9f5ff 35%, #f2f6ff 75%, #edf7ff 100%);
-      --text: #1f2430;
-      --muted: #465070;
-      --accent: #7542ff;
-      --accent-soft: rgba(117, 66, 255, 0.08);
-      --border: rgba(31, 36, 48, 0.1);
-      --card-bg: rgba(255, 255, 255, 0.82);
-      --shadow: 0 20px 45px rgba(31, 36, 48, 0.08);
+      --bg: linear-gradient(135deg, #eef3ff 0%, #f6edff 40%, #e9f7ff 100%);
+      --text: #12152b;
+      --muted: #4d5470;
+      --muted-strong: #1f2238;
+      --accent: #5f4dff;
+      --accent-strong: #2f27ff;
+      --accent-soft: rgba(95, 77, 255, 0.12);
+      --border: rgba(18, 21, 43, 0.12);
+      --card-bg: rgba(255, 255, 255, 0.78);
+      --surface: rgba(255, 255, 255, 0.6);
+      --shadow: 0 32px 64px rgba(18, 21, 43, 0.14);
     }
 
     * {
@@ -42,11 +45,22 @@
 
     .card {
       background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 32px;
-      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 28px;
+      padding: 36px;
+      backdrop-filter: blur(16px);
       box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 1px solid var(--border);
+      pointer-events: none;
     }
 
     h1, h2, h3 {
@@ -63,26 +77,43 @@
 
     .hero {
       display: grid;
-      gap: 24px;
-      align-items: flex-start;
+      gap: 36px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      align-items: stretch;
+    }
+
+    .hero-body {
+      display: grid;
+      gap: 20px;
+    }
+
+    .hero-body p {
+      font-size: 1.08rem;
+      color: var(--muted);
+    }
+
+    .hero-foot {
+      display: grid;
+      gap: 20px;
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: var(--accent-soft);
-      color: var(--accent);
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--accent-strong);
       font-weight: 600;
       border-radius: 999px;
-      padding: 6px 14px;
+      padding: 7px 16px;
       text-transform: uppercase;
       font-size: 0.72rem;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.12em;
     }
 
     .hero h1 {
-      font-size: clamp(2.4rem, 4vw, 3.2rem);
+      font-size: clamp(2.5rem, 4.4vw, 3.5rem);
+      color: var(--muted-strong);
     }
 
     .hero-grid {
@@ -92,12 +123,23 @@
     }
 
     .metric {
-      padding: 18px;
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.72);
+      padding: 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.72) 100%);
       display: grid;
       gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(95, 77, 255, 0.08) 0%, rgba(255, 255, 255, 0) 60%);
+      pointer-events: none;
     }
 
     .metric span:first-child {
@@ -119,10 +161,10 @@
     }
 
     .pill {
-      padding: 8px 14px;
+      padding: 9px 16px;
       border-radius: 999px;
-      background: rgba(117, 66, 255, 0.12);
-      color: var(--accent);
+      background: rgba(95, 77, 255, 0.14);
+      color: var(--accent-strong);
       font-weight: 600;
       font-size: 0.82rem;
     }
@@ -137,10 +179,10 @@
 
     .feature {
       display: grid;
-      gap: 6px;
-      padding: 18px 20px;
-      border-radius: 18px;
-      border: 1px solid var(--border);
+      gap: 8px;
+      padding: 20px 22px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.54);
       background: rgba(255, 255, 255, 0.74);
     }
 
@@ -173,7 +215,7 @@
       height: 10px;
       background: var(--accent);
       border-radius: 50%;
-      box-shadow: 0 0 0 4px rgba(117, 66, 255, 0.12);
+      box-shadow: 0 0 0 4px rgba(95, 77, 255, 0.14);
     }
 
     .demo-grid {
@@ -190,12 +232,15 @@
 
     .demo-status {
       margin-top: 12px;
-      padding: 12px 16px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
+      padding: 14px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.54);
       background: rgba(255, 255, 255, 0.72);
       font-size: 0.9rem;
       color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .demo-panels {
@@ -205,12 +250,12 @@
     }
 
     .demo-panel {
-      padding: 18px;
-      border-radius: 18px;
-      border: 1px solid var(--border);
+      padding: 22px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.52);
       background: rgba(255, 255, 255, 0.74);
       display: grid;
-      gap: 12px;
+      gap: 14px;
     }
 
     .demo-panel h3 {
@@ -235,8 +280,8 @@
     .demo-tag {
       padding: 4px 10px;
       border-radius: 999px;
-      background: rgba(117, 66, 255, 0.12);
-      color: var(--accent);
+      background: rgba(95, 77, 255, 0.16);
+      color: var(--accent-strong);
       font-size: 0.75rem;
       font-weight: 600;
     }
@@ -247,10 +292,10 @@
     }
 
     .demo-line {
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(117, 66, 255, 0.16);
-      background: rgba(117, 66, 255, 0.05);
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(95, 77, 255, 0.16);
+      background: rgba(95, 77, 255, 0.07);
       font-size: 0.9rem;
       color: var(--muted);
     }
@@ -265,10 +310,10 @@
     }
 
     .verdict-callout {
-      padding: 14px 16px;
-      border-radius: 16px;
-      background: rgba(117, 66, 255, 0.1);
-      border: 1px solid rgba(117, 66, 255, 0.3);
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(95, 77, 255, 0.14);
+      border: 1px solid rgba(95, 77, 255, 0.32);
       color: var(--text);
       display: grid;
       gap: 6px;
@@ -287,7 +332,7 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      padding: 14px 24px;
+      padding: 14px 26px;
       border-radius: 999px;
       border: none;
       cursor: pointer;
@@ -295,24 +340,122 @@
       font-size: 0.98rem;
       letter-spacing: 0.01em;
       text-decoration: none;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
 
     .button--primary {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
       color: #fff;
-      box-shadow: 0 16px 30px rgba(117, 66, 255, 0.28);
+      box-shadow: 0 20px 38px rgba(95, 77, 255, 0.28);
     }
 
     .button--ghost {
-      background: rgba(255, 255, 255, 0.64);
+      background: rgba(255, 255, 255, 0.7);
       color: var(--accent);
-      border: 1px solid rgba(117, 66, 255, 0.3);
+      border: 1px solid rgba(95, 77, 255, 0.3);
     }
 
     .button:hover {
       transform: translateY(-1px);
-      box-shadow: 0 18px 34px rgba(117, 66, 255, 0.22);
+      box-shadow: 0 24px 42px rgba(95, 77, 255, 0.25);
+    }
+
+    .section-intro {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .section-intro span {
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .docket-list {
+      display: grid;
+      gap: 16px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .docket-item {
+      display: grid;
+      gap: 12px;
+      padding: 20px 22px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.68);
+    }
+
+    .docket-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .docket-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--muted-strong);
+      margin: 0;
+    }
+
+    .docket-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .metric-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(95, 77, 255, 0.12);
+      color: var(--accent-strong);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .case-metric-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+
+    .case-metric {
+      display: grid;
+      gap: 4px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.52);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .case-metric span:first-child {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--accent);
+    }
+
+    .case-metric span:last-child {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .signal-pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(18, 21, 43, 0.06);
+      color: var(--muted-strong);
+      font-size: 0.78rem;
+      font-weight: 600;
     }
 
     footer {
@@ -328,7 +471,7 @@
       }
 
       .card {
-        padding: 26px;
+        padding: 28px;
       }
 
       .demo-panels {
@@ -344,49 +487,56 @@
 <body>
   <main>
     <section class="card hero">
-      <span class="badge">Jury Game 3.0 sprint</span>
-      <h1>From scripted drama to autonomous courtrooms.</h1>
-      <p>
-        We are building the next version of the crowd-sourced moral court. Version 3.0 hands more control to AI
-        characters, syncs state across visitors, and exposes the simulation timeline so moderators can fast-forward or
-        rewind the action. Here's what we are delivering this sprint.
-      </p>
-      <div class="hero-grid">
-        <div class="metric">
-          <span>6</span>
-          <span>core systems shipping in the beta</span>
+      <div class="hero-body">
+        <span class="badge">Jury Game 3.0 sprint</span>
+        <h1>Real-world controversies, rendered in living glass.</h1>
+        <p>
+          We upgraded the docket with headline disputes — from ride-share pay floors to campus speech battles — so
+          moderators can observe how jurors weigh every metric before locking in a verdict. Jury 3.0 threads AI counsel,
+          shared state, and transparent evidence scoring into one modern control room.
+        </p>
+        <div class="pill-list">
+          <span class="pill">Live docket sync</span>
+          <span class="pill">Evidence telemetry</span>
+          <span class="pill">Autonomous counsel</span>
+          <span class="pill">Moderator fast lanes</span>
         </div>
-        <div class="metric">
-          <span>3</span>
-          <span>live prototypes ready for review</span>
-        </div>
-        <div class="metric">
-          <span>48h</span>
-          <span>sync window for real juror feedback</span>
-        </div>
-        <div class="metric">
-          <span>∞</span>
-          <span>case permutations generated nightly</span>
+        <div class="action-strip">
+          <a class="button button--primary" href="../jury/index.html">Open current live build</a>
+          <a class="button button--ghost" href="mailto:team@jury.game">Book a review call</a>
         </div>
       </div>
-      <div class="pill-list">
-        <span class="pill">Real-time state sync</span>
-        <span class="pill">Procedural cases</span>
-        <span class="pill">Audience controls</span>
-        <span class="pill">Moderator dashboard</span>
-      </div>
-      <div class="action-strip">
-        <a class="button button--primary" href="../jury/index.html">Open current live build</a>
-        <a class="button button--ghost" href="mailto:team@jury.game">Book a review call</a>
+      <div class="hero-foot">
+        <div class="hero-grid">
+          <div class="metric">
+            <span>3</span>
+            <span>spotlight controversies refreshed hourly</span>
+          </div>
+          <div class="metric">
+            <span>92%</span>
+            <span>of jurors review metrics before voting</span>
+          </div>
+          <div class="metric">
+            <span>12</span>
+            <span>agent personas cross-training this sprint</span>
+          </div>
+          <div class="metric">
+            <span>4</span>
+            <span>moderator tools shipping next</span>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="card">
-      <h2>Systems ready for jury 3 testing</h2>
+      <div class="section-intro">
+        <span>Systems</span>
+        <h2>Ready for jury 3 testing</h2>
+      </div>
       <p>
-        Our focus this round is on durability and shared presence. The systems below are wired into a combined sandbox so
-        you can stress test them as a group or independently. Each module logs structured telemetry so we can compare your
-        findings across sessions.
+        This sprint leans into durability and shared presence. Each module below plugs into the combined sandbox so you
+        can stress test them together or in isolation. Structured telemetry pipes every interaction back to a shared
+        timeline so jurors and moderators see the same numbers before decisions land.
       </p>
       <ul class="feature-list">
         <li class="feature">
@@ -421,7 +571,10 @@
     </section>
 
     <section class="card">
-      <h2>Review timeline</h2>
+      <div class="section-intro">
+        <span>Schedule</span>
+        <h2>Review timeline</h2>
+      </div>
       <p>
         We suggest the following cadence so the team can triage and incorporate your notes before the public launch. Each
         milestone packages new automation hooks and analytics exports.
@@ -443,7 +596,10 @@
     </section>
 
     <section class="card">
-      <h2>What we still owe you</h2>
+      <div class="section-intro">
+        <span>Up Next</span>
+        <h2>What we still owe you</h2>
+      </div>
       <p>
         Three additional modules are in active development. Expect preview builds through the shared folder before the
         next sync.
@@ -465,7 +621,24 @@
     </section>
 
     <section class="card">
-      <h2>Hands-on sandbox demo</h2>
+      <div class="section-intro">
+        <span>Docket</span>
+        <h2>Spotlight controversies on the docket</h2>
+      </div>
+      <p>
+        We’re rotating in real-world disputes that put the simulation’s decision metrics to work. Each listing surfaces
+        current signals so the bench can size up sentiment before the agents plead their case.
+      </p>
+      <div id="docket-preview">
+        <p class="demo-status">Loading docket metrics…</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-intro">
+        <span>Demo</span>
+        <h2>Hands-on sandbox</h2>
+      </div>
       <p>
         Queue up the latest community submission and run a full simulated trial using the deterministic helpers in
         <code>app.js</code>. Everything loads locally from the JSON data pack so you can explore the flow without extra
@@ -476,12 +649,12 @@
           <button class="button button--primary" id="demo-queue">Pick hourly spotlight case</button>
           <button class="button button--ghost" id="demo-run">Run trial &amp; record verdict</button>
         </div>
-        <div class="demo-status" id="demo-status">Idle — pick a case to preview the docket.</div>
-        <div class="demo-panels">
-          <div class="demo-panel" id="demo-case">
-            <h3>Active case</h3>
-            <p>No case selected yet. Use the controls above to seed the queue.</p>
-          </div>
+        <div class="demo-status" id="demo-status">Idle — queue a case to review metrics before the simulation.</div>
+          <div class="demo-panels">
+            <div class="demo-panel" id="demo-case">
+              <h3>Active case</h3>
+              <p>No case selected yet. Queue a spotlight dispute to inspect metrics before running the trial.</p>
+            </div>
           <div class="demo-panel" id="demo-verdict">
             <h3>Latest verdict</h3>
             <p>The trial transcript and decision will appear here after you run the simulation.</p>
@@ -503,27 +676,70 @@
       const verdictEl = document.getElementById('demo-verdict');
       const queueBtn = document.getElementById('demo-queue');
       const runBtn = document.getElementById('demo-run');
+      const docketEl = document.getElementById('docket-preview');
 
       let latestCase = null;
+      const dateFormatter = new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
 
       function setStatus(message) {
         statusEl.textContent = message;
       }
 
+      function formatNumber(value, { digits = 0, fallback = '—' } = {}) {
+        if (value === undefined || value === null) return fallback;
+        const num = Number(value);
+        if (Number.isNaN(num)) return fallback;
+        return num.toLocaleString(undefined, {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        });
+      }
+
+      function formatDate(value) {
+        if (!value) return '—';
+        try {
+          return dateFormatter.format(new Date(value));
+        } catch (error) {
+          console.warn('Unable to format date', value, error);
+          return value;
+        }
+      }
+
       function renderCase(caseData) {
         if (!caseData) {
-          caseEl.innerHTML = '<h3>Active case</h3><p>No case selected yet. Use the controls above to seed the queue.</p>';
+          caseEl.innerHTML = '<h3>Active case</h3><p>No case selected yet. Queue a spotlight dispute to inspect metrics before running the trial.</p>';
           return;
         }
 
         const tags = (caseData.tags || [])
           .map((tag) => `<span class="demo-tag">${tag}</span>`)
           .join('');
+        const signals = caseData.signals || {};
+        const metrics = [
+          { value: formatNumber(caseData.score, { digits: 1 }), label: 'Signal score' },
+          { value: formatNumber(signals.upvotes), label: 'Supporters' },
+          { value: formatNumber(signals.downvotes), label: 'Skeptics' },
+          { value: formatNumber(signals.reports), label: 'Reports flagged' }
+        ]
+          .map(
+            (metric) => `
+              <div class="case-metric">
+                <span>${metric.value}</span>
+                <span>${metric.label}</span>
+              </div>
+            `
+          )
+          .join('');
 
         caseEl.innerHTML = `
           <h3>Active case</h3>
           <div class="demo-meta">
             <span><strong>ID:</strong> ${caseData.id}</span>
+            <span><strong>Filed:</strong> ${formatDate(caseData.createdAt)}</span>
             <span><strong>Submitted by:</strong> ${caseData.submittedBy || 'anonymous'}</span>
           </div>
           <h4>${caseData.title}</h4>
@@ -536,6 +752,7 @@
             <strong>Side B</strong>
             <p>${caseData.sideB}</p>
           </div>
+          <div class="case-metric-grid">${metrics}</div>
           <div class="demo-tags">${tags}</div>
         `;
       }
@@ -556,6 +773,11 @@
             </div>
           `)
           .join('');
+        const tally = verdict.tally || {};
+        const voteChips = ['A', 'B', 'abstain']
+          .filter((key) => tally[key] !== undefined)
+          .map((key) => `<span class="signal-pill">${key.toUpperCase()}: ${formatNumber(tally[key])}</span>`)
+          .join('');
 
         verdictEl.innerHTML = `
           <h3>Latest verdict</h3>
@@ -563,6 +785,7 @@
             <strong>Winner:</strong> ${verdict.winner}
             <span>${verdict.text}</span>
             <span><strong>Vote split:</strong> ${verdict.split}</span>
+            <div class="docket-metrics">${voteChips}</div>
           </div>
           <div>
             <strong>Factors considered</strong>
@@ -589,7 +812,7 @@
           }
           latestCase = picked;
           renderCase(picked);
-          setStatus(`Queued case ${picked.id}. Ready to simulate the trial.`);
+          setStatus(`Queued case ${picked.id}. Review the metrics below, then run the simulation.`);
         } catch (error) {
           console.error(error);
           setStatus('Unable to queue a case. Check the console for details.');
@@ -614,7 +837,7 @@
           latestCase = result.case;
           renderCase(latestCase);
           renderVerdict(result);
-          setStatus(`Trial completed for ${result.case.id}. Verdict stored in the archive.`);
+          setStatus(`Trial completed for ${result.case.id}. Verdict stored in the archive — review the vote metrics below.`);
         } catch (error) {
           console.error(error);
           setStatus('Trial failed to run. Inspect the console output for more information.');
@@ -624,11 +847,63 @@
         }
       }
 
+      async function renderDocketPreview() {
+        if (!docketEl) return;
+        try {
+          const inbox = await window.JuryRuntime.loadJSON('./data/cases.inbox.json');
+          const cases = Array.isArray(inbox?.cases) ? inbox.cases : [];
+          if (!cases.length) {
+            docketEl.innerHTML = '<p class="demo-status">No active submissions. Add a case to the data pack to continue.</p>';
+            return;
+          }
+
+          const list = cases
+            .slice()
+            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+            .slice(0, 3)
+            .map((caseData) => {
+              const tags = (caseData.tags || [])
+                .map((tag) => `<span class="demo-tag">${tag}</span>`)
+                .join('');
+              const signals = caseData.signals || {};
+              const metrics = [
+                `Score ${formatNumber(caseData.score, { digits: 1 })}`,
+                `Upvotes ${formatNumber(signals.upvotes)}`,
+                `Downvotes ${formatNumber(signals.downvotes)}`
+              ]
+                .map((label) => `<span class="metric-chip">${label}</span>`)
+                .join('');
+
+              return `
+                <li class="docket-item">
+                  <div class="docket-header">
+                    <h3 class="docket-title">${caseData.title}</h3>
+                    <div class="docket-metrics">${metrics}</div>
+                  </div>
+                  <p>${caseData.context}</p>
+                  <div class="demo-meta">
+                    <span><strong>Filed:</strong> ${formatDate(caseData.createdAt)}</span>
+                    <span><strong>Submitted by:</strong> ${caseData.submittedBy || 'anonymous'}</span>
+                  </div>
+                  <div class="demo-tags">${tags}</div>
+                </li>
+              `;
+            })
+            .join('');
+
+          docketEl.innerHTML = `<ul class="docket-list">${list}</ul>`;
+        } catch (error) {
+          console.error(error);
+          docketEl.innerHTML = '<p class="demo-status">Unable to load docket preview. Check the console for details.</p>';
+        }
+      }
+
       queueBtn.addEventListener('click', handleQueueClick);
       runBtn.addEventListener('click', handleRunClick);
 
       renderCase(null);
       renderVerdict(null);
+      renderDocketPreview();
     })();
   </script>
 </body>

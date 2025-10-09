@@ -1,16 +1,42 @@
 {
   "cases": [
     {
-      "id": "dog-noise-9a2f",
-      "title": "Late-night dog noise dispute",
-      "context": "A tenant reports months of disrupted sleep due to a neighbor’s dog barking past midnight. The neighbor claims they’re training the dog and work late shifts causing inconsistent schedules.",
-      "sideA": "Tenant seeks fines or quiet hours enforcement.",
-      "sideB": "Neighbor requests leniency during training; proposes mitigations.",
-      "tags": ["neighbors", "noise"],
-      "submittedBy": "user_1289",
-      "createdAt": "2025-10-09T12:05:00Z",
-      "signals": {"upvotes": 14, "downvotes": 3, "reports": 0},
-      "score": 12.6,
+      "id": "nyc-ridefloor-2023",
+      "title": "NYC ride-share pay floor showdown",
+      "context": "New York City's Taxi and Limousine Commission approved a 2024 update to the ride-share driver pay floor after Uber and Lyft sued to block an earlier increase. Drivers say the revised formula still leaves them absorbing higher fuel and lease costs while the companies cite slowing demand and argue the city should revisit the pace of raises.",
+      "sideA": "Coalition of app-based drivers asks the court to keep the updated pay floor in place, pointing to TLC trip data that shows most workers are still below the $30 per hour target once expenses are deducted.",
+      "sideB": "Ride-share platforms request a pause on the increase while the TLC studies post-pandemic ridership trends, proposing a temporary fuel surcharge instead of a permanent rate hike.",
+      "tags": ["labor", "transportation", "policy"],
+      "submittedBy": "user_4021",
+      "createdAt": "2024-11-03T09:30:00Z",
+      "signals": {"upvotes": 61, "downvotes": 18, "reports": 1},
+      "score": 44.3,
+      "status": "inbox"
+    },
+    {
+      "id": "stream-pass-2024",
+      "title": "Streaming password crackdown fairness dispute",
+      "context": "A leading streaming platform began requiring primary household verification every 31 days, citing the need to curb widespread account sharing. Long-time subscribers in multi-generational families say the rule cuts off students and caretakers who live apart, while the company notes that rivals have made similar moves to fund new productions.",
+      "sideA": "Subscriber coalition wants a compliance grace period and an expanded list of verified locations so relatives who split time between homes are not locked out of content they help pay for.",
+      "sideB": "Platform legal team argues the policy matches industry standards and offers discounted add-on slots for extra viewers, urging the court to affirm the enforcement window.",
+      "tags": ["consumer rights", "media"],
+      "submittedBy": "user_2380",
+      "createdAt": "2024-10-15T15:12:00Z",
+      "signals": {"upvotes": 48, "downvotes": 25, "reports": 2},
+      "score": 31.8,
+      "status": "inbox"
+    },
+    {
+      "id": "campus-speaker-cc",
+      "title": "Campus disinvitation over protest risk",
+      "context": "Clearwater College invited a nationally known journalist to speak about public health disinformation, then rescinded the event after student organizers warned of large counter-protests. The journalist says the decision undermines the school's academic freedom pledge, while administrators cite security staffing limits and prior clashes at similar events.",
+      "sideA": "Journalist and civil liberties groups ask the court to require the college to honor the speaking agreement or pay damages, arguing the cancellation chills debate on urgent topics.",
+      "sideB": "College trustees request declaratory relief confirming they may postpone the lecture until they can guarantee safety, emphasizing recent campus police overtime costs and limited auditorium capacity.",
+      "tags": ["free speech", "education", "safety"],
+      "submittedBy": "user_3104",
+      "createdAt": "2024-09-28T20:45:00Z",
+      "signals": {"upvotes": 72, "downvotes": 14, "reports": 3},
+      "score": 52.5,
       "status": "inbox"
     }
   ]

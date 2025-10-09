@@ -1,9 +1,16 @@
 {
   "cases": [
     {
-      "id": "dog-noise-9a2f",
-      "verdict": {"winner": "A", "split": "4–3", "factors": ["clear pattern of disturbance", "feasible mitigation"]},
-      "decidedAt": "2025-10-09T13:00:00Z"
+      "id": "newsroom-ai-credits",
+      "verdict": {"winner": "A", "split": "5-2", "factors": ["union contract language", "documented overtime"]},
+      "summary": "Panel sided with the reporters' guild, finding the studio must negotiate before crediting AI systems on investigative packages.",
+      "decidedAt": "2024-08-22T18:20:00Z"
+    },
+    {
+      "id": "city-ebike-curfew",
+      "verdict": {"winner": "B", "split": "4-3", "factors": ["public safety reports", "temporary waiver offered"]},
+      "summary": "Majority let the curfew pilot proceed, requiring the city to publish weekly data on delivery delays during the 90-day trial.",
+      "decidedAt": "2024-07-14T11:05:00Z"
     }
   ]
 }
