@@ -268,12 +268,11 @@ const JuryRuntime = (() => {
     };
   }
 
-  async function runTrial(caseId) {
+  async function deliberateCase(caseId) {
     const settings = await loadSettings();
-    const [lawyersPack, jurorsPack, judge, prompts, caseData] = await Promise.all([
+    const [lawyersPack, jurorsPack, prompts, caseData] = await Promise.all([
       loadJSON('./data/lawyers.json'),
       loadJSON('./data/jurors.json'),
-      loadJSON('./data/judge.json'),
       loadJSON('./data/prompts.json'),
       loadCaseById(caseId)
     ]);
@@ -303,7 +302,6 @@ const JuryRuntime = (() => {
     const votes = panel.map((juror) => jurorVote(juror, caseData, transcript));
     const winner = majority(votes);
     const factors = extractFactors(transcript);
-    const verdict = formatVerdict(judge, winner, factors, votes);
 
     return {
       case: caseData,
@@ -311,8 +309,28 @@ const JuryRuntime = (() => {
       transcript,
       panel,
       votes,
+      winner,
+      factors
+    };
+  }
+
+  async function buildJudgeVerdict(deliberation) {
+    if (!deliberation?.case?.id) {
+      throw new Error('Cannot prepare judge verdict without a deliberated case.');
+    }
+    const judge = await loadJSON('./data/judge.json');
+    const winner = deliberation.winner ?? majority(deliberation.votes ?? []);
+    const factors = deliberation.factors ?? [];
+    const verdict = formatVerdict(judge, winner, factors, deliberation.votes ?? []);
+    return {
+      ...deliberation,
       verdict
     };
+  }
+
+  async function runTrial(caseId) {
+    const deliberation = await deliberateCase(caseId);
+    return buildJudgeVerdict(deliberation);
   }
 
   async function recordVerdict(trialResult, decidedAt = new Date()) {
@@ -323,6 +341,10 @@ const JuryRuntime = (() => {
     const existing = Array.isArray(archive?.cases) ? archive.cases : [];
     const entry = {
       id: trialResult.case.id,
+      case: trialResult.case,
+      panel: trialResult.panel,
+      votes: trialResult.votes,
+      transcript: trialResult.transcript,
       verdict: {
         winner: trialResult.verdict.winner,
         split: trialResult.verdict.split,
@@ -343,9 +365,19 @@ const JuryRuntime = (() => {
   }
 
   async function progressTrial({ now = new Date() } = {}) {
+    const deliberation = await deliberateQueuedCase({ now });
+    if (!deliberation) return null;
+    return runJudgeRuling(deliberation, { now });
+  }
+
+  async function deliberateQueuedCase({ now = new Date() } = {}) {
     const caseData = await drawNextQueuedCase({ now });
     if (!caseData) return null;
-    const result = await runTrial(caseData.id);
+    return deliberateCase(caseData.id);
+  }
+
+  async function runJudgeRuling(deliberation, { now = new Date() } = {}) {
+    const result = await buildJudgeVerdict(deliberation);
     await recordVerdict(result, now);
     return result;
   }
@@ -464,9 +496,13 @@ const JuryRuntime = (() => {
     pickHourlyCase,
     prepareQueue,
     drawNextQueuedCase,
+    deliberateCase,
+    deliberateQueuedCase,
+    buildJudgeVerdict,
     runTrial,
     recordVerdict,
     progressTrial,
+    runJudgeRuling,
     requestGroqVerdict,
     _state: transientState
   };

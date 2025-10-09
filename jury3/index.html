@@ -320,6 +320,17 @@
       font-size: 1.1rem;
     }
 
+    .jury-highlight {
+      display: grid;
+      gap: 10px;
+    }
+
+    .jury-panelists {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .demo-meta {
       display: flex;
       flex-wrap: wrap;
@@ -398,6 +409,16 @@
       letter-spacing: 0.01em;
       text-decoration: none;
       transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .is-hidden {
+      display: none !important;
     }
 
     .button--primary {
@@ -697,16 +718,17 @@
         <h2>Hands-on sandbox</h2>
       </div>
       <p>
-        Queue up the latest community submission and run a full simulated trial using the deterministic helpers in
-        <code>app.js</code>. Everything loads locally from the JSON data pack so you can explore the flow without extra
-        setup.
+        Queue up the latest community submission, submit it to the jury for deliberation, and then invite the judge to
+        finalize the ruling using the deterministic helpers in <code>app.js</code>. Everything loads locally from the JSON
+        data pack so you can explore the flow without extra setup.
       </p>
       <div class="demo-grid">
         <div class="demo-actions">
           <button class="button button--primary" id="demo-queue">Pick hourly spotlight case</button>
-          <button class="button button--ghost" id="demo-run">Run trial &amp; record verdict</button>
+          <button class="button button--ghost" id="demo-submit" disabled>Submit to jury</button>
+          <button class="button button--ghost is-hidden" id="demo-judge" disabled>Run judge ruling</button>
         </div>
-        <div class="demo-status" id="demo-status">Idle — queue a case to review metrics before the simulation.</div>
+        <div class="demo-status" id="demo-status">Idle — queue a case to review metrics before the jury weighs in.</div>
         <div class="demo-panel ai-panel">
           <h3>Groq deliberation boost</h3>
           <p>Bring your Groq API key to sample an additional AI verdict that weighs both sides of the dispute.</p>
@@ -731,15 +753,32 @@
             <h3>Active case</h3>
             <p>No case selected yet. Queue a spotlight dispute to inspect metrics before running the trial.</p>
           </div>
+          <div class="demo-panel" id="demo-jury">
+            <h3>Jury deliberation</h3>
+            <p>Submit a queued case to the jury to see how the panel weighs the evidence before the judge rules.</p>
+          </div>
           <div class="demo-panel" id="demo-verdict">
-            <h3>Latest verdict</h3>
-            <p>The trial transcript and decision will appear here after you run the simulation.</p>
+            <h3>Judge ruling</h3>
+            <p>The final verdict appears here after the judge reviews the jury outcome.</p>
           </div>
           <div class="demo-panel" id="groq-output">
             <h3>Groq AI verdict</h3>
             <p>Connect to Groq and request a verdict to compare external reasoning against the scripted simulation.</p>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-intro">
+        <span>Archive</span>
+        <h2>Resolved cases</h2>
+      </div>
+      <p>
+        Review completed trials and dig into the full briefs, transcripts, and vote splits recorded by the simulation.
+      </p>
+      <div id="archive-preview">
+        <p class="demo-status">Archive populates after rulings are recorded.</p>
       </div>
     </section>
   </main>
@@ -753,10 +792,13 @@
     (function () {
       const statusEl = document.getElementById('demo-status');
       const caseEl = document.getElementById('demo-case');
+      const juryEl = document.getElementById('demo-jury');
       const verdictEl = document.getElementById('demo-verdict');
       const queueBtn = document.getElementById('demo-queue');
-      const runBtn = document.getElementById('demo-run');
+      const submitBtn = document.getElementById('demo-submit');
+      const judgeBtn = document.getElementById('demo-judge');
       const docketEl = document.getElementById('docket-preview');
+      const archiveEl = document.getElementById('archive-preview');
       const groqKeyInput = document.getElementById('groq-key');
       const groqModelSelect = document.getElementById('groq-model');
       const groqButton = document.getElementById('groq-run');
@@ -764,6 +806,7 @@
       const groqOutputEl = document.getElementById('groq-output');
 
       let latestCase = null;
+      let latestDeliberation = null;
       let latestTrial = null;
       const dateFormatter = new Intl.DateTimeFormat(undefined, {
         month: 'short',
@@ -810,15 +853,46 @@
         }
       }
 
+      function summarizeVotes(votes = []) {
+        return votes.reduce(
+          (acc, vote) => {
+            if (!vote) return acc;
+            const normalized = String(vote).toUpperCase();
+            if (normalized === 'A' || normalized === 'B') {
+              acc[normalized] = (acc[normalized] ?? 0) + 1;
+            } else if (normalized === 'ABSTAIN') {
+              acc.abstain = (acc.abstain ?? 0) + 1;
+            }
+            return acc;
+          },
+          { A: 0, B: 0, abstain: 0 }
+        );
+      }
+
+      function formatVoteSplit(tally) {
+        const base = `${formatNumber(tally.A)}-${formatNumber(tally.B)}`;
+        if (!tally.abstain) {
+          return base;
+        }
+        return `${base} • ${formatNumber(tally.abstain)} abstain`;
+      }
+
+      function renderVoteChips(tally) {
+        return ['A', 'B', 'abstain']
+          .filter((key) => tally[key] !== undefined)
+          .map((key) => `<span class="signal-pill">${key.toUpperCase()}: ${formatNumber(tally[key])}</span>`)
+          .join('');
+      }
+
       function renderCase(caseData) {
         if (!caseData) {
-          caseEl.innerHTML = '<h3>Active case</h3><p>No case selected yet. Queue a spotlight dispute to inspect metrics before running the trial.</p>';
+          caseEl.innerHTML = '<h3>Active case</h3><p>No case selected yet. Queue a spotlight dispute to inspect metrics before submitting to the jury.</p>';
           updateGroqButtonState();
           return;
         }
 
         const tags = (caseData.tags || [])
-          .map((tag) => `<span class="demo-tag">${tag}</span>`)
+          .map((tag) => `<span class="demo-tag">${escapeHtml(tag)}</span>`)
           .join('');
         const signals = caseData.signals || {};
         const metrics = [
@@ -840,19 +914,19 @@
         caseEl.innerHTML = `
           <h3>Active case</h3>
           <div class="demo-meta">
-            <span><strong>ID:</strong> ${caseData.id}</span>
+            <span><strong>ID:</strong> ${escapeHtml(caseData.id)}</span>
             <span><strong>Filed:</strong> ${formatDate(caseData.createdAt)}</span>
-            <span><strong>Submitted by:</strong> ${caseData.submittedBy || 'anonymous'}</span>
+            <span><strong>Submitted by:</strong> ${escapeHtml(caseData.submittedBy || 'anonymous')}</span>
           </div>
-          <h4>${caseData.title}</h4>
-          <p>${caseData.context}</p>
+          <h4>${escapeHtml(caseData.title)}</h4>
+          <p>${escapeHtml(caseData.context)}</p>
           <div>
             <strong>Side A</strong>
-            <p>${caseData.sideA}</p>
+            <p>${escapeHtml(caseData.sideA)}</p>
           </div>
           <div>
             <strong>Side B</strong>
-            <p>${caseData.sideB}</p>
+            <p>${escapeHtml(caseData.sideB)}</p>
           </div>
           <div class="case-metric-grid">${metrics}</div>
           <div class="demo-tags">${tags}</div>
@@ -860,45 +934,96 @@
         updateGroqButtonState();
       }
 
-      function renderVerdict(result) {
+      function renderJuryResult(result) {
+        if (!juryEl) return;
         if (!result) {
-          verdictEl.innerHTML = '<h3>Latest verdict</h3><p>The trial transcript and decision will appear here after you run the simulation.</p>';
+          juryEl.innerHTML = '<h3>Jury deliberation</h3><p>Submit a queued case to the jury to see how the panel weighs the evidence before the judge rules.</p>';
+          return;
+        }
+
+        const tally = summarizeVotes(result.votes || []);
+        const panelists = Array.isArray(result.panel) && result.panel.length
+          ? result.panel
+              .map((juror) => `<span class="signal-pill">${escapeHtml(juror.name || juror.id || 'Juror')}</span>`)
+              .join('')
+          : '<span class="signal-pill">Panel data unavailable</span>';
+        const transcript = Array.isArray(result.transcript) ? result.transcript.slice(-4) : [];
+        const transcriptHtml = transcript.length
+          ? `<div class="demo-transcript">${transcript
+              .map(
+                (line) => `
+            <div class="demo-line">
+              <strong>${escapeHtml(String(line.by || '').toUpperCase())} • ${escapeHtml(line.phase || 'phase')}</strong>
+              <span>${escapeHtml(line.text || '')}</span>
+            </div>
+          `
+              )
+              .join('')}</div>`
+          : '<p class="ai-muted">Transcript not available.</p>';
+        const factors = Array.isArray(result.factors) && result.factors.length
+          ? escapeHtml(result.factors.join(', '))
+          : 'Panel did not highlight decisive factors.';
+
+        juryEl.innerHTML = `
+          <h3>Jury deliberation</h3>
+          <div class="verdict-callout">
+            <strong>Panel lean:</strong> ${escapeHtml(result.winner ?? 'undetermined')}
+            <span>${factors}</span>
+            <span><strong>Vote split:</strong> ${formatVoteSplit(tally)}</span>
+            <div class="docket-metrics">${renderVoteChips(tally)}</div>
+          </div>
+          <div class="jury-highlight">
+            <div>
+              <strong>Seated jurors</strong>
+              <div class="jury-panelists">${panelists}</div>
+            </div>
+            <div>
+              <strong>Transcript highlights</strong>
+              ${transcriptHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderVerdict(result) {
+        if (!verdictEl) return;
+        if (!result) {
+          verdictEl.innerHTML = '<h3>Judge ruling</h3><p>The final verdict appears here after the judge reviews the jury outcome.</p>';
           return;
         }
 
         const { case: caseData, transcript, verdict } = result;
         const recentLines = transcript.slice(-4);
         const transcriptHtml = recentLines
-          .map((line) => `
+          .map(
+            (line) => `
             <div class="demo-line">
-              <strong>${line.by.toUpperCase()} • ${line.phase}</strong>
-              <span>${line.text}</span>
+              <strong>${escapeHtml(String(line.by || '').toUpperCase())} • ${escapeHtml(line.phase || 'phase')}</strong>
+              <span>${escapeHtml(line.text || '')}</span>
             </div>
-          `)
+          `
+          )
           .join('');
-        const tally = verdict.tally || {};
-        const voteChips = ['A', 'B', 'abstain']
-          .filter((key) => tally[key] !== undefined)
-          .map((key) => `<span class="signal-pill">${key.toUpperCase()}: ${formatNumber(tally[key])}</span>`)
-          .join('');
+        const tally = verdict.tally || summarizeVotes(result.votes || []);
+        const voteChips = renderVoteChips(tally);
 
         verdictEl.innerHTML = `
-          <h3>Latest verdict</h3>
+          <h3>Judge ruling</h3>
           <div class="verdict-callout">
-            <strong>Winner:</strong> ${verdict.winner}
-            <span>${verdict.text}</span>
-            <span><strong>Vote split:</strong> ${verdict.split}</span>
+            <strong>Winner:</strong> ${escapeHtml(verdict.winner)}
+            <span>${escapeHtml(verdict.text)}</span>
+            <span><strong>Vote split:</strong> ${escapeHtml(verdict.split)}</span>
             <div class="docket-metrics">${voteChips}</div>
           </div>
           <div>
             <strong>Factors considered</strong>
-            <p>${verdict.factors.join(', ')}</p>
+            <p>${escapeHtml((verdict.factors || []).join(', '))}</p>
           </div>
           <div>
             <strong>Transcript highlights</strong>
             <div class="demo-transcript">${transcriptHtml}</div>
           </div>
-          <p><em>Archive updated with ${caseData.id} at ${new Date().toLocaleTimeString()}.</em></p>
+          <p><em>Archive updated with ${escapeHtml(caseData.id)} at ${new Date().toLocaleTimeString()}.</em></p>
         `;
       }
 
@@ -957,56 +1082,112 @@
       async function handleQueueClick() {
         setStatus('Loading latest case…');
         queueBtn.disabled = true;
-        runBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
+        if (judgeBtn) {
+          judgeBtn.disabled = true;
+          judgeBtn.classList.add('is-hidden');
+        }
         try {
           const picked = await window.JuryRuntime.pickHourlyCase();
           if (!picked) {
             setStatus('No cases available in the inbox. Add one to the data pack to continue.');
             renderCase(null);
+            renderJuryResult(null);
+            renderVerdict(null);
             return;
           }
           latestCase = picked;
+          latestDeliberation = null;
           latestTrial = null;
           renderCase(picked);
-          setStatus(`Queued case ${picked.id}. Review the metrics below, then run the simulation.`);
+          renderJuryResult(null);
+          renderVerdict(null);
           renderGroqOutput(null);
-          setGroqStatus('Case queued. Run the simulation or request Groq deliberation with Groq.');
+          setStatus(`Queued case ${picked.id}. Review the metrics below, then submit to the jury.`);
+          setGroqStatus('Case queued. Submit to the jury or request Groq deliberation with Groq.');
+          if (submitBtn) submitBtn.disabled = false;
         } catch (error) {
           console.error(error);
           setStatus('Unable to queue a case. Check the console for details.');
           renderCase(null);
+          renderJuryResult(null);
           renderGroqOutput(null);
         } finally {
           queueBtn.disabled = false;
-          runBtn.disabled = false;
           updateGroqButtonState();
         }
       }
 
-      async function handleRunClick() {
-        setStatus('Running trial and recording verdict…');
+      async function handleSubmitClick() {
+        if (!latestCase) {
+          setStatus('Queue a case before submitting to the jury.');
+          if (submitBtn) submitBtn.disabled = false;
+          return;
+        }
+        setStatus('Submitting case to jury…');
         queueBtn.disabled = true;
-        runBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
+        if (judgeBtn) judgeBtn.disabled = true;
         try {
-          const result = await window.JuryRuntime.progressTrial();
+          const result = await window.JuryRuntime.deliberateQueuedCase();
           if (!result) {
-            setStatus('No case available to try. Queue a submission first.');
-            renderVerdict(null);
+            setStatus('No case available to deliberate. Queue a submission first.');
+            renderJuryResult(null);
             return;
           }
           latestCase = result.case;
-          latestTrial = result;
+          latestDeliberation = result;
+          latestTrial = null;
           renderCase(latestCase);
-          renderVerdict(result);
-          setStatus(`Trial completed for ${result.case.id}. Verdict stored in the archive — review the vote metrics below.`);
-          setGroqStatus('Trial complete — request Groq deliberation to compare reasoning.');
+          renderJuryResult(result);
+          renderVerdict(null);
+          setStatus(`Jury completed deliberation for ${result.case.id}. Review their findings, then run the judge.`);
+          setGroqStatus('Jury verdict ready — request Groq deliberation or run the judge for a final ruling.');
+          if (judgeBtn) {
+            judgeBtn.classList.remove('is-hidden');
+            judgeBtn.disabled = false;
+          }
         } catch (error) {
           console.error(error);
-          setStatus('Trial failed to run. Inspect the console output for more information.');
+          setStatus('Jury deliberation failed. Inspect the console output for more information.');
           setGroqStatus('Groq reasoning is unavailable until the error is resolved.');
+          if (submitBtn) submitBtn.disabled = false;
         } finally {
           queueBtn.disabled = false;
-          runBtn.disabled = false;
+          updateGroqButtonState();
+        }
+      }
+
+      async function handleJudgeClick() {
+        if (!latestDeliberation) {
+          setStatus('Submit the active case to the jury before requesting a judge ruling.');
+          if (judgeBtn) judgeBtn.classList.add('is-hidden');
+          return;
+        }
+        setStatus('Running judge ruling…');
+        queueBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
+        if (judgeBtn) judgeBtn.disabled = true;
+        try {
+          const result = await window.JuryRuntime.runJudgeRuling(latestDeliberation);
+          latestCase = result.case;
+          latestTrial = result;
+          latestDeliberation = result;
+          renderCase(latestCase);
+          renderJuryResult(result);
+          renderVerdict(result);
+          setStatus(`Judge finalized the ruling for ${result.case.id}. Case archived for review.`);
+          setGroqStatus('Trial complete — request Groq deliberation to compare reasoning.');
+          if (judgeBtn) judgeBtn.classList.add('is-hidden');
+          if (submitBtn) submitBtn.disabled = true;
+          renderArchivePreview({ bust: true });
+        } catch (error) {
+          console.error(error);
+          setStatus('Judge ruling failed. Inspect the console output for more information.');
+          setGroqStatus('Groq reasoning is unavailable until the error is resolved.');
+          if (judgeBtn) judgeBtn.disabled = false;
+        } finally {
+          queueBtn.disabled = false;
           updateGroqButtonState();
         }
       }
@@ -1031,7 +1212,7 @@
           const result = await window.JuryRuntime.requestGroqVerdict({
             apiKey,
             caseData: latestCase,
-            transcript: latestTrial?.transcript,
+            transcript: latestTrial?.transcript || latestDeliberation?.transcript,
             model: groqModelSelect?.value || undefined
           });
           renderGroqOutput(result);
@@ -1060,7 +1241,7 @@
             .slice(0, 3)
             .map((caseData) => {
               const tags = (caseData.tags || [])
-                .map((tag) => `<span class="demo-tag">${tag}</span>`)
+                .map((tag) => `<span class="demo-tag">${escapeHtml(tag)}</span>`)
                 .join('');
               const signals = caseData.signals || {};
               const metrics = [
@@ -1068,19 +1249,19 @@
                 `Upvotes ${formatNumber(signals.upvotes)}`,
                 `Downvotes ${formatNumber(signals.downvotes)}`
               ]
-                .map((label) => `<span class="metric-chip">${label}</span>`)
+                .map((label) => `<span class="metric-chip">${escapeHtml(label)}</span>`)
                 .join('');
 
               return `
                 <li class="docket-item">
                   <div class="docket-header">
-                    <h3 class="docket-title">${caseData.title}</h3>
+                    <h3 class="docket-title">${escapeHtml(caseData.title)}</h3>
                     <div class="docket-metrics">${metrics}</div>
                   </div>
-                  <p>${caseData.context}</p>
+                  <p>${escapeHtml(caseData.context)}</p>
                   <div class="demo-meta">
                     <span><strong>Filed:</strong> ${formatDate(caseData.createdAt)}</span>
-                    <span><strong>Submitted by:</strong> ${caseData.submittedBy || 'anonymous'}</span>
+                    <span><strong>Submitted by:</strong> ${escapeHtml(caseData.submittedBy || 'anonymous')}</span>
                   </div>
                   <div class="demo-tags">${tags}</div>
                 </li>
@@ -1095,8 +1276,107 @@
         }
       }
 
+      async function renderArchivePreview({ bust = false } = {}) {
+        if (!archiveEl) return;
+        try {
+          const archive = await window.JuryRuntime.loadJSON('./data/cases.archive.json', { bust });
+          const cases = Array.isArray(archive?.cases) ? archive.cases : [];
+          if (!cases.length) {
+            archiveEl.innerHTML = '<p class="demo-status">No rulings recorded yet. Run a full trial to populate the archive.</p>';
+            return;
+          }
+
+          const list = cases
+            .slice()
+            .sort((a, b) => new Date(b.decidedAt || 0) - new Date(a.decidedAt || 0))
+            .map((entry) => {
+              const caseData = entry.case || {};
+              const tags = Array.isArray(caseData.tags) && caseData.tags.length
+                ? `<div class="demo-tags">${caseData.tags
+                    .map((tag) => `<span class="demo-tag">${escapeHtml(tag)}</span>`)
+                    .join('')}</div>`
+                : '<p class="ai-muted">No tags recorded.</p>';
+              const panelists = Array.isArray(entry.panel) && entry.panel.length
+                ? `<div class="jury-panelists">${entry.panel
+                    .map((juror) => `<span class="signal-pill">${escapeHtml(juror.name || juror.id || 'Juror')}</span>`)
+                    .join('')}</div>`
+                : '<span class="signal-pill">Panel data unavailable</span>';
+              const votes = Array.isArray(entry.votes) ? entry.votes : [];
+              const tally = votes.length ? summarizeVotes(votes) : { A: 0, B: 0, abstain: 0 };
+              const voteChips = votes.length
+                ? `<div class="docket-metrics">${renderVoteChips(tally)}</div>`
+                : '<p class="ai-muted">Vote breakdown unavailable.</p>';
+              const transcript = Array.isArray(entry.transcript) ? entry.transcript.slice(-3) : [];
+              const transcriptHtml = transcript.length
+                ? `<div class="demo-transcript">${transcript
+                    .map(
+                      (line) => `
+                <div class="demo-line">
+                  <strong>${escapeHtml(String(line.by || '').toUpperCase())} • ${escapeHtml(line.phase || 'phase')}</strong>
+                  <span>${escapeHtml(line.text || '')}</span>
+                </div>
+              `
+                    )
+                    .join('')}</div>`
+                : '<p class="ai-muted">Transcript not available.</p>';
+
+              return `
+                <li class="docket-item">
+                  <div class="docket-header">
+                    <h3 class="docket-title">${escapeHtml(caseData.title || entry.id)}</h3>
+                    <div class="docket-metrics">
+                      <span class="signal-pill">Winner: ${escapeHtml(entry.verdict?.winner ?? '—')}</span>
+                      <span class="signal-pill">Split: ${escapeHtml(entry.verdict?.split ?? '—')}</span>
+                    </div>
+                  </div>
+                  <p>${escapeHtml(caseData.context || entry.summary || 'No case context provided.')}</p>
+                  <div class="demo-meta">
+                    <span><strong>Ruled:</strong> ${formatDate(entry.decidedAt)}</span>
+                    <span><strong>Case ID:</strong> ${escapeHtml(entry.id)}</span>
+                  </div>
+                  <div>
+                    <strong>Arguments</strong>
+                    <div class="demo-meta">
+                      <span><em>Side A:</em> ${escapeHtml(caseData.sideA ?? 'Not recorded')}</span>
+                      <span><em>Side B:</em> ${escapeHtml(caseData.sideB ?? 'Not recorded')}</span>
+                    </div>
+                  </div>
+                  ${tags}
+                  <div>
+                    <strong>Panel</strong>
+                    ${panelists}
+                  </div>
+                  <div>
+                    <strong>Vote tally</strong>
+                    ${voteChips}
+                  </div>
+                  <div>
+                    <strong>Transcript highlights</strong>
+                    ${transcriptHtml}
+                  </div>
+                  <div>
+                    <strong>Summary</strong>
+                    <p>${escapeHtml(entry.summary || 'No summary recorded.')}</p>
+                  </div>
+                </li>
+              `;
+            })
+            .join('');
+
+          archiveEl.innerHTML = `<ul class="docket-list">${list}</ul>`;
+        } catch (error) {
+          console.error(error);
+          archiveEl.innerHTML = '<p class="demo-status">Unable to load the archive. Check the console for details.</p>';
+        }
+      }
+
       queueBtn.addEventListener('click', handleQueueClick);
-      runBtn.addEventListener('click', handleRunClick);
+      if (submitBtn) {
+        submitBtn.addEventListener('click', handleSubmitClick);
+      }
+      if (judgeBtn) {
+        judgeBtn.addEventListener('click', handleJudgeClick);
+      }
       if (groqButton) {
         groqButton.addEventListener('click', handleGroqClick);
       }
@@ -1105,11 +1385,14 @@
       }
 
       renderCase(null);
+      renderJuryResult(null);
       renderVerdict(null);
       renderGroqOutput(null);
       renderDocketPreview();
+      renderArchivePreview();
       updateGroqButtonState();
     })();
   </script>
+
 </body>
 </html>
