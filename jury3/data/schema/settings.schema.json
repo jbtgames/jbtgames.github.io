@@ -1,0 +1,48 @@
+{
+  "$id": "settings.schema.json",
+  "type": "object",
+  "required": ["trial", "ranking", "security", "scheduler"],
+  "properties": {
+    "trial": {
+      "type": "object",
+      "properties": {
+        "rounds": {"type": "integer", "minimum": 1, "maximum": 5},
+        "jurorCount": {"type": "integer", "minimum": 3, "maximum": 11},
+        "maxCharsPerStatement": {"type": "integer"},
+        "typingDelayMs": {"type": "integer"}
+      }
+    },
+    "ranking": {
+      "type": "object",
+      "properties": {
+        "hotScoreWeights": {
+          "type": "object",
+          "properties": {
+            "upvotes": {"type": "number"},
+            "downvotes": {"type": "number"},
+            "ageHalfLifeHours": {"type": "number"},
+            "reportPenalty": {"type": "number"}
+          }
+        },
+        "minScoreToQueue": {"type": "number"}
+      }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "profanityBlocklist": {"type": "array", "items": {"type": "string"}},
+        "piiFilters": {"type": "array", "items": {"type": "string"}},
+        "maxLinksPerSubmission": {"type": "integer"}
+      }
+    },
+    "scheduler": {
+      "type": "object",
+      "properties": {
+        "timezone": {"type": "string"},
+        "hourlySlots": {"type": "integer"},
+        "majorCaseEveryHours": {"type": "integer"}
+      }
+    }
+  },
+  "additionalProperties": false
+}

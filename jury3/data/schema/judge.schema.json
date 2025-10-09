@@ -1,0 +1,11 @@
+{
+  "$id": "judge.schema.json",
+  "type": "object",
+  "required": ["interjections", "disallow", "verdictTemplates"],
+  "properties": {
+    "interjections": {"type": "array", "items": {"type": "string"}},
+    "disallow": {"type": "array", "items": {"type": "string"}},
+    "verdictTemplates": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false
+}

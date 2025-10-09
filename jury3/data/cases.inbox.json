@@ -1,0 +1,17 @@
+{
+  "cases": [
+    {
+      "id": "dog-noise-9a2f",
+      "title": "Late-night dog noise dispute",
+      "context": "A tenant reports months of disrupted sleep due to a neighbor’s dog barking past midnight. The neighbor claims they’re training the dog and work late shifts causing inconsistent schedules.",
+      "sideA": "Tenant seeks fines or quiet hours enforcement.",
+      "sideB": "Neighbor requests leniency during training; proposes mitigations.",
+      "tags": ["neighbors", "noise"],
+      "submittedBy": "user_1289",
+      "createdAt": "2025-10-09T12:05:00Z",
+      "signals": {"upvotes": 14, "downvotes": 3, "reports": 0},
+      "score": 12.6,
+      "status": "inbox"
+    }
+  ]
+}
