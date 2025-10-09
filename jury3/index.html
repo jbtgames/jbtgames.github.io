@@ -176,6 +176,104 @@
       box-shadow: 0 0 0 4px rgba(117, 66, 255, 0.12);
     }
 
+    .demo-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .demo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .demo-status {
+      margin-top: 12px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.72);
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .demo-panels {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .demo-panel {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.74);
+      display: grid;
+      gap: 12px;
+    }
+
+    .demo-panel h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .demo-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .demo-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .demo-tag {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(117, 66, 255, 0.12);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .demo-transcript {
+      display: grid;
+      gap: 10px;
+    }
+
+    .demo-line {
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(117, 66, 255, 0.16);
+      background: rgba(117, 66, 255, 0.05);
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .demo-line strong {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .verdict-callout {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(117, 66, 255, 0.1);
+      border: 1px solid rgba(117, 66, 255, 0.3);
+      color: var(--text);
+      display: grid;
+      gap: 6px;
+    }
+
     .action-strip {
       display: flex;
       flex-wrap: wrap;
@@ -231,6 +329,10 @@
 
       .card {
         padding: 26px;
+      }
+
+      .demo-panels {
+        grid-template-columns: 1fr;
       }
 
       .hero-grid {
@@ -361,10 +463,173 @@
         </li>
       </ul>
     </section>
+
+    <section class="card">
+      <h2>Hands-on sandbox demo</h2>
+      <p>
+        Queue up the latest community submission and run a full simulated trial using the deterministic helpers in
+        <code>app.js</code>. Everything loads locally from the JSON data pack so you can explore the flow without extra
+        setup.
+      </p>
+      <div class="demo-grid">
+        <div class="demo-actions">
+          <button class="button button--primary" id="demo-queue">Pick hourly spotlight case</button>
+          <button class="button button--ghost" id="demo-run">Run trial &amp; record verdict</button>
+        </div>
+        <div class="demo-status" id="demo-status">Idle — pick a case to preview the docket.</div>
+        <div class="demo-panels">
+          <div class="demo-panel" id="demo-case">
+            <h3>Active case</h3>
+            <p>No case selected yet. Use the controls above to seed the queue.</p>
+          </div>
+          <div class="demo-panel" id="demo-verdict">
+            <h3>Latest verdict</h3>
+            <p>The trial transcript and decision will appear here after you run the simulation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer>
     Jury Game 3.0 Sprint • Internal briefing for reviewers and moderators
   </footer>
+
+  <script src="app.js"></script>
+  <script>
+    (function () {
+      const statusEl = document.getElementById('demo-status');
+      const caseEl = document.getElementById('demo-case');
+      const verdictEl = document.getElementById('demo-verdict');
+      const queueBtn = document.getElementById('demo-queue');
+      const runBtn = document.getElementById('demo-run');
+
+      let latestCase = null;
+
+      function setStatus(message) {
+        statusEl.textContent = message;
+      }
+
+      function renderCase(caseData) {
+        if (!caseData) {
+          caseEl.innerHTML = '<h3>Active case</h3><p>No case selected yet. Use the controls above to seed the queue.</p>';
+          return;
+        }
+
+        const tags = (caseData.tags || [])
+          .map((tag) => `<span class="demo-tag">${tag}</span>`)
+          .join('');
+
+        caseEl.innerHTML = `
+          <h3>Active case</h3>
+          <div class="demo-meta">
+            <span><strong>ID:</strong> ${caseData.id}</span>
+            <span><strong>Submitted by:</strong> ${caseData.submittedBy || 'anonymous'}</span>
+          </div>
+          <h4>${caseData.title}</h4>
+          <p>${caseData.context}</p>
+          <div>
+            <strong>Side A</strong>
+            <p>${caseData.sideA}</p>
+          </div>
+          <div>
+            <strong>Side B</strong>
+            <p>${caseData.sideB}</p>
+          </div>
+          <div class="demo-tags">${tags}</div>
+        `;
+      }
+
+      function renderVerdict(result) {
+        if (!result) {
+          verdictEl.innerHTML = '<h3>Latest verdict</h3><p>The trial transcript and decision will appear here after you run the simulation.</p>';
+          return;
+        }
+
+        const { case: caseData, transcript, verdict } = result;
+        const recentLines = transcript.slice(-4);
+        const transcriptHtml = recentLines
+          .map((line) => `
+            <div class="demo-line">
+              <strong>${line.by.toUpperCase()} • ${line.phase}</strong>
+              <span>${line.text}</span>
+            </div>
+          `)
+          .join('');
+
+        verdictEl.innerHTML = `
+          <h3>Latest verdict</h3>
+          <div class="verdict-callout">
+            <strong>Winner:</strong> ${verdict.winner}
+            <span>${verdict.text}</span>
+            <span><strong>Vote split:</strong> ${verdict.split}</span>
+          </div>
+          <div>
+            <strong>Factors considered</strong>
+            <p>${verdict.factors.join(', ')}</p>
+          </div>
+          <div>
+            <strong>Transcript highlights</strong>
+            <div class="demo-transcript">${transcriptHtml}</div>
+          </div>
+          <p><em>Archive updated with ${caseData.id} at ${new Date().toLocaleTimeString()}.</em></p>
+        `;
+      }
+
+      async function handleQueueClick() {
+        setStatus('Loading latest case…');
+        queueBtn.disabled = true;
+        runBtn.disabled = true;
+        try {
+          const picked = await window.JuryRuntime.pickHourlyCase();
+          if (!picked) {
+            setStatus('No cases available in the inbox. Add one to the data pack to continue.');
+            renderCase(null);
+            return;
+          }
+          latestCase = picked;
+          renderCase(picked);
+          setStatus(`Queued case ${picked.id}. Ready to simulate the trial.`);
+        } catch (error) {
+          console.error(error);
+          setStatus('Unable to queue a case. Check the console for details.');
+          renderCase(null);
+        } finally {
+          queueBtn.disabled = false;
+          runBtn.disabled = false;
+        }
+      }
+
+      async function handleRunClick() {
+        setStatus('Running trial and recording verdict…');
+        queueBtn.disabled = true;
+        runBtn.disabled = true;
+        try {
+          const result = await window.JuryRuntime.progressTrial();
+          if (!result) {
+            setStatus('No case available to try. Queue a submission first.');
+            renderVerdict(null);
+            return;
+          }
+          latestCase = result.case;
+          renderCase(latestCase);
+          renderVerdict(result);
+          setStatus(`Trial completed for ${result.case.id}. Verdict stored in the archive.`);
+        } catch (error) {
+          console.error(error);
+          setStatus('Trial failed to run. Inspect the console output for more information.');
+        } finally {
+          queueBtn.disabled = false;
+          runBtn.disabled = false;
+        }
+      }
+
+      queueBtn.addEventListener('click', handleQueueClick);
+      runBtn.addEventListener('click', handleRunClick);
+
+      renderCase(null);
+      renderVerdict(null);
+    })();
+  </script>
 </body>
 </html>
