@@ -258,6 +258,63 @@
       gap: 14px;
     }
 
+    .input-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .input-field label {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .input-field input,
+    .input-field select {
+      border-radius: 999px;
+      border: 1px solid rgba(95, 77, 255, 0.24);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      color: var(--muted-strong);
+      outline: none;
+    }
+
+    .input-field input:focus,
+    .input-field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(95, 77, 255, 0.16);
+    }
+
+    .ai-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .ai-status {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .ai-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .ai-muted {
+      color: rgba(31, 36, 48, 0.6);
+      font-size: 0.86rem;
+    }
+
     .demo-panel h3 {
       margin: 0;
       font-size: 1.1rem;
@@ -650,14 +707,37 @@
           <button class="button button--ghost" id="demo-run">Run trial &amp; record verdict</button>
         </div>
         <div class="demo-status" id="demo-status">Idle — queue a case to review metrics before the simulation.</div>
-          <div class="demo-panels">
-            <div class="demo-panel" id="demo-case">
-              <h3>Active case</h3>
-              <p>No case selected yet. Queue a spotlight dispute to inspect metrics before running the trial.</p>
-            </div>
+        <div class="demo-panel ai-panel">
+          <h3>Groq deliberation boost</h3>
+          <p>Bring your Groq API key to sample an additional AI verdict that weighs both sides of the dispute.</p>
+          <div class="input-field">
+            <label for="groq-key">Groq API key</label>
+            <input type="password" id="groq-key" placeholder="gsk_…" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="input-field">
+            <label for="groq-model">Model</label>
+            <select id="groq-model">
+              <option value="llama3-70b-8192">llama3-70b-8192</option>
+              <option value="llama3-8b-8192">llama3-8b-8192</option>
+            </select>
+          </div>
+          <div class="ai-inline">
+            <button class="button button--ghost" id="groq-run" disabled>Request Groq verdict</button>
+            <span class="ai-status" id="groq-status">Enter an API key and queue a case to unlock Groq reasoning.</span>
+          </div>
+        </div>
+        <div class="demo-panels">
+          <div class="demo-panel" id="demo-case">
+            <h3>Active case</h3>
+            <p>No case selected yet. Queue a spotlight dispute to inspect metrics before running the trial.</p>
+          </div>
           <div class="demo-panel" id="demo-verdict">
             <h3>Latest verdict</h3>
             <p>The trial transcript and decision will appear here after you run the simulation.</p>
+          </div>
+          <div class="demo-panel" id="groq-output">
+            <h3>Groq AI verdict</h3>
+            <p>Connect to Groq and request a verdict to compare external reasoning against the scripted simulation.</p>
           </div>
         </div>
       </div>
@@ -677,8 +757,14 @@
       const queueBtn = document.getElementById('demo-queue');
       const runBtn = document.getElementById('demo-run');
       const docketEl = document.getElementById('docket-preview');
+      const groqKeyInput = document.getElementById('groq-key');
+      const groqModelSelect = document.getElementById('groq-model');
+      const groqButton = document.getElementById('groq-run');
+      const groqStatusEl = document.getElementById('groq-status');
+      const groqOutputEl = document.getElementById('groq-output');
 
       let latestCase = null;
+      let latestTrial = null;
       const dateFormatter = new Intl.DateTimeFormat(undefined, {
         month: 'short',
         day: 'numeric',
@@ -687,6 +773,21 @@
 
       function setStatus(message) {
         statusEl.textContent = message;
+      }
+
+      function setGroqStatus(message) {
+        if (groqStatusEl) {
+          groqStatusEl.textContent = message;
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
       }
 
       function formatNumber(value, { digits = 0, fallback = '—' } = {}) {
@@ -712,6 +813,7 @@
       function renderCase(caseData) {
         if (!caseData) {
           caseEl.innerHTML = '<h3>Active case</h3><p>No case selected yet. Queue a spotlight dispute to inspect metrics before running the trial.</p>';
+          updateGroqButtonState();
           return;
         }
 
@@ -755,6 +857,7 @@
           <div class="case-metric-grid">${metrics}</div>
           <div class="demo-tags">${tags}</div>
         `;
+        updateGroqButtonState();
       }
 
       function renderVerdict(result) {
@@ -799,6 +902,58 @@
         `;
       }
 
+      function renderGroqOutput(result) {
+        if (!groqOutputEl) return;
+        if (!result) {
+          groqOutputEl.innerHTML = `
+            <h3>Groq AI verdict</h3>
+            <p>Connect to Groq and request a verdict to compare external reasoning against the scripted simulation.</p>
+          `;
+          return;
+        }
+
+        const parsed = result.parsed || {};
+        const factors = Array.isArray(parsed.factors) && parsed.factors.length
+          ? `<ul class="ai-list">${parsed.factors
+              .map((factor) => `<li>${escapeHtml(factor)}</li>`)
+              .join('')}</ul>`
+          : '<p class="ai-muted">No factors highlighted.</p>';
+        const actions = Array.isArray(parsed.recommended_actions) && parsed.recommended_actions.length
+          ? `<ul class="ai-list">${parsed.recommended_actions
+              .map((action) => `<li>${escapeHtml(action)}</li>`)
+              .join('')}</ul>`
+          : '<p class="ai-muted">No follow-up actions recommended.</p>';
+
+        groqOutputEl.innerHTML = `
+          <h3>Groq AI verdict</h3>
+          <div class="demo-meta">
+            <span><strong>Model:</strong> ${escapeHtml(result.model)}</span>
+            <span><strong>Confidence:</strong> ${escapeHtml(parsed.confidence ?? 'unknown')}</span>
+            <span><strong>Winner:</strong> ${escapeHtml(parsed.winner ?? 'undetermined')}</span>
+          </div>
+          <p>${escapeHtml(parsed.summary ?? result.content ?? 'Groq returned an empty response.')}</p>
+          <div>
+            <strong>Key factors</strong>
+            ${factors}
+          </div>
+          <div>
+            <strong>Recommended actions</strong>
+            ${actions}
+          </div>
+        `;
+      }
+
+      function updateGroqButtonState() {
+        if (!groqButton) return;
+        const hasKey = Boolean(groqKeyInput?.value?.trim());
+        groqButton.disabled = !hasKey || !latestCase;
+        if (!latestCase) {
+          setGroqStatus('Queue a case before requesting Groq reasoning.');
+        } else if (!hasKey) {
+          setGroqStatus('Enter an API key to enable the Groq request.');
+        }
+      }
+
       async function handleQueueClick() {
         setStatus('Loading latest case…');
         queueBtn.disabled = true;
@@ -811,15 +966,20 @@
             return;
           }
           latestCase = picked;
+          latestTrial = null;
           renderCase(picked);
           setStatus(`Queued case ${picked.id}. Review the metrics below, then run the simulation.`);
+          renderGroqOutput(null);
+          setGroqStatus('Case queued. Run the simulation or request Groq deliberation with Groq.');
         } catch (error) {
           console.error(error);
           setStatus('Unable to queue a case. Check the console for details.');
           renderCase(null);
+          renderGroqOutput(null);
         } finally {
           queueBtn.disabled = false;
           runBtn.disabled = false;
+          updateGroqButtonState();
         }
       }
 
@@ -835,15 +995,52 @@
             return;
           }
           latestCase = result.case;
+          latestTrial = result;
           renderCase(latestCase);
           renderVerdict(result);
           setStatus(`Trial completed for ${result.case.id}. Verdict stored in the archive — review the vote metrics below.`);
+          setGroqStatus('Trial complete — request Groq deliberation to compare reasoning.');
         } catch (error) {
           console.error(error);
           setStatus('Trial failed to run. Inspect the console output for more information.');
+          setGroqStatus('Groq reasoning is unavailable until the error is resolved.');
         } finally {
           queueBtn.disabled = false;
           runBtn.disabled = false;
+          updateGroqButtonState();
+        }
+      }
+
+      async function handleGroqClick() {
+        if (!groqButton) return;
+        const apiKey = groqKeyInput?.value?.trim();
+        if (!apiKey) {
+          setGroqStatus('Enter your Groq API key to continue.');
+          updateGroqButtonState();
+          return;
+        }
+        if (!latestCase) {
+          setGroqStatus('Queue a case before requesting Groq reasoning.');
+          updateGroqButtonState();
+          return;
+        }
+
+        setGroqStatus('Requesting Groq deliberation…');
+        groqButton.disabled = true;
+        try {
+          const result = await window.JuryRuntime.requestGroqVerdict({
+            apiKey,
+            caseData: latestCase,
+            transcript: latestTrial?.transcript,
+            model: groqModelSelect?.value || undefined
+          });
+          renderGroqOutput(result);
+          setGroqStatus('Groq verdict received. Review the panel for details.');
+        } catch (error) {
+          console.error(error);
+          setGroqStatus(error.message || 'Unable to fetch Groq verdict.');
+        } finally {
+          updateGroqButtonState();
         }
       }
 
@@ -900,10 +1097,18 @@
 
       queueBtn.addEventListener('click', handleQueueClick);
       runBtn.addEventListener('click', handleRunClick);
+      if (groqButton) {
+        groqButton.addEventListener('click', handleGroqClick);
+      }
+      if (groqKeyInput) {
+        groqKeyInput.addEventListener('input', updateGroqButtonState);
+      }
 
       renderCase(null);
       renderVerdict(null);
+      renderGroqOutput(null);
       renderDocketPreview();
+      updateGroqButtonState();
     })();
   </script>
 </body>
