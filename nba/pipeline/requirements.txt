@@ -1,0 +1,8 @@
+requests
+beautifulsoup4
+lxml
+feedparser
+newspaper3k
+tldextract
+python-dateutil
+pyyaml
