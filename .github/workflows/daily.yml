@@ -31,11 +31,12 @@ jobs:
     python -m pip install --upgrade pip
     pip install -r nba/pipeline/requirements.txt
 
-      - name: Run pipeline (scrape & write)
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          python pipeline/nba_news_pipeline.py
+- name: Run pipeline (scrape & write)
+  env:
+    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  run: |
+    python nba/pipeline/nba_news_pipeline.py
+
           echo "Pipeline complete"
 
       - name: Commit daily content
