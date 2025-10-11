@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Civic Engine</title>
+    <link rel="stylesheet" href="styles/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="stats-bar" aria-label="City metrics">
+        <div class="stat" data-key="treasury">💰 <span>0</span></div>
+        <div class="stat" data-key="happiness">🙂 <span>0</span></div>
+        <div class="stat" data-key="pollution">🌫 <span>0</span></div>
+        <div class="stat" data-key="infrastructure">⚡ <span>0</span></div>
+        <div class="stat" data-key="population">👥 <span>0</span></div>
+      </header>
+      <main>
+        <section class="city-visual">
+          <canvas id="cityCanvas" width="320" height="160" aria-label="City overview"></canvas>
+        </section>
+        <section class="hand" aria-label="Player hand">
+          <ul id="handList"></ul>
+        </section>
+      </main>
+      <footer class="controls">
+        <button id="playCardBtn" disabled>Play Selected</button>
+        <button id="endTurnBtn">End Turn</button>
+        <button id="viewDeckBtn">Deck</button>
+      </footer>
+      <dialog id="deckDialog" aria-label="Deck overview">
+        <h2>Deck</h2>
+        <ul id="deckList"></ul>
+        <button id="closeDeckBtn">Close</button>
+      </dialog>
+      <dialog id="eventDialog" aria-label="Event details">
+        <h2 id="eventTitle"></h2>
+        <p id="eventDescription"></p>
+        <button id="eventCloseBtn">Acknowledge</button>
+      </dialog>
+    </div>
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
