@@ -7,38 +7,95 @@
     <link rel="stylesheet" href="styles/style.css" />
   </head>
   <body>
-    <div id="app">
-      <header class="stats-bar" aria-label="City metrics">
-        <div class="stat" data-key="treasury">💰 <span>0</span></div>
-        <div class="stat" data-key="happiness">🙂 <span>0</span></div>
-        <div class="stat" data-key="pollution">🌫 <span>0</span></div>
-        <div class="stat" data-key="infrastructure">⚡ <span>0</span></div>
-        <div class="stat" data-key="population">👥 <span>0</span></div>
+    <div id="app" class="app-shell">
+      <header class="app-header" aria-labelledby="title">
+        <div class="app-branding">
+          <p class="eyebrow">City Management Simulation</p>
+          <h1 id="title">Civic Engine</h1>
+          <p class="tagline">Balance infrastructure, happiness, and the environment to keep your metropolis thriving.</p>
+        </div>
       </header>
-      <main>
-        <section class="city-visual">
-          <canvas id="cityCanvas" width="320" height="160" aria-label="City overview"></canvas>
+
+      <section class="stats-section" aria-label="City metrics">
+        <h2 class="section-title">City Pulse</h2>
+        <div class="stats-grid">
+          <article class="stat-card stat" data-key="treasury" aria-live="polite">
+            <strong class="stat-label">Treasury</strong>
+            <div class="stat-value">
+              <span>0</span>
+              <span aria-hidden="true">💰</span>
+            </div>
+          </article>
+          <article class="stat-card stat" data-key="happiness" aria-live="polite">
+            <strong class="stat-label">Happiness</strong>
+            <div class="stat-value">
+              <span>0</span>
+              <span aria-hidden="true">🙂</span>
+            </div>
+          </article>
+          <article class="stat-card stat" data-key="pollution" aria-live="polite">
+            <strong class="stat-label">Pollution</strong>
+            <div class="stat-value">
+              <span>0</span>
+              <span aria-hidden="true">🌫️</span>
+            </div>
+          </article>
+          <article class="stat-card stat" data-key="infrastructure" aria-live="polite">
+            <strong class="stat-label">Infrastructure</strong>
+            <div class="stat-value">
+              <span>0</span>
+              <span aria-hidden="true">⚡</span>
+            </div>
+          </article>
+          <article class="stat-card stat" data-key="population" aria-live="polite">
+            <strong class="stat-label">Population</strong>
+            <div class="stat-value">
+              <span>0</span>
+              <span aria-hidden="true">👥</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <main class="main-layout">
+        <section class="city-panel" aria-labelledby="city-heading">
+          <div class="panel-header">
+            <h2 id="city-heading">City Overview</h2>
+            <p>Track the skyline as your decisions reshape the urban landscape.</p>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="cityCanvas" width="320" height="160" aria-label="City overview"></canvas>
+          </div>
         </section>
-        <section class="hand" aria-label="Player hand">
-          <ul id="handList"></ul>
+
+        <section class="hand" aria-labelledby="hand-heading">
+          <div class="panel-header">
+            <h2 id="hand-heading">Strategy Deck</h2>
+            <p>Tap a card to queue it for play. Play up to three cards each turn.</p>
+          </div>
+          <ul id="handList" class="hand-list" role="list"></ul>
         </section>
       </main>
-      <footer class="controls">
-        <button id="playCardBtn" disabled>Play Selected</button>
-        <button id="endTurnBtn">End Turn</button>
-        <button id="viewDeckBtn">Deck</button>
+
+      <footer class="controls" aria-label="Turn controls">
+        <button id="playCardBtn" class="control" disabled>Play Selected</button>
+        <button id="endTurnBtn" class="control">End Turn</button>
+        <button id="viewDeckBtn" class="control">View Deck</button>
       </footer>
+
       <dialog id="deckDialog" aria-label="Deck overview">
         <h2>Deck</h2>
         <ul id="deckList"></ul>
         <button id="closeDeckBtn">Close</button>
       </dialog>
+
       <dialog id="eventDialog" aria-label="Event details">
         <h2 id="eventTitle"></h2>
         <p id="eventDescription"></p>
         <button id="eventCloseBtn">Acknowledge</button>
       </dialog>
     </div>
+
     <script type="module" src="src/main.js"></script>
   </body>
 </html>
