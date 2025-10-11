@@ -1,4 +1,3 @@
-import cardsData from "./cards.json" assert { type: "json" };
 import { defaultState, loadState, resetState, getState, updateState } from "./state.js";
 import { initializeDeck, drawCards, cleanupTurn, drawNewHand } from "./deck.js";
 import { initializeAi, aiTakeTurn } from "./ai.js";
@@ -14,6 +13,7 @@ async function bootstrap() {
 
   initUi();
 
+  const cardsData = await loadCards();
   const cards = cardsData.map((card) => ({ ...card }));
   if (!loaded || getState().deck.length === 0) {
     initializeDeck(cards);
@@ -54,4 +54,25 @@ function processTurn() {
   checkEndConditions();
 }
 
-bootstrap();
+async function loadCards() {
+  try {
+    const response = await fetch(new URL("./cards.json", import.meta.url));
+    if (!response.ok) {
+      throw new Error(`Failed to load cards (${response.status})`);
+    }
+    return await response.json();
+  } catch (error) {
+    showFatalError("Unable to load game data. Please refresh the page.");
+    throw error;
+  }
+}
+
+function showFatalError(message) {
+  const container = document.getElementById("app");
+  if (!container) return;
+  container.innerHTML = `<div class="error">${message}</div>`;
+}
+
+bootstrap().catch((error) => {
+  console.error("Civic Engine failed to start", error);
+});
