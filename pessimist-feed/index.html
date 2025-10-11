@@ -17,12 +17,28 @@
       <header class="top-bar">
         <div class="title-block">
           <h1>BleakFeed</h1>
-          <p>Only the bleakest words and images make it here.</p>
+          <p>
+            Hope is absent. Warmth is unwelcome. This is where optimism comes to
+            erode.
+          </p>
         </div>
         <button class="refresh-button" id="refreshButton" aria-label="Refresh posts">
           Refresh Gloom
         </button>
       </header>
+
+      <section class="atmosphere" aria-label="Ambient despair levels">
+        <div class="gloom-meter">
+          <div class="gloom-label">Gloom Index</div>
+          <div class="gloom-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <span class="gloom-bar-fill" id="gloomBarFill"></span>
+            <span class="gloom-value" id="gloomValue">91%</span>
+          </div>
+        </div>
+        <div class="ticker" aria-live="polite">
+          <p id="tickerText">Tonight's quiet is just the universe catching its breath.</p>
+        </div>
+      </section>
 
       <section class="filters" aria-label="Feed filters">
         <button class="filter-button active" data-filter="all">All</button>

@@ -60,18 +60,112 @@ const posts = [
       'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=900&q=80',
     tag: 'Bleak Vista',
   },
+  {
+    id: 7,
+    author: 'Cicada Sayer',
+    handle: '@whisperwinter',
+    time: '6 hours ago',
+    type: 'quote',
+    content:
+      '"Midnight is not the middle of the night; it is the edge where tomorrow already starts to fail."',
+    tag: 'Quote',
+  },
+  {
+    id: 8,
+    author: 'Gutter Prophet',
+    handle: '@oilrain',
+    time: '7 hours ago',
+    type: 'proverb',
+    content:
+      'Dismal alley proverb: "Even the rats leave when the lights stop returning."',
+    tag: 'Proverb',
+  },
+  {
+    id: 9,
+    author: 'Abandoned Aria',
+    handle: '@emptytheatre',
+    time: '9 hours ago',
+    type: 'image',
+    content: 'Captioned: "Curtains fall even when no one is clapping."',
+    image:
+      'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=900&q=80',
+    tag: 'Ruined Stage',
+  },
+  {
+    id: 10,
+    author: 'Ashen Atlas',
+    handle: '@forsakencities',
+    time: '11 hours ago',
+    type: 'quote',
+    content:
+      '"Tomorrow is a rumor started by people afraid of endings."',
+    tag: 'Dispatch',
+  },
+  {
+    id: 11,
+    author: 'Graveyard Grace',
+    handle: '@marrowmurmur',
+    time: 'Yesterday',
+    type: 'proverb',
+    content:
+      'Gravestone whisper: "The ground always keeps the last word."',
+    tag: 'Proverb',
+  },
+  {
+    id: 12,
+    author: 'Midnight Mire',
+    handle: '@tarstarlight',
+    time: '2 days ago',
+    type: 'image',
+    content:
+      'Captioned: "The moon is only a bruise the sky refuses to heal."',
+    image:
+      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=900&q=80',
+    tag: 'Night Scar',
+  },
 ];
 
 const gradients = [
-  'linear-gradient(135deg, rgba(245, 115, 115, 0.4), rgba(62, 70, 90, 0.4))',
-  'linear-gradient(135deg, rgba(71, 90, 107, 0.45), rgba(32, 25, 42, 0.45))',
-  'linear-gradient(135deg, rgba(83, 63, 75, 0.45), rgba(15, 18, 25, 0.45))',
+  'linear-gradient(140deg, rgba(182, 77, 88, 0.42), rgba(34, 39, 58, 0.3))',
+  'linear-gradient(135deg, rgba(56, 61, 82, 0.55), rgba(18, 19, 28, 0.4))',
+  'linear-gradient(130deg, rgba(99, 42, 50, 0.48), rgba(12, 13, 21, 0.45))',
 ];
 
 const feed = document.getElementById('feed');
 const template = document.getElementById('post-template');
 const filterButtons = document.querySelectorAll('.filter-button');
 const refreshButton = document.getElementById('refreshButton');
+const gloomBar = document.querySelector('.gloom-bar');
+const gloomBarFill = document.getElementById('gloomBarFill');
+const gloomValue = document.getElementById('gloomValue');
+const tickerText = document.getElementById('tickerText');
+
+const gloomReadings = [
+  {
+    value: 91,
+    message: 'Tonight the streetlights hum elegies for unpaid dreams.',
+  },
+  {
+    value: 87,
+    message: 'Citywide insomnia alert: hope has been declared a noise violation.',
+  },
+  {
+    value: 94,
+    message: 'A thousand unread apologies just flickered out in the queue.',
+  },
+  {
+    value: 89,
+    message: 'Forecast: relentless drizzle, suitable for mourning plans.',
+  },
+  {
+    value: 96,
+    message: 'Hospitals report a surge in unshakable déjà vu about endings.',
+  },
+  {
+    value: 92,
+    message: 'Public service reminder: even the sunrise showed up late and dim.',
+  },
+];
 
 const shuffle = (array) => {
   const copy = [...array];
@@ -140,6 +234,18 @@ const setActiveFilter = (activeButton) => {
   });
 };
 
+const updateAtmosphere = () => {
+  const reading = gloomReadings[Math.floor(Math.random() * gloomReadings.length)];
+  if (gloomBar && gloomBarFill && gloomValue) {
+    gloomBarFill.style.width = `${reading.value}%`;
+    gloomBar.setAttribute('aria-valuenow', reading.value);
+    gloomValue.textContent = `${reading.value}%`;
+  }
+  if (tickerText) {
+    tickerText.textContent = reading.message;
+  }
+};
+
 filterButtons.forEach((button) => {
   button.addEventListener('click', () => {
     const filter = button.dataset.filter;
@@ -160,6 +266,7 @@ refreshButton.addEventListener('click', () => {
 
   setTimeout(() => {
     renderFeed(shuffle(posts));
+    updateAtmosphere();
     refreshButton.classList.remove('is-loading');
     refreshButton.disabled = false;
     refreshButton.textContent = 'Refresh Gloom';
@@ -167,3 +274,4 @@ refreshButton.addEventListener('click', () => {
 });
 
 renderFeed(shuffle(posts));
+updateAtmosphere();
