@@ -1,4 +1,4 @@
-const posts = [
+const basePosts = [
   {
     id: 1,
     author: 'Existential Ella',
@@ -124,6 +124,254 @@ const posts = [
     tag: 'Night Scar',
   },
 ];
+
+const authorDescriptors = [
+  'Sable',
+  'Faded',
+  'Tenebrous',
+  'Sighing',
+  'Lonely',
+  'Midnight',
+  'Hollow',
+  'Dusky',
+  'Weary',
+  'Forsaken',
+  'Nocturnal',
+  'Bleary',
+  'Somber',
+  'Rusted',
+  'Waning',
+];
+
+const authorRoles = [
+  'Archivist',
+  'Cartographer',
+  'Messenger',
+  'Nomad',
+  'Witness',
+  'Chronicler',
+  'Herald',
+  'Seer',
+  'Envoy',
+  'Narrator',
+  'Scribe',
+  'Minstrel',
+  'Courier',
+  'Observer',
+  'Emissary',
+];
+
+const handleRoots = [
+  'void',
+  'ashen',
+  'morrowless',
+  'nightcode',
+  'ember',
+  'frostline',
+  'dread',
+  'dusk',
+  'hush',
+  'umbra',
+  'sigh',
+  'gloom',
+  'wane',
+  'rust',
+  'bleak',
+];
+
+const handleSuffixes = [
+  'scribe',
+  'signal',
+  'relay',
+  'archive',
+  'ledger',
+  'echo',
+  'index',
+  'diary',
+  'script',
+  'memo',
+  'relay',
+  'scroll',
+  'report',
+  'feed',
+  'log',
+];
+
+const quoteSubjects = [
+  'Hope',
+  'The dawn',
+  'Tomorrow',
+  'Second chances',
+  'Promised rain',
+  'Silent prayers',
+  'Halfhearted smiles',
+  'Unsent letters',
+  'Forgotten dreams',
+  'Lonely lanterns',
+  'Empty trains',
+  'Idle comets',
+  'Sleepless rooftops',
+  'Weathered vows',
+  'Half remembered victories',
+];
+
+const quoteActions = [
+  'is just the first footstep toward surrender',
+  'arrives late and leaves early',
+  'is a rumor spread by restless clocks',
+  'tastes like promises grown stale',
+  'wears the same mask as regret',
+  'collects dust in the hall of maybe',
+  'breaks apart before it even hits the ground',
+  'borrows courage at ruinous interest',
+  'flickers only to remind us of the dark',
+  'drifts somewhere between memory and myth',
+  'stretches thin across an unending dusk',
+  'trips over the same shadow every night',
+  'sits quiet beside the undone tasks',
+  'rolls back like tide from a poisoned shore',
+  'unravels in the draft of a closing door',
+];
+
+const proverbSources = [
+  'Northern ferry decks',
+  'abandoned observatories',
+  'sunless valleys',
+  'forgotten border towns',
+  'midnight parliaments',
+  'underground atriums',
+  'derelict radio towers',
+  'storm-tossed harbors',
+  'deserted transit lines',
+  'candlelit archives',
+  'echoing cathedrals',
+  'frostbitten markets',
+  'overtired night schools',
+  'half-lit plazas',
+  'railway waiting rooms',
+];
+
+const proverbLessons = [
+  'The horizon is just the lie we tell the dark',
+  'Every promise collects rust overnight',
+  'Silence always wins the loudest argument',
+  'Even the moon owes debts it cannot repay',
+  'Lanterns burn out before the path is found',
+  'Echoes return carrying heavier news',
+  'The quietest rooms house the sternest ghosts',
+  'Time only stops to watch us stumble',
+  'Cold winds memorize every farewell',
+  'Distant thunder rehearses the verdict',
+  'Footsteps fade faster than regrets',
+  'Still water hides the deepest doubt',
+  'Ashes remember more than the flame',
+  'Long nights raise patient questions',
+  'Shadows know the map of every retreat',
+];
+
+const imageMoods = [
+  'Every skyline eventually bows to the fog',
+  'Bridges wait for footsteps that never return',
+  'Empty stairwells echo with unfinished plans',
+  'Streetlights rehearse the language of goodbyes',
+  'The ocean keeps all the cancelled itineraries',
+  'Broken clocks still announce the end of things',
+  'Cathedrals sigh when the congregation leaves',
+  'Snowdrifts archive the letters we never sent',
+  'The last ferry horn knows everyone by name',
+  'Vacant diners hum a key of minor resignation',
+  'Escalators climb toward a shuttered evening',
+  'Alleys breathe the heat of forgotten engines',
+  'Graveyards hum with half finished lullabies',
+  'Warehouses guard the dust of failed parades',
+  'Fire escapes point nowhere in particular',
+];
+
+const timeGenerators = [
+  () => `${Math.ceil(randomInRange(3, 58))} minutes ago`,
+  () => `${Math.ceil(randomInRange(1, 12))} hours ago`,
+  () => `${Math.ceil(randomInRange(2, 5))} days ago`,
+  () => `${Math.ceil(randomInRange(2, 9))} weeks ago`,
+  () => `${Math.ceil(randomInRange(3, 11))} months ago`,
+];
+
+const imageSources = [
+  'https://images.unsplash.com/photo-1478720568477-152d9b164e26',
+  'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429',
+  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',
+  'https://images.unsplash.com/photo-1500534321413-85b859e71adf',
+  'https://images.unsplash.com/photo-1469474968028-56623f02e42e',
+  'https://images.unsplash.com/photo-1519681393784-d120267933ba',
+  'https://images.unsplash.com/photo-1489515217757-5fd1be406fef',
+  'https://images.unsplash.com/photo-1472214103451-9374bd1c798e',
+  'https://images.unsplash.com/photo-1500530855697-343f3794ba05',
+  'https://images.unsplash.com/photo-1491557345352-5929e343eb89',
+];
+
+const tagsByType = {
+  quote: ['Quote', 'Dispatch', 'Night Quote', 'Signal'],
+  proverb: ['Proverb', 'Old Warning', 'Folk Sigh', 'Weathered Saying'],
+  image: ['Bleak Vista', 'Dusk Snapshot', 'Twilight Proof', 'Gloom Study'],
+};
+
+const pick = (items) => items[Math.floor(Math.random() * items.length)];
+
+const slugifyHandle = (descriptor, suffix) =>
+  `@${descriptor}${suffix}`.replace(/\s+/g, '').toLowerCase();
+
+const buildQuoteContent = () =>
+  `"${pick(quoteSubjects)} ${pick(quoteActions)}."`;
+
+const buildProverbContent = () =>
+  `Bleak proverb from ${pick(proverbSources)}: "${pick(proverbLessons)}."`;
+
+const buildImageContent = () => `Captioned: "${pick(imageMoods)}."`;
+
+const buildGeneratedPosts = (count) => {
+  const generated = [];
+  const types = ['quote', 'proverb', 'image'];
+
+  for (let i = 0; i < count; i += 1) {
+    const type = types[i % types.length];
+    const descriptor = pick(authorDescriptors);
+    const role = pick(authorRoles);
+    const author = `${descriptor} ${role}`;
+    const handle = slugifyHandle(pick(handleRoots), pick(handleSuffixes));
+    const time = pick(timeGenerators)();
+
+    let content = '';
+    let image = undefined;
+
+    if (type === 'quote') {
+      content = buildQuoteContent();
+    } else if (type === 'proverb') {
+      content = buildProverbContent();
+    } else {
+      content = buildImageContent();
+      const imageSource = pick(imageSources);
+      image = `${imageSource}?auto=format&fit=crop&w=900&q=80&sig=${i + 1}`;
+    }
+
+    generated.push({
+      id: basePosts.length + i + 1,
+      author,
+      handle,
+      time,
+      type,
+      content,
+      image,
+      tag: pick(tagsByType[type]),
+    });
+  }
+
+  return generated;
+};
+
+const TARGET_POST_COUNT = basePosts.length * 100;
+const generatedPosts = buildGeneratedPosts(
+  Math.max(TARGET_POST_COUNT - basePosts.length, 0),
+);
+const posts = [...basePosts, ...generatedPosts];
 
 const gradients = [
   'linear-gradient(140deg, rgba(182, 77, 88, 0.42), rgba(34, 39, 58, 0.3))',
