@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BleakFeed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="top-bar">
+        <div class="title-block">
+          <h1>BleakFeed</h1>
+          <p>Only the bleakest words and images make it here.</p>
+        </div>
+        <button class="refresh-button" id="refreshButton" aria-label="Refresh posts">
+          Refresh Gloom
+        </button>
+      </header>
+
+      <section class="filters" aria-label="Feed filters">
+        <button class="filter-button active" data-filter="all">All</button>
+        <button class="filter-button" data-filter="quote">Quotes</button>
+        <button class="filter-button" data-filter="proverb">Proverbs</button>
+        <button class="filter-button" data-filter="image">Images</button>
+      </section>
+
+      <main class="feed" id="feed" aria-live="polite"></main>
+
+      <footer class="footer">
+        <p>BleakFeed curates verified pessimism every hour.</p>
+      </footer>
+    </div>
+
+    <template id="post-template">
+      <article class="post">
+        <header class="post-header">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <p class="author"></p>
+            <p class="meta"></p>
+          </div>
+        </header>
+        <div class="post-content"></div>
+        <figure class="post-image"></figure>
+        <div class="post-footer">
+          <button class="action-button" aria-label="Echo this post">
+            <span aria-hidden="true">🔁</span> Echo
+          </button>
+          <button class="action-button" aria-label="Save this post">
+            <span aria-hidden="true">💾</span> Save
+          </button>
+        </div>
+      </article>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>

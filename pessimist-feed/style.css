@@ -1,0 +1,235 @@
+:root {
+  color-scheme: dark;
+  --bg: #0f1219;
+  --card: #191d29;
+  --accent: #9aa0b2;
+  --accent-strong: #f57373;
+  --text-primary: #f4f5f7;
+  --text-secondary: #9aa0b2;
+  --border: rgba(255, 255, 255, 0.08);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(circle at 20% 20%, #1c2332, transparent 60%),
+    radial-gradient(circle at 80% 0%, #301c24, transparent 65%),
+    var(--bg);
+  color: var(--text-primary);
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+.app-shell {
+  width: min(420px, 100%);
+  padding: 0 1.25rem 4rem;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0 1.25rem;
+}
+
+.title-block h1 {
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.title-block p {
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.refresh-button {
+  background: linear-gradient(135deg, rgba(245, 115, 115, 0.2), transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.refresh-button.is-loading {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.refresh-button:focus-visible,
+.refresh-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(245, 115, 115, 0.5);
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.filter-button {
+  border: 1px solid var(--border);
+  background: rgba(25, 29, 41, 0.6);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filter-button.active,
+.filter-button:hover {
+  color: var(--text-primary);
+  border-color: rgba(245, 115, 115, 0.5);
+  background: rgba(245, 115, 115, 0.08);
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.empty-state {
+  border: 1px dashed rgba(245, 115, 115, 0.3);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  background: rgba(10, 12, 18, 0.4);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.post {
+  background: rgba(10, 12, 18, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(245, 115, 115, 0.4), transparent);
+  border: 1px solid rgba(245, 115, 115, 0.3);
+}
+
+.author {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.meta {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.post-content {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.post-content p {
+  margin-bottom: 0.5rem;
+}
+
+.post-content .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(245, 115, 115, 0.08);
+  border: 1px solid rgba(245, 115, 115, 0.2);
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  margin-top: 0.25rem;
+}
+
+.post-image {
+  display: none;
+  margin: 0;
+}
+
+.post-image img {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 115, 115, 0.2);
+  object-fit: cover;
+  max-height: 240px;
+}
+
+.post-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.action-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.action-button:hover,
+.action-button:focus-visible {
+  color: var(--text-primary);
+  border-color: rgba(245, 115, 115, 0.4);
+}
+
+.footer {
+  text-align: center;
+  margin-top: 2rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+@media (min-width: 480px) {
+  body {
+    padding: 2.5rem 0;
+  }
+
+  .top-bar {
+    padding-top: 1rem;
+  }
+}
