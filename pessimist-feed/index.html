@@ -40,6 +40,43 @@
         </div>
       </section>
 
+      <section class="metrics" aria-label="Bleak analytics dashboard">
+        <article class="metric-card">
+          <h2>Global Dread</h2>
+          <p class="metric-value" id="globalDreadValue">93%</p>
+          <p class="metric-delta" id="globalDreadDelta">+2.4% vs last dusk</p>
+          <p class="metric-note" id="globalDreadNote">Emergency skylight closings up across the grid.</p>
+        </article>
+        <article class="metric-card">
+          <h2>Resignation Spread</h2>
+          <p class="metric-value" id="resignationSpreadValue">48 cities</p>
+          <p class="metric-delta" id="resignationSpreadDelta">+5 overnight</p>
+          <p class="metric-note" id="resignationSpreadNote">Transit systems report sighs louder than engines.</p>
+        </article>
+        <article class="metric-card">
+          <h2>Night Rumination</h2>
+          <p class="metric-value" id="ruminationValue">76 mins</p>
+          <p class="metric-delta" id="ruminationDelta">+6.2 tonight</p>
+          <p class="metric-note" id="ruminationNote">Collective insomnia peaking before the third yawn.</p>
+        </article>
+      </section>
+
+      <section class="utilities" aria-label="Gloom controls and status">
+        <div class="auto-refresh">
+          <label class="toggle">
+            <input type="checkbox" id="autoRefreshToggle" />
+            <span class="toggle-switch" aria-hidden="true"></span>
+            <span class="toggle-label">Auto-refresh gloom (every 30s)</span>
+          </label>
+          <p class="last-refresh">
+            Last gloom update: <span id="lastRefresh">just now</span>
+          </p>
+        </div>
+        <p class="auto-refresh-status" id="autoRefreshStatus" aria-live="polite">
+          Auto-refresh disabled. Manual dread in effect.
+        </p>
+      </section>
+
       <section class="filters" aria-label="Feed filters">
         <button class="filter-button active" data-filter="all">All</button>
         <button class="filter-button" data-filter="quote">Quotes</button>
@@ -47,7 +84,53 @@
         <button class="filter-button" data-filter="image">Images</button>
       </section>
 
-      <main class="feed" id="feed" aria-live="polite"></main>
+      <div class="feed-layout">
+        <main class="feed" id="feed" aria-live="polite"></main>
+        <aside class="sidebar" aria-label="Bleak highlights">
+          <section class="trend-panel" aria-live="polite">
+            <h2>Trending Dismay</h2>
+            <ul class="trend-list" id="trendList">
+              <li class="trend-item">
+                <span class="trend-topic">Recurring sunless dreams</span>
+                <span class="trend-intensity">Intensity 92</span>
+                <span class="trend-change trend-up">▲ +5</span>
+              </li>
+              <li class="trend-item">
+                <span class="trend-topic">Fogbound resolutions</span>
+                <span class="trend-intensity">Intensity 87</span>
+                <span class="trend-change trend-flat">■ +0</span>
+              </li>
+              <li class="trend-item">
+                <span class="trend-topic">Moonlit second thoughts</span>
+                <span class="trend-intensity">Intensity 81</span>
+                <span class="trend-change trend-down">▼ -3</span>
+              </li>
+            </ul>
+          </section>
+
+          <section class="newsletter" aria-label="Subscribe to bleak bulletins">
+            <h2>Subscribe to the Spiral</h2>
+            <p>
+              Receive curated melancholy directly in your inbox. No spam—just
+              dignified despair.
+            </p>
+            <form id="newsletterForm" novalidate>
+              <label class="sr-only" for="newsletterEmail">Email address</label>
+              <div class="input-group">
+                <input
+                  type="email"
+                  id="newsletterEmail"
+                  name="email"
+                  placeholder="you@voidmail.com"
+                  required
+                />
+                <button type="submit">Submit gloom</button>
+              </div>
+            </form>
+            <p class="newsletter-message" id="newsletterMessage" role="status" aria-live="polite"></p>
+          </section>
+        </aside>
+      </div>
 
       <footer class="footer">
         <p>BleakFeed curates verified pessimism every hour.</p>

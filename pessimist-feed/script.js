@@ -139,6 +139,12 @@ const gloomBar = document.querySelector('.gloom-bar');
 const gloomBarFill = document.getElementById('gloomBarFill');
 const gloomValue = document.getElementById('gloomValue');
 const tickerText = document.getElementById('tickerText');
+const autoRefreshToggle = document.getElementById('autoRefreshToggle');
+const autoRefreshStatus = document.getElementById('autoRefreshStatus');
+const lastRefresh = document.getElementById('lastRefresh');
+const trendList = document.getElementById('trendList');
+const newsletterForm = document.getElementById('newsletterForm');
+const newsletterMessage = document.getElementById('newsletterMessage');
 
 const gloomReadings = [
   {
@@ -167,6 +173,18 @@ const gloomReadings = [
   },
 ];
 
+const trendSeeds = [
+  'Recurring sunless dreams',
+  'Fogbound resolutions',
+  'Moonlit second thoughts',
+  'Unsent apologies queue',
+  'Static-drenched lullabies',
+  'Fire escape confessions',
+  'Citywide déjà vu',
+  'Ghosted group chats',
+  'Unread eulogies',
+];
+
 const shuffle = (array) => {
   const copy = [...array];
   for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -176,7 +194,57 @@ const shuffle = (array) => {
   return copy;
 };
 
+const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
 const formatMeta = (post) => `${post.handle} • ${post.time}`;
+
+const metricsConfig = [
+  {
+    valueEl: document.getElementById('globalDreadValue'),
+    deltaEl: document.getElementById('globalDreadDelta'),
+    noteEl: document.getElementById('globalDreadNote'),
+    valueRange: [88, 98],
+    deltaRange: [-1.4, 3.8],
+    notes: [
+      'Emergency skylight closings up across the grid.',
+      'Crowd-funded optimism funds officially depleted.',
+      'City squares dimmed to preserve collective sighs.',
+      'Experts confirm: silver linings remain on back order.',
+    ],
+    formatValue: (value) => `${Math.round(value)}%`,
+    formatDelta: (delta) => `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs last dusk`,
+  },
+  {
+    valueEl: document.getElementById('resignationSpreadValue'),
+    deltaEl: document.getElementById('resignationSpreadDelta'),
+    noteEl: document.getElementById('resignationSpreadNote'),
+    valueRange: [32, 64],
+    deltaRange: [2, 9],
+    notes: [
+      'Transit systems report sighs louder than engines.',
+      'Office plants filed formal complaints about morale.',
+      'Rainy rooftops now classified as collective shrug zones.',
+      'Civic centers issue advisory: bring your own gloom.',
+    ],
+    formatValue: (value) => `${Math.round(value)} cities`,
+    formatDelta: (delta) => `${delta >= 0 ? '+' : ''}${Math.round(delta)} overnight`,
+  },
+  {
+    valueEl: document.getElementById('ruminationValue'),
+    deltaEl: document.getElementById('ruminationDelta'),
+    noteEl: document.getElementById('ruminationNote'),
+    valueRange: [62, 88],
+    deltaRange: [-4, 9],
+    notes: [
+      'Collective insomnia peaking before the third yawn.',
+      'Nightly worry playlists trending at maximum volume.',
+      'Dream analysts confirm: endings now rerun hourly.',
+      'Glow-in-the-dark regret charts selling out worldwide.',
+    ],
+    formatValue: (value) => `${Math.round(value)} mins`,
+    formatDelta: (delta) => `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} tonight`,
+  },
+];
 
 const renderPost = (post) => {
   const node = template.content.cloneNode(true);
@@ -246,6 +314,112 @@ const updateAtmosphere = () => {
   }
 };
 
+const updateMetrics = () => {
+  metricsConfig.forEach((metric) => {
+    if (!metric.valueEl || !metric.deltaEl || !metric.noteEl) return;
+    const value = randomInRange(metric.valueRange[0], metric.valueRange[1]);
+    const delta = randomInRange(metric.deltaRange[0], metric.deltaRange[1]);
+    const note = metric.notes[Math.floor(Math.random() * metric.notes.length)];
+
+    metric.valueEl.textContent = metric.formatValue(value);
+    metric.deltaEl.textContent = metric.formatDelta(delta);
+    metric.noteEl.textContent = note;
+  });
+};
+
+const updateTrends = () => {
+  if (!trendList) return;
+  const fragment = document.createDocumentFragment();
+  trendList.innerHTML = '';
+
+  shuffle(trendSeeds)
+    .slice(0, 4)
+    .forEach((topic) => {
+      const change = Math.round(randomInRange(-6, 9));
+      const intensity = Math.round(randomInRange(72, 97));
+
+      const item = document.createElement('li');
+      item.className = 'trend-item';
+
+      const topicEl = document.createElement('span');
+      topicEl.className = 'trend-topic';
+      topicEl.textContent = topic;
+
+      const intensityEl = document.createElement('span');
+      intensityEl.className = 'trend-intensity';
+      intensityEl.textContent = `Intensity ${intensity}`;
+
+      const changeEl = document.createElement('span');
+      let changeClass = 'trend-flat';
+      let icon = '■';
+      if (change > 0) {
+        changeClass = 'trend-up';
+        icon = '▲';
+      } else if (change < 0) {
+        changeClass = 'trend-down';
+        icon = '▼';
+      }
+      changeEl.className = `trend-change ${changeClass}`;
+      changeEl.textContent = `${icon} ${change > 0 ? '+' : ''}${change}`;
+
+      item.append(topicEl, intensityEl, changeEl);
+      fragment.appendChild(item);
+    });
+
+  trendList.appendChild(fragment);
+};
+
+const updateLastRefresh = () => {
+  if (!lastRefresh) return;
+  const now = new Date();
+  lastRefresh.textContent = now.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  lastRefresh.dataset.timestamp = now.toISOString();
+};
+
+const setAutoRefreshStatus = (message) => {
+  if (autoRefreshStatus) {
+    autoRefreshStatus.textContent = message;
+  }
+};
+
+const performRefresh = () => {
+  renderFeed(shuffle(posts));
+  updateAtmosphere();
+  updateMetrics();
+  updateTrends();
+  updateLastRefresh();
+};
+
+const REFRESH_DELAY = 700;
+const AUTO_REFRESH_INTERVAL = 30000;
+let autoRefreshTimer = null;
+
+const refreshFeed = ({ showLoading = true } = {}) => {
+  if (!refreshButton) {
+    performRefresh();
+    return;
+  }
+
+  if (!showLoading) {
+    performRefresh();
+    return;
+  }
+
+  refreshButton.classList.add('is-loading');
+  refreshButton.disabled = true;
+  refreshButton.textContent = 'Refreshing gloom…';
+
+  setTimeout(() => {
+    performRefresh();
+    refreshButton.classList.remove('is-loading');
+    refreshButton.disabled = false;
+    refreshButton.textContent = 'Refresh Gloom';
+  }, REFRESH_DELAY);
+};
+
 filterButtons.forEach((button) => {
   button.addEventListener('click', () => {
     const filter = button.dataset.filter;
@@ -259,19 +433,68 @@ filterButtons.forEach((button) => {
   });
 });
 
-refreshButton.addEventListener('click', () => {
-  refreshButton.classList.add('is-loading');
-  refreshButton.disabled = true;
-  refreshButton.textContent = 'Refreshing gloom…';
+if (refreshButton) {
+  refreshButton.addEventListener('click', () => refreshFeed());
+}
 
-  setTimeout(() => {
-    renderFeed(shuffle(posts));
-    updateAtmosphere();
-    refreshButton.classList.remove('is-loading');
-    refreshButton.disabled = false;
-    refreshButton.textContent = 'Refresh Gloom';
-  }, 700);
-});
+if (autoRefreshToggle) {
+  const startAutoRefresh = () => {
+    refreshFeed({ showLoading: false });
+    setAutoRefreshStatus('Auto-refresh enabled. Fresh despair scheduled every 30 seconds.');
+    autoRefreshTimer = setInterval(() => refreshFeed({ showLoading: false }), AUTO_REFRESH_INTERVAL);
+  };
 
-renderFeed(shuffle(posts));
-updateAtmosphere();
+  const stopAutoRefresh = () => {
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
+    }
+    setAutoRefreshStatus('Auto-refresh disabled. Manual dread in effect.');
+  };
+
+  autoRefreshToggle.addEventListener('change', () => {
+    if (autoRefreshToggle.checked) {
+      startAutoRefresh();
+    } else {
+      stopAutoRefresh();
+    }
+  });
+}
+
+if (newsletterForm && newsletterMessage) {
+  let messageTimeout;
+
+  const showMessage = (text, type) => {
+    newsletterMessage.textContent = text;
+    newsletterMessage.classList.remove('is-success', 'is-error');
+    if (type) {
+      newsletterMessage.classList.add(type);
+    }
+    if (messageTimeout) {
+      clearTimeout(messageTimeout);
+    }
+    messageTimeout = setTimeout(() => {
+      newsletterMessage.textContent = '';
+      newsletterMessage.classList.remove('is-success', 'is-error');
+    }, 6000);
+  };
+
+  const isValidEmail = (value) => /\S+@\S+\.\S+/.test(value);
+
+  newsletterForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const formData = new FormData(newsletterForm);
+    const email = (formData.get('email') || '').toString().trim();
+
+    if (!email || !isValidEmail(email)) {
+      showMessage('Please provide a valid address the void can haunt.', 'is-error');
+      return;
+    }
+
+    showMessage('Confirmed. Expect curated gloom soon.', 'is-success');
+    newsletterForm.reset();
+  });
+}
+
+performRefresh();
+setAutoRefreshStatus('Auto-refresh disabled. Manual dread in effect.');
