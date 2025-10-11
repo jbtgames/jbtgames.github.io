@@ -1,5 +1,12 @@
 const STORAGE_KEY = "civic-engine-save";
 
+function clone(value) {
+  if (typeof structuredClone === "function") {
+    return structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value));
+}
+
 export const defaultState = {
   turn: 1,
   treasury: 500,
@@ -18,7 +25,7 @@ export const defaultState = {
   ended: false
 };
 
-let state = structuredClone(defaultState);
+let state = clone(defaultState);
 
 const subscribers = new Set();
 
@@ -43,7 +50,7 @@ export function setState(partial) {
 }
 
 export function resetState(base) {
-  state = structuredClone(base ?? defaultState);
+  state = clone(base ?? defaultState);
   notify();
   persist();
 }
@@ -68,7 +75,7 @@ export function loadState() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return false;
     const parsed = JSON.parse(stored);
-    state = { ...structuredClone(defaultState), ...parsed };
+    state = { ...clone(defaultState), ...parsed };
     notify();
     return true;
   } catch (err) {
