@@ -19,6 +19,19 @@ const computeArmyStats = (composition) => {
   );
 };
 
+const applyArmyModifiers = (stats, modifiers = {}) => {
+  return {
+    ...stats,
+    attack: stats.attack * (modifiers.attackMultiplier ?? 1),
+    defense: stats.defense * (modifiers.defenseMultiplier ?? 1),
+    morale: modifiers.moraleBonus ?? 0,
+    heal: modifiers.healBonus ?? 0,
+    control: modifiers.controlBonus ?? 0,
+    variance: modifiers.varianceBonus ?? 0,
+    leech: modifiers.leechBonus ?? 0,
+  };
+};
+
 const drawCard = (deck, rng) => {
   if (!deck.length) return null;
   const cardId = pickFromArray(deck, rng);
@@ -35,7 +48,7 @@ const applyCardEffect = (stats, card) => {
     };
   }
   const effect = card.effect ?? {};
-  const variance = effect.morale ? effect.morale * 1.5 : 0;
+  const varianceBonus = effect.variance ?? (effect.morale ? effect.morale * 1.5 : 0);
   return {
     ...stats,
     attack: stats.attack + (effect.attackBoost ?? 0),
@@ -45,7 +58,7 @@ const applyCardEffect = (stats, card) => {
     heal: (stats.heal ?? 0) + (effect.heal ?? 0),
     control: (stats.control ?? 0) + (effect.control ?? 0),
     leech: (stats.leech ?? 0) + (effect.leech ?? 0),
-    variance,
+    variance: (stats.variance ?? 0) + varianceBonus,
     log: effect.description,
   };
 };
@@ -67,12 +80,14 @@ export const runBattleSimulation = ({
   playerDeck,
   ghostDeck,
   ghostArmy,
+  playerModifiers = {},
+  ghostModifiers = {},
 }) => {
   const normalizedSeed = normalizeSeed(seed);
   const rng = createMulberry32(normalizedSeed);
   const rounds = [];
-  const playerStats = computeArmyStats(playerArmy);
-  const ghostStats = computeArmyStats(ghostArmy);
+  const playerStats = applyArmyModifiers(computeArmyStats(playerArmy), playerModifiers);
+  const ghostStats = applyArmyModifiers(computeArmyStats(ghostArmy), ghostModifiers);
 
   let playerHp = playerStats.hp;
   let ghostHp = ghostStats.hp;
@@ -81,8 +96,30 @@ export const runBattleSimulation = ({
     const playerCard = drawCard(playerDeck, rng);
     const ghostCard = drawCard(ghostDeck, rng);
 
-    const playerBuff = applyCardEffect({ attack: playerStats.attack, defense: playerStats.defense }, playerCard);
-    const ghostBuff = applyCardEffect({ attack: ghostStats.attack, defense: ghostStats.defense }, ghostCard);
+    const playerBuff = applyCardEffect(
+      {
+        attack: playerStats.attack,
+        defense: playerStats.defense,
+        morale: playerStats.morale,
+        heal: playerStats.heal,
+        control: playerStats.control,
+        variance: playerStats.variance,
+        leech: playerStats.leech,
+      },
+      playerCard
+    );
+    const ghostBuff = applyCardEffect(
+      {
+        attack: ghostStats.attack,
+        defense: ghostStats.defense,
+        morale: ghostStats.morale,
+        heal: ghostStats.heal,
+        control: ghostStats.control,
+        variance: ghostStats.variance,
+        leech: ghostStats.leech,
+      },
+      ghostCard
+    );
 
     const playerDamage = resolveDamage(playerBuff, ghostBuff, rng);
     const ghostDamage = resolveDamage(ghostBuff, playerBuff, rng);

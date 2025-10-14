@@ -16,8 +16,13 @@
     <div id="app">
       <div class="pixel-grid-overlay" aria-hidden="true"></div>
       <header class="app-header">
-        <div class="app-title">Rune &amp; Ration</div>
-        <div class="app-subtitle">Citadel Reconstruction Protocol</div>
+        <div class="app-header__row">
+          <div>
+            <div class="app-title">Rune &amp; Ration</div>
+            <div class="app-subtitle">Citadel Reconstruction Protocol</div>
+          </div>
+          <button class="realm-event" id="realm-event" type="button" aria-live="polite"></button>
+        </div>
         <p class="app-subtitle">
           Stabilize resources, prepare formations, and tune your command deck to
           survive the siege.
@@ -32,6 +37,7 @@
         <button class="tab-button" data-tab="army">Army</button>
         <button class="tab-button" data-tab="deck">Deck</button>
         <button class="tab-button" data-tab="battle">Battle</button>
+        <button class="tab-button" data-tab="alliance">Alliance</button>
       </nav>
 
       <main class="panel" id="panel" aria-live="polite"></main>
@@ -40,6 +46,8 @@
         Prototype build • Deterministic auto-battles v0.1
       </footer>
     </div>
+
+    <div class="onboarding-overlay hidden" id="onboarding-overlay" aria-live="assertive"></div>
 
     <script type="module" src="./src/main.js"></script>
   </body>

@@ -5,12 +5,157 @@ import { buildingDefinitions, getUpgradeCost } from "./data/buildings.js";
 import { unitList, units } from "./data/units.js";
 import { cards, cardById } from "./data/cards.js";
 import { ghostArmies, getGhostArmy } from "./data/ghosts.js";
+import { getRealmEvent, getNextRealmEventId } from "./data/events.js";
+import { relicCatalog, relicById } from "./data/relics.js";
 import { runBattleSimulation } from "./sim/battle.js";
 
 const DECK_LIMIT = 12;
 const resourceBarEl = document.querySelector("#resource-bar");
 const panelEl = document.querySelector("#panel");
 const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
+const realmEventButton = document.querySelector("#realm-event");
+const onboardingOverlay = document.querySelector("#onboarding-overlay");
+
+const ONBOARDING_STEPS = [
+  {
+    id: "resources",
+    tab: "resources",
+    title: "Stabilize the Flow",
+    description:
+      "Resources trickle constantly. Monitor the green rates and keep them positive before you attempt any deployments.",
+  },
+  {
+    id: "build",
+    tab: "build",
+    title: "Reignite the Foundry",
+    description:
+      "Upgrade any structure or forge a relic to permanently accelerate production. Relics consume stockpiled resources but never decay.",
+    requirement: (state) => Object.values(state.buildings ?? {}).some((building) => building.level > 1) || state.relics?.crafted?.length,
+    requirementText: "Upgrade a building or forge your first relic to proceed.",
+  },
+  {
+    id: "deck",
+    tab: "deck",
+    title: "Tune Your Command Deck",
+    description:
+      "Every battle plays five rounds. Fill all twelve card slots so the simulation has tactical options to draw from.",
+    requirement: (state) => (state.deck?.active?.length ?? 0) >= DECK_LIMIT,
+    requirementText: "Fill the command deck to 12 cards to continue.",
+  },
+  {
+    id: "alliance",
+    tab: "alliance",
+    title: "Link to the Alliance",
+    description:
+      "Contribute to the shared raid or sync with the Firebase relay to earn weekly rewards. Cooperation unlocks ghost army intel.",
+  },
+];
+
+let realmTooltipOpen = false;
+let battlePlaybackInterval = null;
+
+const triggerBattleVisual = (effect = "shake") => {
+  if (!panelEl) return;
+  const classes = ["battle-visual-shake", "battle-visual-glow"];
+  panelEl.classList.remove(...classes);
+  // force reflow
+  void panelEl.offsetWidth;
+  const className = effect === "glow" ? "battle-visual-glow" : "battle-visual-shake";
+  panelEl.classList.add(className);
+  setTimeout(() => {
+    panelEl.classList.remove(className);
+  }, effect === "glow" ? 900 : 450);
+};
+
+const highlightOnboardingTab = (tabId) => {
+  tabButtons.forEach((button) => {
+    const shouldPulse = tabId && button.dataset.tab === tabId;
+    button.classList.toggle("tab-button--pulse", shouldPulse);
+  });
+};
+
+const renderOnboarding = (state) => {
+  if (!onboardingOverlay) return;
+  if (state.onboarding?.completed) {
+    onboardingOverlay.classList.add("hidden");
+    highlightOnboardingTab(null);
+    return;
+  }
+  const step = ONBOARDING_STEPS[state.onboarding?.currentStep ?? 0] ?? ONBOARDING_STEPS[0];
+  highlightOnboardingTab(step.tab);
+  if (store && state.activeTab !== step.tab) {
+    store.setState({ activeTab: step.tab });
+    return;
+  }
+  const requirementMet = step.requirement ? step.requirement(state) : true;
+  const requirementText = step.requirementText && !requirementMet ? `<p class="panel-note">${step.requirementText}</p>` : "";
+  const isLastStep = (state.onboarding?.currentStep ?? 0) >= ONBOARDING_STEPS.length - 1;
+
+  onboardingOverlay.innerHTML = `
+    <article class="onboarding-card">
+      <h2>${step.title}</h2>
+      <p>${step.description}</p>
+      ${requirementText}
+      <footer>
+        <button class="button button--ghost" data-onboarding-skip type="button">Skip</button>
+        <button class="button button--primary" data-onboarding-next type="button" ${
+          requirementMet ? "" : "disabled"
+        }>${isLastStep ? "Begin Siege" : "Next"}</button>
+      </footer>
+    </article>
+  `;
+  onboardingOverlay.classList.remove("hidden");
+
+  const nextButton = onboardingOverlay.querySelector("[data-onboarding-next]");
+  if (nextButton) {
+    nextButton.addEventListener("click", () => {
+      advanceOnboarding();
+    });
+  }
+  const skipButton = onboardingOverlay.querySelector("[data-onboarding-skip]");
+  if (skipButton) {
+    skipButton.addEventListener("click", () => {
+      completeOnboarding();
+    });
+  }
+};
+
+const advanceOnboarding = () => {
+  if (!store) return;
+  store.setState((state) => {
+    if (state.onboarding.completed) return {};
+    const nextStep = state.onboarding.currentStep + 1;
+    if (nextStep >= ONBOARDING_STEPS.length) {
+      return {
+        onboarding: {
+          ...state.onboarding,
+          completed: true,
+        },
+      };
+    }
+    const nextTab = ONBOARDING_STEPS[nextStep]?.tab ?? state.activeTab;
+    return {
+      onboarding: {
+        ...state.onboarding,
+        currentStep: nextStep,
+      },
+      activeTab: nextTab,
+    };
+  });
+};
+
+const completeOnboarding = () => {
+  if (!store) return;
+  store.setState((state) => {
+    if (state.onboarding.completed) return {};
+    return {
+      onboarding: {
+        ...state.onboarding,
+        completed: true,
+      },
+    };
+  });
+};
 
 const formatNumber = (value) => {
   if (value >= 1000) {
@@ -23,6 +168,93 @@ const formatNumber = (value) => {
 };
 
 const formatRate = (value) => (value >= 0 ? `+${value.toFixed(2)}` : value.toFixed(2));
+
+const clampRate = (value) => Math.round(value * 100) / 100;
+
+const collectEconomyModifiers = (state) => {
+  const multipliers = {};
+  const flats = {};
+
+  const event = getRealmEvent(state.realm?.activeEventId);
+  if (event?.resourceMultipliers) {
+    Object.entries(event.resourceMultipliers).forEach(([resource, multiplier]) => {
+      if (typeof multiplier !== "number") return;
+      multipliers[resource] = (multipliers[resource] ?? 1) * multiplier;
+    });
+  }
+
+  (state.relics?.crafted ?? []).forEach((relicId) => {
+    const relic = relicById[relicId];
+    if (!relic?.economy) return;
+    if (relic.economy.manaFlat) flats.mana = (flats.mana ?? 0) + relic.economy.manaFlat;
+    if (relic.economy.foodFlat) flats.food = (flats.food ?? 0) + relic.economy.foodFlat;
+    if (relic.economy.soulsFlat) flats.souls = (flats.souls ?? 0) + relic.economy.soulsFlat;
+    if (relic.economy.crystalsFlat) flats.crystals = (flats.crystals ?? 0) + relic.economy.crystalsFlat;
+    if (relic.economy.goldFlat) flats.gold = (flats.gold ?? 0) + relic.economy.goldFlat;
+    if (relic.economy.manaMultiplier)
+      multipliers.mana = (multipliers.mana ?? 1) * (1 + relic.economy.manaMultiplier);
+    if (relic.economy.foodMultiplier)
+      multipliers.food = (multipliers.food ?? 1) * (1 + relic.economy.foodMultiplier);
+    if (relic.economy.soulsMultiplier)
+      multipliers.souls = (multipliers.souls ?? 1) * (1 + relic.economy.soulsMultiplier);
+    if (relic.economy.crystalsMultiplier)
+      multipliers.crystals = (multipliers.crystals ?? 1) * (1 + relic.economy.crystalsMultiplier);
+    if (relic.economy.goldMultiplier)
+      multipliers.gold = (multipliers.gold ?? 1) * (1 + relic.economy.goldMultiplier);
+  });
+
+  return { multipliers, flats };
+};
+
+const collectBattleModifiers = (state) => {
+  const player = {
+    attackMultiplier: 1,
+    defenseMultiplier: 1,
+    moraleBonus: 0,
+    healBonus: 0,
+    controlBonus: 0,
+    varianceBonus: 0,
+    leechBonus: 0,
+  };
+  const ghost = { ...player };
+
+  const applySource = (target, source) => {
+    if (!source) return;
+    if (typeof source.attackMultiplier === "number") {
+      target.attackMultiplier *= source.attackMultiplier > 1 ? source.attackMultiplier : 1 + source.attackMultiplier;
+    }
+    if (typeof source.defenseMultiplier === "number") {
+      target.defenseMultiplier *= source.defenseMultiplier > 1 ? source.defenseMultiplier : 1 + source.defenseMultiplier;
+    }
+    if (typeof source.moraleBonus === "number") {
+      target.moraleBonus += source.moraleBonus;
+    }
+    if (typeof source.healBonus === "number") {
+      target.healBonus += source.healBonus;
+    }
+    if (typeof source.controlBonus === "number") {
+      target.controlBonus += source.controlBonus;
+    }
+    if (typeof source.varianceBonus === "number") {
+      target.varianceBonus += source.varianceBonus;
+    }
+    if (typeof source.leechBonus === "number") {
+      target.leechBonus += source.leechBonus;
+    }
+  };
+
+  const event = getRealmEvent(state.realm?.activeEventId);
+  applySource(player, event?.battleModifiers?.player);
+  applySource(ghost, event?.battleModifiers?.ghost);
+
+  (state.relics?.crafted ?? []).forEach((relicId) => {
+    const relic = relicById[relicId];
+    if (!relic?.battle) return;
+    applySource(player, relic.battle);
+  });
+
+  return { player, ghost };
+};
 
 const calculateResourceRates = (state) => {
   const totals = Object.fromEntries(
@@ -38,12 +270,14 @@ const calculateResourceRates = (state) => {
     });
   });
 
+  const economy = collectEconomyModifiers(state);
+
   return Object.fromEntries(
     Object.entries(state.resources).map(([key, resource]) => [
       key,
       {
         ...resource,
-        rate: Math.round((totals[key] ?? resource.baseRate ?? 0) * 100) / 100,
+        rate: clampRate((totals[key] ?? resource.baseRate ?? 0) * (economy.multipliers[key] ?? 1) + (economy.flats[key] ?? 0)),
       },
     ])
   );
@@ -98,6 +332,54 @@ const sanitizeState = (storedState) => {
       lastResult: storedState?.battle?.lastResult ?? null,
       seedInput: storedState?.battle?.seedInput ?? "",
     },
+    realm: (() => {
+      const storedEventId = storedState?.realm?.activeEventId;
+      const event = getRealmEvent(storedEventId);
+      const baseExpires = Date.now() + event.durationHours * 60 * 60 * 1000;
+      const expiresAt =
+        typeof storedState?.realm?.eventExpiresAt === "number"
+          ? storedState.realm.eventExpiresAt
+          : baseExpires;
+      return {
+        activeEventId: event.id,
+        eventExpiresAt: expiresAt,
+        lastRotationAt: storedState?.realm?.lastRotationAt ?? Date.now(),
+      };
+    })(),
+    relics: {
+      crafted: Array.from(
+        new Set(
+          (Array.isArray(storedState?.relics?.crafted) ? storedState.relics.crafted : []).filter(
+            (relicId) => relicById[relicId]
+          )
+        )
+      ),
+    },
+    alliance: (() => {
+      const baseAlliance = base.alliance;
+      const storedAlliance = storedState?.alliance ?? {};
+      const leaderboard = Array.isArray(storedAlliance.leaderboard)
+        ? storedAlliance.leaderboard
+            .filter((entry) => entry?.name && typeof entry.score === "number")
+            .slice(0, 6)
+        : baseAlliance.leaderboard;
+      return {
+        ...baseAlliance,
+        ...storedAlliance,
+        leaderboard,
+        contributed: Math.max(storedAlliance.contributed ?? baseAlliance.contributed, 0),
+        lastSynced: storedAlliance.lastSynced ?? baseAlliance.lastSynced,
+        featuredRaid: {
+          ...baseAlliance.featuredRaid,
+          ...(storedAlliance.featuredRaid ?? {}),
+          progress: Math.min(1, Math.max(0, storedAlliance.featuredRaid?.progress ?? baseAlliance.featuredRaid.progress ?? 0)),
+        },
+      };
+    })(),
+    onboarding: {
+      completed: Boolean(storedState?.onboarding?.completed),
+      currentStep: Math.max(0, Math.min(ONBOARDING_STEPS.length - 1, storedState?.onboarding?.currentStep ?? 0)),
+    },
     lastTick: storedState?.lastTick ?? Date.now(),
     activeTab: storedState?.activeTab ?? "resources",
   };
@@ -123,6 +405,64 @@ const renderResourceBar = (state) => {
     .join("");
 };
 
+const formatCountdown = (expiresAt) => {
+  const remaining = Math.max(0, expiresAt - Date.now());
+  const hours = Math.floor(remaining / (60 * 60 * 1000));
+  const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+  const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+  if (hours > 0) {
+    return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
+  }
+  return `${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`;
+};
+
+const renderRealmEvent = (state) => {
+  if (!realmEventButton) return;
+  const event = getRealmEvent(state.realm?.activeEventId);
+  const expiresAt = state.realm?.eventExpiresAt ?? Date.now();
+  const countdown = formatCountdown(expiresAt);
+
+  const resourceLines = Object.entries(event.resourceMultipliers ?? {})
+    .map(([resource, multiplier]) => {
+      const label = state.resources[resource]?.label ?? resource;
+      const percent = Math.round((multiplier - 1) * 100);
+      const sign = percent >= 0 ? "+" : "";
+      return `<li>${label} ${sign}${percent}%</li>`;
+    })
+    .join("") || "<li>No resource shifts</li>";
+
+  const battleModifiers = event.battleModifiers?.player ?? {};
+  const battleLines = Object.entries(battleModifiers)
+    .map(([key, value]) => {
+      if (typeof value !== "number") return null;
+      if (key.endsWith("Multiplier")) {
+        return `<li>${key.replace("Multiplier", "").toUpperCase()} +${Math.round((value > 1 ? value - 1 : value) * 100)}%</li>`;
+      }
+      if (key.endsWith("Bonus")) {
+        return `<li>${key.replace("Bonus", "").toUpperCase()} +${value}</li>`;
+      }
+      return null;
+    })
+    .filter(Boolean)
+    .join("");
+
+  const tooltip = `
+    <div class="realm-event__tooltip">
+      <strong>${event.description}</strong>
+      <ul>${resourceLines}</ul>
+      ${battleLines ? `<p>Battle Edge</p><ul>${battleLines}</ul>` : ""}
+    </div>
+  `;
+
+  realmEventButton.innerHTML = `
+    <span class="realm-event__name">${event.name}</span>
+    <span class="realm-event__timer">${countdown}</span>
+    ${tooltip}
+  `;
+  realmEventButton.setAttribute("data-event", event.id);
+  realmEventButton.setAttribute("aria-expanded", realmTooltipOpen ? "true" : "false");
+};
+
 const renderResourcesPanel = (state) => {
   const resourceRows = Object.entries(state.resources)
     .map(([key, resource]) => {
@@ -139,12 +479,23 @@ const renderResourcesPanel = (state) => {
     })
     .join("");
 
+  const event = getRealmEvent(state.realm?.activeEventId);
+  const eventSummary = Object.entries(event.resourceMultipliers ?? {})
+    .map(([resource, multiplier]) => {
+      const label = state.resources[resource]?.label ?? resource;
+      const percent = Math.round((multiplier - 1) * 100);
+      const sign = percent >= 0 ? "+" : "";
+      return `${label} ${sign}${percent}%`;
+    })
+    .join(" • ");
+
   return `
     <h2>Resource Operations</h2>
     <section class="panel-section">
       <h3>Production Overview</h3>
       <div class="resource-grid">${resourceRows}</div>
       <p class="panel-note">Production ticks automatically every second. Leaving the citadel will resume from the saved timeline.</p>
+      <p class="panel-note">Realm Event — <strong>${event.name}</strong>: ${eventSummary || "No active modifiers"}.</p>
     </section>
     <section class="panel-section">
       <h3>Focus Suggestions</h3>
@@ -200,11 +551,78 @@ const renderBuildPanel = (state) => {
     })
     .join("");
 
+  const relicCards = relicCatalog
+    .map((relic) => {
+      const owned = state.relics?.crafted?.includes(relic.id);
+      const canAfford = Object.entries(relic.cost).every(
+        ([resource, value]) => (state.resources[resource]?.amount ?? 0) >= value
+      );
+      const costText = Object.entries(relic.cost)
+        .map(([resource, value]) => `${state.resources[resource]?.label ?? resource}: ${value}`)
+        .join(" • ");
+
+      const economyEffects = Object.entries(relic.economy ?? {})
+        .map(([key, value]) => {
+          if (typeof value !== "number") return null;
+          if (key.endsWith("Flat")) {
+            const resource = key.replace("Flat", "");
+            const label = state.resources[resource]?.label ?? resource;
+            return `<span class="relic-pill">+${value.toFixed(2)} ${label}/s</span>`;
+          }
+          if (key.endsWith("Multiplier")) {
+            const resource = key.replace("Multiplier", "");
+            const label = state.resources[resource]?.label ?? resource;
+            return `<span class="relic-pill">+${Math.round(value * 100)}% ${label}</span>`;
+          }
+          return null;
+        })
+        .filter(Boolean)
+        .join("");
+
+      const battleEffects = Object.entries(relic.battle ?? {})
+        .map(([key, value]) => {
+          if (typeof value !== "number") return null;
+          if (key.endsWith("Multiplier")) {
+            return `<span class="relic-pill">${key.replace("Multiplier", "").toUpperCase()} +${Math.round(value * 100)}%</span>`;
+          }
+          if (key.endsWith("Bonus")) {
+            return `<span class="relic-pill">${key.replace("Bonus", "").toUpperCase()} +${value}</span>`;
+          }
+          return null;
+        })
+        .filter(Boolean)
+        .join("");
+
+      const effectTags = [economyEffects, battleEffects].filter(Boolean).join(" ");
+
+      return `
+        <article class="relic-card ${owned ? "relic-card--owned" : ""}" data-relic="${relic.id}">
+          <header>
+            <h3>${relic.name}</h3>
+            <p>${relic.description}</p>
+          </header>
+          <div class="relic-effects">${effectTags}</div>
+          <footer>
+            <span class="building-cost">${costText}</span>
+            <button class="button button--primary" data-forge="${relic.id}" ${
+              !canAfford || owned ? "disabled" : ""
+            }>${owned ? "Forged" : "Forge Relic"}</button>
+          </footer>
+        </article>
+      `;
+    })
+    .join("");
+
   return `
     <h2>Citadel Reconstruction</h2>
     <section class="panel-section">
       <h3>Project Queue</h3>
       <div class="buildings-grid">${buildingCards}</div>
+    </section>
+    <section class="panel-section">
+      <h3>Relic Foundry</h3>
+      <p class="panel-note">Relics consume resources once and permanently enhance production and combat.</p>
+      <div class="relic-grid">${relicCards}</div>
     </section>
   `;
 };
@@ -359,12 +777,31 @@ const renderBattlePanel = (state) => {
               ? "Defeat"
               : "Stalemate"
           }</h3>
+          <div class="battle-timeline">
+            <div class="battle-timeline__controls">
+              <button class="button button--ghost" data-battle-play type="button">Replay</button>
+              <input type="range" class="battle-timeline__slider" min="1" max="${lastResult.rounds.length}" value="${lastResult.rounds.length}" data-round-slider />
+            </div>
+            <div class="battle-timeline__rounds">
+              ${lastResult.rounds
+                .map(
+                  (round, index) => `
+                    <button type="button" class="battle-round-pill ${
+                      index === lastResult.rounds.length - 1 ? "active" : ""
+                    }" data-round-pill="${round.round}">R${round.round}</button>
+                  `
+                )
+                .join("")}
+            </div>
+          </div>
           <p class="battle-summary">Seed ${lastResult.seed} • Remaining HP — You: ${lastResult.remaining.playerHp}, Ghost: ${lastResult.remaining.ghostHp}</p>
           <ol>
             ${lastResult.rounds
               .map(
-                (round) => `
-                  <li>
+                (round, index) => `
+                  <li class="battle-log__round" data-round-entry="${round.round}" data-active="${
+                    index === lastResult.rounds.length - 1
+                  }">
                     <header>Round ${round.round}</header>
                     <p><strong>You:</strong> ${round.playerCard} — ${round.playerCardText}</p>
                     <p><strong>Ghost:</strong> ${round.ghostCard} — ${round.ghostCardText}</p>
@@ -404,12 +841,65 @@ const renderBattlePanel = (state) => {
   `;
 };
 
+const renderAlliancePanel = (state) => {
+  const alliance = state.alliance;
+  const ghost = getGhostArmy(alliance.featuredRaid?.ghostId);
+  const weeklyProgress = Math.min(100, Math.round((alliance.contributed / alliance.weeklyGoal) * 100));
+  const raidProgress = Math.min(100, Math.round((alliance.featuredRaid?.progress ?? 0) * 100));
+  const lastSynced = alliance.lastSynced
+    ? new Date(alliance.lastSynced).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "Never";
+
+  const leaderboard = (alliance.leaderboard ?? [])
+    .map(
+      (entry, index) => `
+        <li>
+          <span>${index + 1}. ${entry.name}</span>
+          <span>${Math.round(entry.score).toLocaleString()}</span>
+        </li>
+      `
+    )
+    .join("");
+
+  return `
+    <h2>Alliance Outpost</h2>
+    <section class="panel-section alliance-panel">
+      <div>
+        <h3>${alliance.name}</h3>
+        <p class="panel-note">Rank #${alliance.rank} • Last synced ${lastSynced}</p>
+      </div>
+      <div class="alliance-metrics">
+        <article class="metric-card">
+          <span>Weekly Goal</span>
+          <strong>${Math.round(alliance.contributed).toLocaleString()} / ${Math.round(alliance.weeklyGoal).toLocaleString()}</strong>
+          <span>${weeklyProgress}% complete</span>
+        </article>
+        <article class="metric-card">
+          <span>Featured Raid</span>
+          <strong>${ghost.name}</strong>
+          <span>${raidProgress}% ghost morale broken</span>
+        </article>
+      </div>
+      <div>
+        <button class="button button--primary" data-sync-alliance>Sync Firebase Relay</button>
+        <button class="button button--ghost" data-contribute>${"Pledge 240 strength"}</button>
+      </div>
+      <p class="panel-note">Alliance pledges consume 40 Gold and 20 Mana to add 240 raid strength plus a bonus from your deck.</p>
+      <section class="panel-section">
+        <h3>Season Leaderboard</h3>
+        <ul class="leaderboard">${leaderboard}</ul>
+      </section>
+    </section>
+  `;
+};
+
 const panelRenderers = {
   resources: renderResourcesPanel,
   build: renderBuildPanel,
   army: renderArmyPanel,
   deck: renderDeckPanel,
   battle: renderBattlePanel,
+  alliance: renderAlliancePanel,
 };
 
 const panelBinders = {
@@ -418,6 +908,12 @@ const panelBinders = {
       button.addEventListener("click", () => {
         const buildingId = button.dataset.upgrade;
         upgradeBuilding(buildingId);
+      });
+    });
+    panelEl.querySelectorAll("[data-forge]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const relicId = button.dataset.forge;
+        forgeRelic(relicId);
       });
     });
   },
@@ -463,7 +959,88 @@ const panelBinders = {
         runBattle();
       });
     }
+    initializeBattleTimeline(state);
   },
+  alliance: () => {
+    const syncButton = panelEl.querySelector("[data-sync-alliance]");
+    if (syncButton) {
+      syncButton.addEventListener("click", () => {
+        syncAlliance();
+      });
+    }
+    const contributeButton = panelEl.querySelector("[data-contribute]");
+    if (contributeButton) {
+      contributeButton.addEventListener("click", () => {
+        pledgeAlliance();
+      });
+    }
+  },
+};
+
+const initializeBattleTimeline = (state) => {
+  if (!state.battle?.lastResult) return;
+  if (battlePlaybackInterval) {
+    clearInterval(battlePlaybackInterval);
+    battlePlaybackInterval = null;
+  }
+  const slider = panelEl.querySelector("[data-round-slider]");
+  const pills = Array.from(panelEl.querySelectorAll("[data-round-pill]"));
+  const entries = Array.from(panelEl.querySelectorAll("[data-round-entry]"));
+  if (!slider || !entries.length) return;
+
+  const highlight = (round) => {
+    entries.forEach((entry) => {
+      const isActive = Number(entry.dataset.roundEntry) === round;
+      entry.setAttribute("data-active", isActive);
+    });
+    pills.forEach((pill) => {
+      const isActive = Number(pill.dataset.roundPill) === round;
+      pill.classList.toggle("active", isActive);
+    });
+  };
+
+  const maxRound = Number(slider.max);
+  highlight(Number(slider.value) || maxRound);
+
+  slider.addEventListener("input", (event) => {
+    const round = Number(event.target.value);
+    highlight(round);
+    triggerBattleVisual("glow");
+  });
+
+  pills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      const round = Number(pill.dataset.roundPill);
+      slider.value = round;
+      highlight(round);
+      triggerBattleVisual();
+    });
+  });
+
+  const playButton = panelEl.querySelector("[data-battle-play]");
+  if (playButton) {
+    playButton.addEventListener("click", () => {
+      if (battlePlaybackInterval) {
+        clearInterval(battlePlaybackInterval);
+        battlePlaybackInterval = null;
+      }
+      let currentRound = 1;
+      highlight(currentRound);
+      slider.value = currentRound;
+      triggerBattleVisual("glow");
+      battlePlaybackInterval = setInterval(() => {
+        currentRound += 1;
+        if (currentRound > maxRound) {
+          clearInterval(battlePlaybackInterval);
+          battlePlaybackInterval = null;
+          return;
+        }
+        slider.value = currentRound;
+        highlight(currentRound);
+        triggerBattleVisual(currentRound === maxRound ? "glow" : "shake");
+      }, 900);
+    });
+  }
 };
 
 const renderPanel = (state) => {
@@ -519,6 +1096,130 @@ const upgradeBuilding = (buildingId) => {
     return {
       resources: updatedState.resources,
       buildings: updatedBuildings,
+    };
+  });
+};
+
+const forgeRelic = (relicId) => {
+  store.setState((state) => {
+    const relic = relicById[relicId];
+    if (!relic) return {};
+    const crafted = state.relics?.crafted ?? [];
+    if (crafted.includes(relicId)) return {};
+    const canAfford = Object.entries(relic.cost).every(
+      ([resource, value]) => (state.resources[resource]?.amount ?? 0) >= value
+    );
+    if (!canAfford) return {};
+
+    const updatedResources = Object.fromEntries(
+      Object.entries(state.resources).map(([resourceId, resource]) => {
+        const spend = relic.cost[resourceId] ?? 0;
+        return [
+          resourceId,
+          {
+            ...resource,
+            amount: resource.amount - spend,
+          },
+        ];
+      })
+    );
+
+    const updatedRelics = [...crafted, relicId];
+    const recalculated = calculateResourceRates({
+      ...state,
+      resources: updatedResources,
+      relics: { crafted: updatedRelics },
+    });
+
+    return {
+      resources: recalculated,
+      relics: {
+        crafted: updatedRelics,
+      },
+    };
+  });
+};
+
+const syncAlliance = () => {
+  store.setState((state) => {
+    const now = Date.now();
+    const leaderboard = [...(state.alliance.leaderboard ?? [])].map((entry) => {
+      if (entry.name === state.alliance.name) {
+        return {
+          ...entry,
+          score: Math.max(entry.score, state.alliance.contributed),
+        };
+      }
+      return {
+        ...entry,
+        score: Math.round(entry.score * (1 + Math.random() * 0.05)),
+      };
+    });
+
+    if (!leaderboard.some((entry) => entry.name === state.alliance.name)) {
+      leaderboard.push({ name: state.alliance.name, score: state.alliance.contributed });
+    }
+
+    leaderboard.sort((a, b) => b.score - a.score);
+
+    return {
+      alliance: {
+        ...state.alliance,
+        leaderboard: leaderboard.slice(0, 6),
+        lastSynced: now,
+      },
+    };
+  });
+};
+
+const pledgeAlliance = () => {
+  store.setState((state) => {
+    const cost = { gold: 40, mana: 20 };
+    const canAfford = Object.entries(cost).every(
+      ([resource, value]) => (state.resources[resource]?.amount ?? 0) >= value
+    );
+    if (!canAfford) return {};
+
+    const updatedResources = Object.fromEntries(
+      Object.entries(state.resources).map(([resourceId, resource]) => {
+        const spend = cost[resourceId] ?? 0;
+        return [
+          resourceId,
+          {
+            ...resource,
+            amount: resource.amount - spend,
+          },
+        ];
+      })
+    );
+
+    const deckBonus = (state.deck?.active?.length ?? 0) * 5;
+    const contributionGain = 240 + deckBonus;
+    const contributed = state.alliance.contributed + contributionGain;
+    const raidProgress = Math.min(
+      1,
+      (state.alliance.featuredRaid?.progress ?? 0) + contributionGain / state.alliance.weeklyGoal
+    );
+
+    const leaderboard = (state.alliance.leaderboard ?? []).map((entry) =>
+      entry.name === state.alliance.name
+        ? { ...entry, score: Math.max(entry.score, contributed) }
+        : entry
+    );
+
+    triggerBattleVisual("glow");
+
+    return {
+      resources: updatedResources,
+      alliance: {
+        ...state.alliance,
+        contributed,
+        featuredRaid: {
+          ...state.alliance.featuredRaid,
+          progress: raidProgress,
+        },
+        leaderboard,
+      },
     };
   });
 };
@@ -604,12 +1305,16 @@ const runBattle = () => {
     Object.entries(selectedGhost.units).map(([unitId, count]) => [unitId, { count }])
   );
 
+  const battleModifiers = collectBattleModifiers(state);
+
   const result = runBattleSimulation({
     seed,
     playerArmy,
     playerDeck: state.deck.active,
     ghostDeck: selectedGhost.deck,
     ghostArmy,
+    playerModifiers: battleModifiers.player,
+    ghostModifiers: battleModifiers.ghost,
   });
 
   store.setState((prev) => ({
@@ -622,9 +1327,11 @@ const runBattle = () => {
       },
     },
   }));
+  triggerBattleVisual("glow");
 };
 
 const tickResources = () => {
+  rotateRealmEventIfNeeded();
   store.setState((state) => {
     const now = Date.now();
     const elapsed = Math.max(0, (now - state.lastTick) / 1000);
@@ -650,6 +1357,29 @@ const tickResources = () => {
   });
 };
 
+const rotateRealmEventIfNeeded = () => {
+  if (!store) return;
+  const state = store.getState();
+  if (!state.realm) return;
+  const now = Date.now();
+  if (now < (state.realm.eventExpiresAt ?? 0)) return;
+  const nextId = getNextRealmEventId(state.realm.activeEventId);
+  const nextEvent = getRealmEvent(nextId);
+  const updatedRealm = {
+    activeEventId: nextId,
+    eventExpiresAt: now + nextEvent.durationHours * 60 * 60 * 1000,
+    lastRotationAt: now,
+  };
+  const recalculated = calculateResourceRates({
+    ...state,
+    realm: updatedRealm,
+  });
+  store.setState({
+    realm: updatedRealm,
+    resources: recalculated,
+  });
+};
+
 const bootstrap = async () => {
   const stored = await loadGameState();
   const initialState = sanitizeState(stored);
@@ -657,7 +1387,9 @@ const bootstrap = async () => {
 
   store.subscribe((state) => {
     renderResourceBar(state);
+    renderRealmEvent(state);
     renderPanel(state);
+    renderOnboarding(state);
   });
 
   tabButtons.forEach((button) => {
@@ -665,6 +1397,29 @@ const bootstrap = async () => {
       const tab = button.dataset.tab;
       store.setState({ activeTab: tab });
     });
+  });
+
+  if (realmEventButton) {
+    realmEventButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      realmTooltipOpen = !realmTooltipOpen;
+      realmEventButton.setAttribute("aria-expanded", realmTooltipOpen ? "true" : "false");
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!realmEventButton) return;
+    if (!realmEventButton.contains(event.target)) {
+      realmTooltipOpen = false;
+      realmEventButton.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && realmTooltipOpen) {
+      realmTooltipOpen = false;
+      realmEventButton?.setAttribute("aria-expanded", "false");
+    }
   });
 
   setupAutosave(store);
