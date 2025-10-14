@@ -7,12 +7,17 @@
   --color-emerald: #2fa68b;
   --color-text: #f0f4ff;
   --color-muted: #9aa3c2;
-  --border-radius: 8px;
+  --border-radius: 12px;
   --pixel-border: 2px solid rgba(255, 255, 255, 0.08);
   --font-display: "Press Start 2P", "Courier New", monospace;
   --font-body: "VT323", "Courier New", monospace;
-  --layout-width: 390px;
-  --layout-height: 844px;
+  --layout-max-width: 420px;
+  --layout-max-height: 840px;
+  --layout-min-height: 520px;
+  --surface-padding: clamp(14px, 4vw, 24px);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-vertical: calc(var(--safe-area-top) + var(--safe-area-bottom));
 }
 
 * {
@@ -22,9 +27,13 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: calc(var(--safe-area-top) + var(--surface-padding))
+    clamp(12px, 5vw, 32px)
+    calc(var(--safe-area-bottom) + var(--surface-padding));
   background: radial-gradient(circle at top, #1c2545, #05060d 70%);
   color: var(--color-text);
   font-family: var(--font-body);
@@ -32,17 +41,27 @@ body {
 }
 
 #app {
-  width: var(--layout-width);
-  height: var(--layout-height);
+  width: min(100%, var(--layout-max-width));
+  min-height: clamp(
+    var(--layout-min-height),
+    calc(100vh - var(--safe-area-vertical)),
+    var(--layout-max-height)
+  );
+  min-height: clamp(
+    var(--layout-min-height),
+    calc(100dvh - var(--safe-area-vertical)),
+    var(--layout-max-height)
+  );
   background: linear-gradient(160deg, rgba(22, 29, 54, 0.92), rgba(6, 8, 20, 0.96));
   border: 4px solid rgba(124, 92, 204, 0.4);
   border-radius: 24px;
   box-shadow: 0 24px 48px rgba(5, 6, 13, 0.9);
   display: grid;
   grid-template-rows: auto auto 1fr auto;
-  padding: 16px;
+  padding: var(--surface-padding);
   overflow: hidden;
   position: relative;
+  gap: clamp(12px, 2vw, 18px);
 }
 
 .app-header {
@@ -66,22 +85,22 @@ body {
 }
 
 .resource-bar {
-  margin: 8px 0 12px;
+  margin: 4px 0 8px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: clamp(8px, 2vw, 12px);
 }
 
 .resource-chip {
   background: var(--color-panel);
   border: var(--pixel-border);
   border-radius: var(--border-radius);
-  padding: 8px 6px;
+  padding: clamp(8px, 2vw, 12px) clamp(6px, 2vw, 10px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 62px;
+  min-height: clamp(56px, 12vw, 68px);
   position: relative;
   overflow: hidden;
 }
@@ -96,34 +115,50 @@ body {
 }
 
 .resource-name {
-  font-size: 11px;
+  font-size: clamp(10px, 2.4vw, 12px);
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
 .resource-value {
-  font-size: 18px;
+  font-size: clamp(16px, 4.5vw, 20px);
   font-weight: bold;
   color: var(--color-text);
 }
 
 .tab-nav {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(120px, 1fr);
   gap: 8px;
-  margin-bottom: 12px;
+  margin: 0 calc(var(--surface-padding) * -0.25) 4px;
+  padding: 0 calc(var(--surface-padding) * 0.25) 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.tab-nav::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tab-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
 }
 
 .tab-button {
   font-family: var(--font-body);
-  font-size: 14px;
-  padding: 10px 6px;
+  font-size: clamp(13px, 3.6vw, 15px);
+  padding: 10px 8px;
   border-radius: var(--border-radius);
   border: var(--pixel-border);
   background: var(--color-panel);
   color: var(--color-text);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  scroll-snap-align: center;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
@@ -139,7 +174,7 @@ body {
   background: var(--color-panel);
   border: var(--pixel-border);
   border-radius: 18px;
-  padding: 16px;
+  padding: clamp(14px, 4vw, 20px);
   overflow-y: auto;
   position: relative;
   display: flex;
@@ -150,7 +185,7 @@ body {
 
 .panel h2 {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: clamp(15px, 4vw, 18px);
   text-transform: uppercase;
   margin: 0 0 8px;
   color: var(--color-emerald);
@@ -160,20 +195,20 @@ body {
 .panel p {
   margin: 0;
   color: var(--color-text);
-  font-size: 18px;
+  font-size: clamp(16px, 4.8vw, 18px);
   line-height: 1.4;
 }
 
 .panel-section {
   background: rgba(0, 0, 0, 0.18);
   border-radius: var(--border-radius);
-  padding: 12px;
+  padding: clamp(12px, 3.5vw, 16px);
   border: 1px solid rgba(47, 166, 139, 0.25);
 }
 
 .panel-section h3 {
   margin: 0 0 8px;
-  font-size: 15px;
+  font-size: clamp(14px, 3.8vw, 16px);
   text-transform: uppercase;
   color: var(--color-accent);
 }
@@ -181,7 +216,7 @@ body {
 .panel-section p,
 .panel-section li {
   color: var(--color-muted);
-  font-size: 16px;
+  font-size: clamp(15px, 4.2vw, 17px);
 }
 
 .panel-section ul {
@@ -192,12 +227,12 @@ body {
 }
 
 .footer {
-  margin-top: 12px;
-  padding: 8px 10px;
+  margin-top: 0;
+  padding: clamp(8px, 3vw, 12px) clamp(10px, 3vw, 16px);
   border-radius: var(--border-radius);
   border: var(--pixel-border);
   background: rgba(19, 26, 47, 0.85);
-  font-size: 14px;
+  font-size: clamp(13px, 3.8vw, 15px);
   color: var(--color-muted);
   text-align: center;
 }
@@ -212,15 +247,38 @@ body {
   opacity: 0.6;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 640px) {
   body {
-    padding: 16px 0;
+    padding: calc(var(--safe-area-top) + clamp(12px, 6vw, 20px))
+      clamp(8px, 4vw, 16px)
+      calc(var(--safe-area-bottom) + clamp(12px, 6vw, 20px));
+    align-items: stretch;
   }
 
   #app {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-    border-width: 0;
+    margin: 0 auto;
+    border-radius: 20px;
+    border-width: 3px;
+    max-width: 100%;
+  }
+
+  .tab-nav {
+    margin-inline: calc(var(--surface-padding) * -0.5);
+    padding-inline: calc(var(--surface-padding) * 0.5);
+  }
+}
+
+@media (min-width: 720px) {
+  body {
+    padding: calc(var(--safe-area-top) + var(--surface-padding)) 48px
+      calc(var(--safe-area-bottom) + var(--surface-padding));
+  }
+
+  .tab-nav {
+    grid-auto-flow: initial;
+    grid-template-columns: repeat(5, 1fr);
+    overflow: visible;
+    margin: 0 0 12px;
+    padding: 0;
   }
 }
