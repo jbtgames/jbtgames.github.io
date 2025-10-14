@@ -1,4 +1,9 @@
 import { loadFromIndexedDb, saveToIndexedDb } from "./indexedDb.js";
+import {
+  loadFirebaseSnapshot,
+  mergeStateWithCloud,
+  queueFirebaseSave,
+} from "./firebase.js";
 
 const LOCAL_STORAGE_KEY = "rune-ration-state";
 
@@ -34,9 +39,17 @@ const saveToLocalStorage = (state) => {
 };
 
 export const loadGameState = async () => {
-  const stored = await loadFromIndexedDb();
-  if (stored) return stored;
-  return loadFromLocalStorage();
+  const [indexedDbState, localStorageState, cloudState] = await Promise.all([
+    loadFromIndexedDb(),
+    Promise.resolve(loadFromLocalStorage()),
+    loadFirebaseSnapshot(),
+  ]);
+
+  let baseState = indexedDbState ?? localStorageState ?? null;
+  if (cloudState) {
+    baseState = mergeStateWithCloud(baseState, cloudState);
+  }
+  return baseState ?? localStorageState ?? indexedDbState ?? null;
 };
 
 export const saveGameState = async (state) => {
@@ -45,6 +58,7 @@ export const saveGameState = async (state) => {
   if (!saved) {
     saveToLocalStorage(snapshot);
   }
+  queueFirebaseSave(snapshot);
 };
 
 export const setupAutosave = (store) => {
