@@ -87,6 +87,21 @@ Each tab replaces the central panel but reuses header and footer.
 5. Ghost opponents seeded locally with varied decks.
 6. Mobile layout fully responsive and pixel-perfect.
 
+## PHASE 1 IMPLEMENTATION SNAPSHOT
+- **State & Persistence**: Reactive store persists automatically through IndexedDB with a graceful localStorage fallback. State hydration replays saved resources, formations, and deck selections.
+- **Resource Economy**: Mana, food, crystals, souls, and gold tick every second with building-driven rates. Upgrade tiers recalculate production instantly.
+- **Citadel Build Queue**: Rune Forge, Barracks, Granary, and Mage Tower upgrades spend resources, scale costs, and surface per-level production deltas.
+- **Army & Deck Management**: Adjustable unit counts feed battle readiness summaries, while a 12-card command deck enforces per-card copy limits with add/remove controls.
+- **Battle Simulation**: Deterministic five-round auto-battle compares the player build against three seeded ghost armies and produces granular combat logs, honoring optional custom seeds.
+
+## PHASE 2 LAYOUT PLAN
+1. **Realm Events Layer** – Introduce rotating realm modifiers (e.g., Blood Moon, Verdant Tide) that alter resource rates and combat bonuses. UI: seasonal badge in the header with tooltip and countdown.
+2. **Relics & Crafting** – Extend the Build tab with a Relic Foundry panel. Players forge relics using surplus resources for permanent stat augments and passive abilities.
+3. **Alliance Outpost** – Add a new tab for asynchronous co-op goals, including shared ghost raids and weekly leaderboards synchronized via Firebase.
+4. **Enhanced Battle Visuals** – Implement pixel animations (screen shake, card glow, rune traces) and per-round timelines for richer battle feedback. Integrate a replay slider.
+5. **Expanded Persistence** – Migrate autosave to a strategy that merges local state with Firebase, enabling ghost army sharing and seasonal reset support.
+6. **Onboarding Flow** – Script a guided tutorial overlay (3–4 steps) that highlights key panels, ensures the first deck is valid, and primes players for alliances in Phase 2.
+
 ## FUTURE EXPANSIONS
 - Firebase sync for live player ghost data.
 - Seasonal realm modifiers (e.g., “Blood Moon Week”).
