@@ -1,1 +1,46 @@
-!
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rune &amp; Ration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles/base.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="pixel-grid-overlay" aria-hidden="true"></div>
+      <header class="app-header">
+        <div class="app-title">Rune &amp; Ration</div>
+        <div class="app-subtitle">Citadel Reconstruction Protocol</div>
+        <p class="app-subtitle">
+          Stabilize resources, prepare formations, and tune your command deck to
+          survive the siege.
+        </p>
+      </header>
+
+      <section class="resource-bar" id="resource-bar" aria-label="resources"></section>
+
+      <nav class="tab-nav" aria-label="Primary">
+        <button class="tab-button active" data-tab="resources">Resources</button>
+        <button class="tab-button" data-tab="build">Build</button>
+        <button class="tab-button" data-tab="army">Army</button>
+        <button class="tab-button" data-tab="deck">Deck</button>
+        <button class="tab-button" data-tab="battle">Battle</button>
+      </nav>
+
+      <main class="panel" id="panel" aria-live="polite"></main>
+
+      <footer class="footer">
+        Prototype build • Deterministic auto-battles v0.1
+      </footer>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
