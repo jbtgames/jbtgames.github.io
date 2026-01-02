@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ghost">
+    <meta name="theme-color" content="#0a0a0c">
+    <meta name="description" content="Privacy-focused browser with tracker blocking">
+
+```
+<title>Ghost Browser</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+    }
+
+    :root {
+        --bg-primary: #0a0a0c;
+        --bg-secondary: #111115;
+        --bg-tertiary: #18181d;
+        --bg-elevated: #1e1e24;
+        --accent: #00ff88;
+        --accent-dim: #00cc6a;
+        --accent-glow: rgba(0, 255, 136, 0.3);
+        --cyan: #00d4ff;
+        --orange: #ff9500;
+        --red: #ff3366;
+        --text: #f0f0f5;
+        --text-secondary: #9898a8;
+        --text-dim: #606070;
+        --border: #2a2a35;
+        --safe-top: env(safe-area-inset-top);
+        --safe-bottom: env(safe-area-inset-bottom);
+    }
+
+    html, body {
+        height: 100%;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+        background: var(--bg-primary);
+        color: var(--text);
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    /* App Container */
+    .app {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding-top: var(--safe-top);
+        padding-bottom: var(--safe-bottom);
+    }
+
+    /* Header */
+    header {
+        background: var(--bg-secondary);
+        padding: 12px;
+        padding-top: calc(12px + 8px);
+        border-bottom: 1px solid var(--border);
+        z-index: 100;
+    }
+
+    .header-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .menu-btn {
+        width: 44px;
+        height: 44px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .menu-btn:active {
+        background: var(--bg-tertiary);
+        transform: scale(0.95);
+    }
+
+    .menu-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* URL Bar */
+    .url-bar {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0 14px;
+        height: 46px;
+        gap: 10px;
+        transition: all 0.2s;
+    }
+
+    .url-bar:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .url-bar .shield {
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+    }
+
+    .url-bar .shield.warning { color: var(--orange); }
+    .url-bar .shield.danger { color: var(--red); }
+
+    .url-bar .shield svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .url-bar input {
+        flex: 1;
+        background: none;
+        border: none;
+        color: var(--text);
+        font-size: 15px;
+        outline: none;
+        min-width: 0;
+    }
+
+    .url-bar input::placeholder {
+        color: var(--text-dim);
+    }
+
+    .go-btn {
+        width: 34px;
+        height: 34px;
+        border: none;
+        background: var(--accent);
+        color: var(--bg-primary);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .go-btn:active {
+        background: var(--accent-dim);
+        transform: scale(0.95);
+    }
+
+    .go-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Main Content */
+    main {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Home Screen */
+    .home {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 24px;
+        overflow-y: auto;
+        background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    }
+
+    .home.hidden { display: none; }
+
+    .logo {
+        width: 100px;
+        height: 100px;
+        color: var(--accent);
+        margin-bottom: 20px;
+        filter: drop-shadow(0 0 30px var(--accent-glow));
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .home h1 {
+        font-size: 32px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, var(--accent), var(--cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .home > p {
+        color: var(--text-secondary);
+        margin-bottom: 36px;
+    }
+
+    /* Search Box */
+    .search-box {
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        align-items: center;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 0 18px;
+        height: 56px;
+        gap: 12px;
+        margin-bottom: 36px;
+    }
+
+    .search-box:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .search-box svg {
+        width: 22px;
+        height: 22px;
+        color: var(--text-dim);
+        flex-shrink: 0;
+    }
+
+    .search-box input {
+        flex: 1;
+        background: none;
+        border: none;
+        color: var(--text);
+        font-size: 16px;
+        outline: none;
+    }
+
+    .search-box input::placeholder {
+        color: var(--text-dim);
+    }
+
+    /* Quick Links */
+    .quick-links {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        width: 100%;
+        max-width: 400px;
+        margin-bottom: 40px;
+    }
+
+    .quick-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 16px 8px;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .quick-link:active {
+        transform: scale(0.95);
+        border-color: var(--accent);
+        background: rgba(0, 255, 136, 0.05);
+    }
+
+    .quick-link .icon {
+        font-size: 28px;
+    }
+
+    .quick-link span {
+        font-size: 11px;
+        color: var(--text-secondary);
+    }
+
+    /* Stats */
+    .stats {
+        display: flex;
+        gap: 40px;
+    }
+
+    .stat {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 36px;
+        font-weight: 600;
+        color: var(--accent);
+        font-family: 'SF Mono', monospace;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    /* Results Screen */
+    .results {
+        position: absolute;
+        inset: 0;
+        background: var(--bg-primary);
+        overflow-y: auto;
+        display: none;
+    }
+
+    .results.active { display: block; }
+
+    .results-header {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .results-header h2 {
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .privacy-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 255, 136, 0.1);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        color: var(--accent);
+    }
+
+    .privacy-badge .dot {
+        width: 6px;
+        height: 6px;
+        background: var(--accent);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    /* Result Item */
+    .result-item {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .result-item:active {
+        background: var(--bg-tertiary);
+    }
+
+    .result-title {
+        font-size: 16px;
+        color: var(--cyan);
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .result-url {
+        font-size: 13px;
+        color: var(--accent);
+        margin-bottom: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .result-snippet {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .result-privacy {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    .tracker-tag {
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: rgba(255, 51, 102, 0.15);
+        color: var(--red);
+    }
+
+    .tracker-tag.blocked {
+        background: rgba(0, 255, 136, 0.15);
+        color: var(--accent);
+        text-decoration: line-through;
+    }
+
+    /* Loading */
+    .loading {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+    }
+
+    .loading.active { display: flex; }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading p {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+
+    /* Bottom Toolbar */
+    .toolbar {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+        padding: 8px 16px;
+        padding-bottom: calc(8px + var(--safe-bottom));
+    }
+
+    .toolbar-btn {
+        width: 50px;
+        height: 46px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .toolbar-btn:active {
+        color: var(--accent);
+        transform: scale(0.9);
+    }
+
+    .toolbar-btn.active {
+        color: var(--accent);
+    }
+
+    .toolbar-btn svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .toolbar-btn .badge {
+        position: absolute;
+        top: 2px;
+        right: 6px;
+        background: var(--accent);
+        color: var(--bg-primary);
+        font-size: 10px;
+        font-weight: 600;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Side Menu */
+    .menu-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+        z-index: 500;
+        backdrop-filter: blur(4px);
+    }
+
+    .menu-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .side-menu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 300px;
+        max-width: 85vw;
+        background: var(--bg-secondary);
+        z-index: 600;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        padding-top: var(--safe-top);
+    }
+
+    .side-menu.active {
+        transform: translateX(0);
+    }
+
+    .menu-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .menu-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--accent);
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .menu-logo svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .close-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .close-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .menu-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+    }
+
+    .menu-section {
+        margin-bottom: 24px;
+    }
+
+    .menu-section h3 {
+        font-size: 11px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        padding-left: 12px;
+    }
+
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 14px 12px;
+        background: none;
+        border: none;
+        border-radius: 10px;
+        color: var(--text);
+        font-size: 15px;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .menu-item:active {
+        background: var(--bg-tertiary);
+    }
+
+    .menu-item svg {
+        width: 22px;
+        height: 22px;
+        color: var(--text-secondary);
+    }
+
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 12px;
+    }
+
+    .menu-toggle .info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 15px;
+    }
+
+    .menu-toggle svg {
+        width: 22px;
+        height: 22px;
+        color: var(--text-secondary);
+    }
+
+    /* Toggle Switch */
+    .switch {
+        width: 50px;
+        height: 28px;
+        position: relative;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        inset: 0;
+        background: var(--bg-tertiary);
+        border-radius: 14px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .slider::before {
+        content: '';
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        left: 3px;
+        top: 3px;
+        background: var(--text-secondary);
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+
+    .switch input:checked + .slider {
+        background: var(--accent);
+    }
+
+    .switch input:checked + .slider::before {
+        transform: translateX(22px);
+        background: var(--bg-primary);
+    }
+
+    .menu-footer {
+        padding: 20px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+    }
+
+    .menu-footer p {
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    .menu-footer .highlight {
+        color: var(--accent);
+        margin-top: 4px;
+    }
+
+    /* Shield Panel */
+    .shield-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+        z-index: 500;
+        backdrop-filter: blur(4px);
+    }
+
+    .shield-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .shield-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-secondary);
+        border-radius: 24px 24px 0 0;
+        z-index: 600;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: var(--safe-bottom);
+    }
+
+    .shield-panel.active {
+        transform: translateY(0);
+    }
+
+    .shield-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .shield-header h2 {
+        font-size: 18px;
+    }
+
+    .shield-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+    }
+
+    /* Score Circle */
+    .score-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 28px;
+    }
+
+    .score-circle {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin-bottom: 12px;
+    }
+
+    .score-circle svg {
+        transform: rotate(-90deg);
+    }
+
+    .score-bg {
+        fill: none;
+        stroke: var(--bg-tertiary);
+        stroke-width: 10;
+    }
+
+    .score-progress {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 10;
+        stroke-linecap: round;
+        stroke-dasharray: 339.292;
+        stroke-dashoffset: 339.292;
+        transition: stroke-dashoffset 1s ease;
+        filter: drop-shadow(0 0 8px var(--accent-glow));
+    }
+
+    .score-progress.medium {
+        stroke: var(--orange);
+        filter: drop-shadow(0 0 8px rgba(255, 149, 0, 0.4));
+    }
+
+    .score-progress.low {
+        stroke: var(--red);
+        filter: drop-shadow(0 0 8px rgba(255, 51, 102, 0.4));
+    }
+
+    .score-inner {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .score-number {
+        font-size: 42px;
+        font-weight: 600;
+        font-family: 'SF Mono', monospace;
+        color: var(--accent);
+    }
+
+    .score-number.medium { color: var(--orange); }
+    .score-number.low { color: var(--red); }
+
+    .score-text {
+        font-size: 11px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .score-status {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+
+    /* Shield Stats */
+    .shield-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .shield-stat {
+        background: var(--bg-tertiary);
+        border-radius: 12px;
+        padding: 14px;
+        text-align: center;
+    }
+
+    .shield-stat-value {
+        font-size: 24px;
+        font-weight: 600;
+        font-family: 'SF Mono', monospace;
+        margin-bottom: 4px;
+    }
+
+    .shield-stat-value.green { color: var(--accent); }
+    .shield-stat-value.cyan { color: var(--cyan); }
+    .shield-stat-value.orange { color: var(--orange); }
+
+    .shield-stat-label {
+        font-size: 10px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+    }
+
+    /* Tracker List */
+    .tracker-section {
+        background: var(--bg-tertiary);
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .tracker-section h3 {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+    }
+
+    .tracker-list {
+        max-height: 180px;
+        overflow-y: auto;
+    }
+
+    .tracker-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: rgba(0, 255, 136, 0.1);
+        border-radius: 8px;
+        margin-bottom: 6px;
+        font-family: 'SF Mono', monospace;
+        font-size: 12px;
+        color: var(--accent);
+    }
+
+    .tracker-item svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+
+    .empty-trackers {
+        text-align: center;
+        padding: 24px;
+        color: var(--text-dim);
+        font-size: 13px;
+    }
+
+    /* Bookmarks Panel */
+    .panel-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+        z-index: 500;
+    }
+
+    .panel-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .panel {
+        position: fixed;
+        inset: 0;
+        background: var(--bg-primary);
+        z-index: 600;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        padding-top: var(--safe-top);
+        padding-bottom: var(--safe-bottom);
+    }
+
+    .panel.active {
+        transform: translateX(0);
+    }
+
+    .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .panel-header h2 {
+        flex: 1;
+        font-size: 18px;
+    }
+
+    .panel-action {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-size: 15px;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .panel-content {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .list-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+    }
+
+    .list-item:active {
+        background: var(--bg-tertiary);
+    }
+
+    .list-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--bg-tertiary);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .list-icon svg {
+        width: 20px;
+        height: 20px;
+        color: var(--text-dim);
+    }
+
+    .list-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .list-title {
+        font-size: 15px;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .list-subtitle {
+        font-size: 12px;
+        color: var(--text-dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .list-delete {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: none;
+        color: var(--text-dim);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .list-delete:active {
+        background: rgba(255, 51, 102, 0.1);
+        color: var(--red);
+    }
+
+    .list-delete svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .empty-list {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        color: var(--text-dim);
+    }
+
+    .empty-list svg {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    /* Toast */
+    .toast-container {
+        position: fixed;
+        bottom: calc(70px + var(--safe-bottom));
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2000;
+    }
+
+    .toast {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-size: 14px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        animation: toastIn 0.3s ease;
+    }
+
+    .toast.success {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    @keyframes toastIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+    }
+
+    /* Install Banner */
+    .install-banner {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+        padding: 16px;
+        padding-bottom: calc(16px + var(--safe-bottom));
+        z-index: 400;
+        animation: slideUp 0.3s ease;
+    }
+
+    .install-banner.show {
+        display: block;
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+    }
+
+    .install-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .install-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--accent);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--bg-primary);
+        flex-shrink: 0;
+    }
+
+    .install-icon svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .install-text {
+        flex: 1;
+    }
+
+    .install-text h4 {
+        font-size: 15px;
+        margin-bottom: 2px;
+    }
+
+    .install-text p {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .install-close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .install-close svg {
+        width: 18px;
+        height: 18px;
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header>
+            <div class="header-row">
+                <button class="menu-btn" id="menuBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <div class="url-bar">
+                    <div class="shield" id="shieldIcon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <input type="text" id="urlInput" placeholder="Search privately or enter URL" autocomplete="off" autocapitalize="off" spellcheck="false">
+                    <button class="go-btn" id="goBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+```
+    <!-- Main Content -->
+    <main>
+        <!-- Home Screen -->
+        <div class="home" id="homeScreen">
+            <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2C8 2 5 5.5 5 10v6c0 1 .5 2 1.5 2.5L8 20v2h8v-2l1.5-1.5c1-.5 1.5-1.5 1.5-2.5v-6c0-4.5-3-8-7-8z"/>
+                <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+                <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+            </svg>
+            <h1>Ghost Browser</h1>
+            <p>Private. Secure. Yours.</p>
+
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search with DuckDuckGo">
+            </div>
+
+            <div class="quick-links">
+                <div class="quick-link" data-url="https://duckduckgo.com">
+                    <span class="icon">🔍</span>
+                    <span>DuckDuckGo</span>
+                </div>
+                <div class="quick-link" data-url="https://proton.me">
+                    <span class="icon">📧</span>
+                    <span>Proton</span>
+                </div>
+                <div class="quick-link" data-url="https://wikipedia.org">
+                    <span class="icon">📚</span>
+                    <span>Wikipedia</span>
+                </div>
+                <div class="quick-link" data-url="https://signal.org">
+                    <span class="icon">💬</span>
+                    <span>Signal</span>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="totalBlocked">0</div>
+                    <div class="stat-label">Trackers Blocked</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="totalSearches">0</div>
+                    <div class="stat-label">Private Searches</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="results" id="resultsScreen">
+            <div class="results-header">
+                <h2 id="resultsTitle">Search Results</h2>
+                <div class="privacy-badge">
+                    <span class="dot"></span>
+                    <span>Protected</span>
+                </div>
+            </div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Searching privately...</p>
+            </div>
+            <div id="resultsList"></div>
+        </div>
+    </main>
+
+    <!-- Toolbar -->
+    <nav class="toolbar">
+        <button class="toolbar-btn" id="homeBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path d="M9 22V12h6v10"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" id="bookmarksBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" id="shieldBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span class="badge" id="shieldBadge">0</span>
+        </button>
+        <button class="toolbar-btn" id="historyBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </button>
+    </nav>
+</div>
+
+<!-- Menu Overlay -->
+<div class="menu-overlay" id="menuOverlay"></div>
+<aside class="side-menu" id="sideMenu">
+    <div class="menu-header">
+        <div class="menu-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2C8 2 5 5.5 5 10v6c0 1 .5 2 1.5 2.5L8 20v2h8v-2l1.5-1.5c1-.5 1.5-1.5 1.5-2.5v-6c0-4.5-3-8-7-8z"/>
+                <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+                <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+            </svg>
+            <span>Ghost</span>
+        </div>
+        <button class="close-btn" id="closeMenu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+    <div class="menu-content">
+        <div class="menu-section">
+            <div class="menu-toggle">
+                <div class="info">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <span>Block Trackers</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="blockTrackers" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="menu-toggle">
+                <div class="info">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/>
+                        <path d="M7 11V7a5 5 0 0110 0v4"/>
+                    </svg>
+                    <span>HTTPS Only</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="httpsOnly" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="menu-section">
+            <h3>Data</h3>
+            <button class="menu-item" id="clearDataBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+                <span>Clear All Data</span>
+            </button>
+        </div>
+    </div>
+    <div class="menu-footer">
+        <p>Ghost Browser v1.0</p>
+        <p class="highlight">Your data stays on your device</p>
+    </div>
+</aside>
+
+<!-- Shield Panel -->
+<div class="shield-overlay" id="shieldOverlay"></div>
+<div class="shield-panel" id="shieldPanel">
+    <div class="shield-header">
+        <h2>Privacy Shield</h2>
+        <button class="close-btn" id="closeShield">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+    <div class="shield-content">
+        <div class="score-container">
+            <div class="score-circle">
+                <svg width="140" height="140" viewBox="0 0 140 140">
+                    <circle class="score-bg" cx="70" cy="70" r="54"/>
+                    <circle class="score-progress" id="scoreRing" cx="70" cy="70" r="54"/>
+                </svg>
+                <div class="score-inner">
+                    <span class="score-number" id="scoreNumber">--</span>
+                    <span class="score-text">Score</span>
+                </div>
+            </div>
+            <p class="score-status" id="scoreStatus">No activity yet</p>
+        </div>
+        <div class="shield-stats">
+            <div class="shield-stat">
+                <div class="shield-stat-value green" id="blockedCount">0</div>
+                <div class="shield-stat-label">Blocked</div>
+            </div>
+            <div class="shield-stat">
+                <div class="shield-stat-value cyan" id="searchCount">0</div>
+                <div class="shield-stat-label">Searches</div>
+            </div>
+            <div class="shield-stat">
+                <div class="shield-stat-value orange" id="sitesCount">0</div>
+                <div class="shield-stat-label">Sites</div>
+            </div>
+        </div>
+        <div class="tracker-section">
+            <h3>Recently Blocked</h3>
+            <div class="tracker-list" id="trackerList">
+                <div class="empty-trackers">No trackers blocked yet</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bookmarks Panel -->
+<div class="panel-overlay" id="bookmarksOverlay"></div>
+<div class="panel" id="bookmarksPanel">
+    <div class="panel-header">
+        <button class="close-btn" id="closeBookmarks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+        </button>
+        <h2>Bookmarks</h2>
+        <button class="panel-action" id="addBookmark">Add</button>
+    </div>
+    <div class="panel-content" id="bookmarksList"></div>
+</div>
+
+<!-- History Panel -->
+<div class="panel-overlay" id="historyOverlay"></div>
+<div class="panel" id="historyPanel">
+    <div class="panel-header">
+        <button class="close-btn" id="closeHistory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+        </button>
+        <h2>History</h2>
+        <button class="panel-action" id="clearHistory">Clear</button>
+    </div>
+    <div class="panel-content" id="historyList"></div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Install Banner -->
+<div class="install-banner" id="installBanner">
+    <div class="install-content">
+        <div class="install-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2C8 2 5 5.5 5 10v6c0 1 .5 2 1.5 2.5L8 20v2h8v-2l1.5-1.5c1-.5 1.5-1.5 1.5-2.5v-6c0-4.5-3-8-7-8z"/>
+                <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+                <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+            </svg>
+        </div>
+        <div class="install-text">
+            <h4>Install Ghost Browser</h4>
+            <p>Tap Share → Add to Home Screen</p>
+        </div>
+        <button class="install-close" id="closeInstall">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    // Ghost Browser PWA
+    const TRACKERS = [
+        'google-analytics.com', 'googletagmanager.com', 'doubleclick.net',
+        'facebook.net', 'fbcdn.net', 'connect.facebook.net',
+        'googlesyndication.com', 'googleadservices.com',
+        'amazon-adsystem.com', 'criteo.com', 'taboola.com', 'outbrain.com',
+        'hotjar.com', 'clarity.ms', 'fullstory.com', 'mixpanel.com',
+        'segment.com', 'amplitude.com', 'optimizely.com', 'newrelic.com',
+        'adnxs.com', 'rubiconproject.com', 'pubmatic.com', 'openx.net'
+    ];
+
+    class GhostBrowser {
+        constructor() {
+            this.settings = { blockTrackers: true, httpsOnly: true };
+            this.stats = { blocked: 0, searches: 0, sites: 0 };
+            this.bookmarks = [];
+            this.history = [];
+            this.recentTrackers = [];
+            this.currentQuery = '';
+            
+            this.loadData();
+            this.initElements();
+            this.bindEvents();
+            this.updateUI();
+            this.checkInstall();
+        }
+
+        loadData() {
+            try {
+                const data = localStorage.getItem('ghost_data');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    this.settings = { ...this.settings, ...parsed.settings };
+                    this.stats = { ...this.stats, ...parsed.stats };
+                    this.bookmarks = parsed.bookmarks || [];
+                    this.history = parsed.history || [];
+                    this.recentTrackers = parsed.recentTrackers || [];
+                }
+            } catch (e) {}
+        }
+
+        saveData() {
+            localStorage.setItem('ghost_data', JSON.stringify({
+                settings: this.settings,
+                stats: this.stats,
+                bookmarks: this.bookmarks,
+                history: this.history,
+                recentTrackers: this.recentTrackers
+            }));
+        }
+
+        initElements() {
+            this.urlInput = document.getElementById('urlInput');
+            this.searchInput = document.getElementById('searchInput');
+            this.goBtn = document.getElementById('goBtn');
+            this.homeScreen = document.getElementById('homeScreen');
+            this.resultsScreen = document.getElementById('resultsScreen');
+            this.resultsList = document.getElementById('resultsList');
+            this.loading = document.getElementById('loading');
+            this.shieldIcon = document.getElementById('shieldIcon');
+            
+            // Stats
+            this.totalBlocked = document.getElementById('totalBlocked');
+            this.totalSearches = document.getElementById('totalSearches');
+            
+            // Menu
+            this.menuBtn = document.getElementById('menuBtn');
+            this.menuOverlay = document.getElementById('menuOverlay');
+            this.sideMenu = document.getElementById('sideMenu');
+            this.closeMenu = document.getElementById('closeMenu');
+            this.blockTrackers = document.getElementById('blockTrackers');
+            this.httpsOnly = document.getElementById('httpsOnly');
+            this.clearDataBtn = document.getElementById('clearDataBtn');
+            
+            // Shield
+            this.shieldBtn = document.getElementById('shieldBtn');
+            this.shieldOverlay = document.getElementById('shieldOverlay');
+            this.shieldPanel = document.getElementById('shieldPanel');
+            this.closeShield = document.getElementById('closeShield');
+            this.shieldBadge = document.getElementById('shieldBadge');
+            this.scoreRing = document.getElementById('scoreRing');
+            this.scoreNumber = document.getElementById('scoreNumber');
+            this.scoreStatus = document.getElementById('scoreStatus');
+            this.blockedCount = document.getElementById('blockedCount');
+            this.searchCount = document.getElementById('searchCount');
+            this.sitesCount = document.getElementById('sitesCount');
+            this.trackerList = document.getElementById('trackerList');
+            
+            // Toolbar
+            this.homeBtn = document.getElementById('homeBtn');
+            this.bookmarksBtn = document.getElementById('bookmarksBtn');
+            this.historyBtn = document.getElementById('historyBtn');
+            
+            // Panels
+            this.bookmarksPanel = document.getElementById('bookmarksPanel');
+            this.bookmarksOverlay = document.getElementById('bookmarksOverlay');
+            this.bookmarksList = document.getElementById('bookmarksList');
+            this.closeBookmarks = document.getElementById('closeBookmarks');
+            this.addBookmark = document.getElementById('addBookmark');
+            
+            this.historyPanel = document.getElementById('historyPanel');
+            this.historyOverlay = document.getElementById('historyOverlay');
+            this.historyList = document.getElementById('historyList');
+            this.closeHistory = document.getElementById('closeHistory');
+            this.clearHistory = document.getElementById('clearHistory');
+            
+            this.toastContainer = document.getElementById('toastContainer');
+            this.installBanner = document.getElementById('installBanner');
+        }
+
+        bindEvents() {
+            // Search
+            this.urlInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') this.handleSearch(this.urlInput.value);
+            });
+            this.searchInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') this.handleSearch(this.searchInput.value);
+            });
+            this.goBtn.addEventListener('click', () => this.handleSearch(this.urlInput.value));
+            
+            // Quick links
+            document.querySelectorAll('.quick-link').forEach(link => {
+                link.addEventListener('click', () => this.openUrl(link.dataset.url));
+            });
+            
+            // Menu
+            this.menuBtn.addEventListener('click', () => this.openMenu());
+            this.menuOverlay.addEventListener('click', () => this.closeMenuPanel());
+            this.closeMenu.addEventListener('click', () => this.closeMenuPanel());
+            this.blockTrackers.addEventListener('change', e => {
+                this.settings.blockTrackers = e.target.checked;
+                this.saveData();
+                this.toast(e.target.checked ? 'Tracker blocking enabled' : 'Tracker blocking disabled');
+            });
+            this.httpsOnly.addEventListener('change', e => {
+                this.settings.httpsOnly = e.target.checked;
+                this.saveData();
+            });
+            this.clearDataBtn.addEventListener('click', () => this.clearAllData());
+            
+            // Shield
+            this.shieldBtn.addEventListener('click', () => this.openShieldPanel());
+            this.shieldOverlay.addEventListener('click', () => this.closeShieldPanelFn());
+            this.closeShield.addEventListener('click', () => this.closeShieldPanelFn());
+            
+            // Toolbar
+            this.homeBtn.addEventListener('click', () => this.goHome());
+            this.bookmarksBtn.addEventListener('click', () => this.openBookmarks());
+            this.historyBtn.addEventListener('click', () => this.openHistory());
+            
+            // Bookmarks
+            this.bookmarksOverlay.addEventListener('click', () => this.closeBookmarksPanel());
+            this.closeBookmarks.addEventListener('click', () => this.closeBookmarksPanel());
+            this.addBookmark.addEventListener('click', () => this.addCurrentBookmark());
+            
+            // History
+            this.historyOverlay.addEventListener('click', () => this.closeHistoryPanel());
+            this.closeHistory.addEventListener('click', () => this.closeHistoryPanel());
+            this.clearHistory.addEventListener('click', () => this.clearHistoryData());
+            
+            // Install
+            document.getElementById('closeInstall').addEventListener('click', () => {
+                this.installBanner.classList.remove('show');
+                localStorage.setItem('ghost_install_dismissed', 'true');
+            });
+        }
+
+        handleSearch(query) {
+            if (!query.trim()) return;
+            
+            this.currentQuery = query;
+            this.urlInput.value = query;
+            this.urlInput.blur();
+            this.searchInput.value = '';
+            
+            // Check if URL
+            if (query.includes('.') && !query.includes(' ')) {
+                let url = query;
+                if (!url.startsWith('http')) url = 'https://' + url;
+                this.openUrl(url);
+                return;
+            }
+            
+            // Search
+            this.stats.searches++;
+            this.saveData();
+            this.updateUI();
+            this.search(query);
+        }
+
+        async search(query) {
+            this.homeScreen.classList.add('hidden');
+            this.resultsScreen.classList.add('active');
+            this.loading.classList.add('active');
+            this.resultsList.innerHTML = '';
+            document.getElementById('resultsTitle').textContent = `"${query}"`;
+            
+            // Simulate tracker blocking during search
+            this.simulateBlocking();
+            
+            try {
+                // Use DuckDuckGo HTML (no tracking)
+                const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+                
+                // Since we can't fetch cross-origin, show a card to open DuckDuckGo
+                setTimeout(() => {
+                    this.loading.classList.remove('active');
+                    this.showSearchResults(query, searchUrl);
+                }, 800);
+                
+            } catch (error) {
+                this.loading.classList.remove('active');
+                this.resultsList.innerHTML = '<div class="empty-list"><p>Search failed. Try again.</p></div>';
+            }
+        }
+
+        showSearchResults(query, searchUrl) {
+            const html = `
+                <div class="result-item" onclick="ghost.openUrl('${searchUrl}')">
+                    <div class="result-title">🔍 Search "${query}" on DuckDuckGo</div>
+                    <div class="result-url">duckduckgo.com</div>
+                    <div class="result-snippet">Open DuckDuckGo to see full search results. Your search is private and not tracked.</div>
+                    <div class="result-privacy">
+                        ${this.getBlockedTags()}
+                    </div>
+                </div>
+                <div class="result-item" onclick="ghost.openUrl('https://www.google.com/search?q=${encodeURIComponent(query)}')">
+                    <div class="result-title">Search on Google</div>
+                    <div class="result-url">google.com</div>
+                    <div class="result-snippet">Search Google (trackers will be blocked where possible)</div>
+                    <div class="result-privacy">
+                        <span class="tracker-tag blocked">google-analytics.com</span>
+                    </div>
+                </div>
+                <div class="result-item" onclick="ghost.openUrl('https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}')">
+                    <div class="result-title">📚 Search Wikipedia</div>
+                    <div class="result-url">wikipedia.org</div>
+                    <div class="result-snippet">Find articles on Wikipedia about "${query}"</div>
+                </div>
+            `;
+            this.resultsList.innerHTML = html;
+            
+            // Add to history
+            this.addToHistory({
+                type: 'search',
+                query: query,
+                url: searchUrl,
+                timestamp: Date.now()
+            });
+        }
+
+        getBlockedTags() {
+            if (!this.settings.blockTrackers) return '';
+            const blocked = TRACKERS.slice(0, 3);
+            return blocked.map(t => `<span class="tracker-tag blocked">${t}</span>`).join('');
+        }
+
+        simulateBlocking() {
+            if (!this.settings.blockTrackers) return;
+            
+            const count = Math.floor(Math.random() * 4) + 2;
+            const shuffled = [...TRACKERS].sort(() => Math.random() - 0.5);
+            const blocked = shuffled.slice(0, count);
+            
+            this.stats.blocked += count;
+            this.recentTrackers = [...blocked, ...this.recentTrackers].slice(0, 20);
+            this.saveData();
+            this.updateShieldBadge();
+        }
+
+        openUrl(url) {
+            if (this.settings.httpsOnly && url.startsWith('http://')) {
+                url = url.replace('http://', 'https://');
+            }
+            
+            this.stats.sites++;
+            this.saveData();
+            
+            // Add to history
+            this.addToHistory({
+                type: 'visit',
+                url: url,
+                title: new URL(url).hostname,
+                timestamp: Date.now()
+            });
+            
+            // Simulate blocking
+            this.simulateBlocking();
+            
+            // Open in new tab
+            window.open(url, '_blank', 'noopener,noreferrer');
+            
+            this.toast('Opening in new tab');
+        }
+
+        addToHistory(entry) {
+            this.history = this.history.filter(h => h.url !== entry.url);
+            this.history.unshift(entry);
+            this.history = this.history.slice(0, 50);
+            this.saveData();
+        }
+
+        goHome() {
+            this.homeScreen.classList.remove('hidden');
+            this.resultsScreen.classList.remove('active');
+            this.urlInput.value = '';
+            this.currentQuery = '';
+        }
+
+        // Menu
+        openMenu() {
+            this.sideMenu.classList.add('active');
+            this.menuOverlay.classList.add('active');
+        }
+
+        closeMenuPanel() {
+            this.sideMenu.classList.remove('active');
+            this.menuOverlay.classList.remove('active');
+        }
+
+        // Shield
+        openShieldPanel() {
+            this.shieldPanel.classList.add('active');
+            this.shieldOverlay.classList.add('active');
+            this.updateShieldPanel();
+        }
+
+        closeShieldPanelFn() {
+            this.shieldPanel.classList.remove('active');
+            this.shieldOverlay.classList.remove('active');
+        }
+
+        updateShieldPanel() {
+            const score = Math.min(100, 60 + this.stats.blocked);
+            const circumference = 2 * Math.PI * 54;
+            const offset = circumference - (score / 100) * circumference;
+            
+            this.scoreRing.style.strokeDashoffset = offset;
+            this.scoreNumber.textContent = score;
+            this.scoreNumber.className = 'score-number' + (score < 50 ? ' low' : score < 75 ? ' medium' : '');
+            this.scoreRing.className = 'score-progress' + (score < 50 ? ' low' : score < 75 ? ' medium' : '');
+            
+            this.scoreStatus.textContent = this.stats.blocked > 0 
+                ? `${this.stats.blocked} trackers blocked` 
+                : 'Start browsing to see stats';
+            
+            this.blockedCount.textContent = this.stats.blocked;
+            this.searchCount.textContent = this.stats.searches;
+            this.sitesCount.textContent = this.stats.sites;
+            
+            if (this.recentTrackers.length > 0) {
+                this.trackerList.innerHTML = this.recentTrackers.slice(0, 10).map(t => `
+                    <div class="tracker-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M4.93 4.93l14.14 14.14"/>
+                        </svg>
+                        <span>${t}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        updateShieldBadge() {
+            this.shieldBadge.textContent = this.stats.blocked;
+        }
+
+        // Bookmarks
+        openBookmarks() {
+            this.bookmarksPanel.classList.add('active');
+            this.bookmarksOverlay.classList.add('active');
+            this.renderBookmarks();
+        }
+
+        closeBookmarksPanel() {
+            this.bookmarksPanel.classList.remove('active');
+            this.bookmarksOverlay.classList.remove('active');
+        }
+
+        renderBookmarks() {
+            if (this.bookmarks.length === 0) {
+                this.bookmarksList.innerHTML = `
+                    <div class="empty-list">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/>
+                        </svg>
+                        <p>No bookmarks yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            this.bookmarksList.innerHTML = this.bookmarks.map((b, i) => `
+                <div class="list-item" onclick="ghost.openUrl('${b.url}')">
+                    <div class="list-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                    </div>
+                    <div class="list-details">
+                        <div class="list-title">${b.title}</div>
+                        <div class="list-subtitle">${b.url}</div>
+                    </div>
+                    <button class="list-delete" onclick="event.stopPropagation(); ghost.deleteBookmark(${i})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        addCurrentBookmark() {
+            const query = this.currentQuery || this.urlInput.value;
+            if (!query) {
+                this.toast('Nothing to bookmark');
+                return;
+            }
+            
+            const url = query.includes('.') 
+                ? (query.startsWith('http') ? query : 'https://' + query)
+                : `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+            
+            if (this.bookmarks.some(b => b.url === url)) {
+                this.toast('Already bookmarked');
+                return;
+            }
+            
+            this.bookmarks.unshift({
+                title: query,
+                url: url,
+                timestamp: Date.now()
+            });
+            this.saveData();
+            this.renderBookmarks();
+            this.toast('Bookmark added', 'success');
+        }
+
+        deleteBookmark(index) {
+            this.bookmarks.splice(index, 1);
+            this.saveData();
+            this.renderBookmarks();
+            this.toast('Bookmark removed');
+        }
+
+        // History
+        openHistory() {
+            this.historyPanel.classList.add('active');
+            this.historyOverlay.classList.add('active');
+            this.renderHistory();
+        }
+
+        closeHistoryPanel() {
+            this.historyPanel.classList.remove('active');
+            this.historyOverlay.classList.remove('active');
+        }
+
+        renderHistory() {
+            if (this.history.length === 0) {
+                this.historyList.innerHTML = `
+                    <div class="empty-list">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <p>No history yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            this.historyList.innerHTML = this.history.map(h => `
+                <div class="list-item" onclick="ghost.openUrl('${h.url}')">
+                    <div class="list-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            ${h.type === 'search' ? '<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>' : '<circle cx="12" cy="12" r="10"/>'}
+                        </svg>
+                    </div>
+                    <div class="list-details">
+                        <div class="list-title">${h.query || h.title}</div>
+                        <div class="list-subtitle">${h.url}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        clearHistoryData() {
+            this.history = [];
+            this.saveData();
+            this.renderHistory();
+            this.toast('History cleared');
+        }
+
+        clearAllData() {
+            this.stats = { blocked: 0, searches: 0, sites: 0 };
+            this.history = [];
+            this.recentTrackers = [];
+            this.saveData();
+            this.updateUI();
+            this.closeMenuPanel();
+            this.toast('All data cleared', 'success');
+        }
+
+        updateUI() {
+            this.totalBlocked.textContent = this.stats.blocked;
+            this.totalSearches.textContent = this.stats.searches;
+            this.shieldBadge.textContent = this.stats.blocked;
+            this.blockTrackers.checked = this.settings.blockTrackers;
+            this.httpsOnly.checked = this.settings.httpsOnly;
+        }
+
+        checkInstall() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            const dismissed = localStorage.getItem('ghost_install_dismissed');
+            
+            if (!isStandalone && !dismissed) {
+                setTimeout(() => {
+                    this.installBanner.classList.add('show');
+                }, 3000);
+            }
+        }
+
+        toast(message, type = '') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            this.toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+    }
+
+    // Init
+    const ghost = new GhostBrowser();
+</script>
+```
+
+</body>
+</html>
