@@ -39,6 +39,7 @@ viral-app/
 │       ├── navbar.js
 │       ├── post.js
 │       └── profile.js
+├── local-preview.sh
 ├── package.json
 ├── deploy.yml
 └── README.md
@@ -46,6 +47,21 @@ viral-app/
 
 ## Getting started
 
+1. **Create a Firebase project** and enable **Authentication (Email/Password + Google)**, **Firestore**, and **Storage**.
+2. Update [`config/firebaseConfig.js`](./config/firebaseConfig.js) with your Firebase project credentials.
+3. Configure [Firestore security rules](https://firebase.google.com/docs/firestore/security/get-started) to protect reads/writes (see sample below).
+4. Serve locally without npm by using the built-in Python web server (ships with macOS, most Linux distros, and Windows 11):
+   ```bash
+   cd viral-app
+   python3 -m http.server 4173
+   ```
+   Then visit [http://localhost:4173](http://localhost:4173). The app is pure HTML/CSS/JS, so any static server works.
+
+   Prefer a one-liner? Run the provided helper:
+   ```bash
+   bash local-preview.sh
+   ```
+   Pass a custom port like `bash local-preview.sh 9000` if 4173 is taken.
 1. **Install dependencies** (optional for static hosting, required for Firebase CLI helpers):
    ```bash
    cd viral-app
@@ -117,11 +133,13 @@ export const recomputePostScore = onDocumentWritten('posts/{postId}', async (eve
 });
 ```
 
+Deploy with `firebase deploy --only functions` from the [Firebase Cloud Shell](https://console.firebase.google.com/project/_/settings/general/cloudShell) (the CLI is pre-installed there) or from any environment where you can install the Firebase CLI.
 Deploy with `firebase deploy --only functions` once your Firebase CLI is configured.
 
 ## Deployment
 
 - **GitHub Pages:** The included [`deploy.yml`](./deploy.yml) action publishes the `viral-app` folder to `gh-pages` on every push to `main`.
+- **Firebase Hosting (optional):** From Firebase Hosting in the console, use **Upload** to publish the `viral-app` directory, or open Cloud Shell and run `firebase deploy --only hosting`.
 - **Firebase Hosting (optional):** Run `firebase init` inside `viral-app`, choose Hosting + Functions, and deploy via `npm run deploy`.
 
 ## Seeding bot content
